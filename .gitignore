@@ -52,3 +52,9 @@ Mkfile.old
 dkms.conf
 
 .cache/*
+dependencies/*
+include/*
+server/bin/*
+gui/bin/*
+compile_commands.json
+
