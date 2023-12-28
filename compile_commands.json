@@ -1,0 +1,31 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Werror",
+      "-o",
+      "obj/main.o",
+      "src/main.c"
+    ],
+    "directory": "/home/lukas/Repositories/dhcp-server/gui",
+    "file": "/home/lukas/Repositories/dhcp-server/gui/src/main.c",
+    "output": "/home/lukas/Repositories/dhcp-server/gui/obj/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Werror",
+      "-I/home/lukas/Repositories/dhcp-server/include",
+      "-o",
+      "obj/main.o",
+      "src/main.c"
+    ],
+    "directory": "/home/lukas/Repositories/dhcp-server/server",
+    "file": "/home/lukas/Repositories/dhcp-server/server/src/main.c",
+    "output": "/home/lukas/Repositories/dhcp-server/server/obj/main.o"
+  }
+]
