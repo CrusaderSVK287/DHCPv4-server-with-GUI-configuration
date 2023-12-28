@@ -64,6 +64,13 @@ projects:
         echo -e "$(COLOUR_GREEN)[project] $${dir}build$(COLOUR_RESET)"; \
         $(MAKE) $(MAKE_FLAGS) INC_DIR=$(INC_DIR) -C $$dir $(MAKE_CMD_TAIL) || { echo -e "$(COLOUR_RED)[project] $$dir FAILED!$(COLOUR_RESET)"; exit 1; }; \
     done
+	@echo -e "$(COLOUR_GREEN)Project tree compiled successfully$(COLOUR_RESET)"; \
+
+ifeq (,$(findstring $(INC_DIR),$(LD_LIBRARY_PATH)))
+	@echo -e "\n\n$(COLOUR_RED)LD_LIBRARY_PATH does not include $(INC_DIR). Please set it manually, or copy contents of include folder to your systems default library folder (usualy /usr/lib). \
+		To set the path, use 'export LD_LIBRARY_PATH=$(INC_DIR)::\$$LD_LIBRARY_PATH'$(COLOUR_RESET)\n\n"
+endif
+
 
 test:
 	@for dir in $(PROJECTS); do \
