@@ -1,0 +1,42 @@
+# General roadmap for expected path of development.
+When criteria for a feature is made, commit hash will be added as a link to track progress.
+When a set of features in category are made, pull request and commit hash will be added.
+Tasks will not be worked on necessarily in order they are written. 
+Tasks may be worked on even when flagged as done, flag just means that the feature was merged.
+This roadmap may change in future
+
+## Server:
+* Make DORA handshake with multiple clients from pool:
+    - Logging setup (CCLog)
+    - Server logic
+    - DHCP message parser and builder
+    - Basic IP allocator API
+* UNIX server and commands implementation for configuring:
+    - UNIX server for ipc communication with gui
+    - Command usage API (Maybe command execution could be made on separate thread if doesnt require server cooperation, e.g. changing config file without applying changes)
+* DHCP configuration
+    - IP allocator configuration for IP address pools
+    - Extend IP allocator API
+    - Configuration option for dhcp options.
+* DHCP messages communication
+    - Implement rest of DHCP message types handling
+* Transaction database
+    - Transaction database structure
+    - Database API to store, retrieve data etc.
+* Other configuration
+    - ACL configuration
+    - Log verbosity configuration
+    - Other general system configuration
+* Security
+    - ACL feature
+    - DHCP starvation prevention
+    - Active DHCP probing (Scanning network for rogue DHCP servers)
+
+## GUI:
+* UNIX client
+    - UNIX client for communication with server
+    - Commands API for sending commands to server (might be similiar to the server one since will use similiar syntax)
+* curses UI
+    - Root user authentification
+    - Navigable menus/submenus for configuration
+    - Emulated CLI with configuration commands
