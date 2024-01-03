@@ -21,6 +21,8 @@ CCLog:
 	@cd $(DEPS_DIR)/$@ && git checkout -q v1.2.0
 	$(MAKE_CMD) $(DEPS_DIR)/$@
 	cp $(DEPS_DIR)/$@/bin/libcclog.so $(INC_DIR)/
+	cp $(DEPS_DIR)/$@/src/cclog.h $(INC_DIR)/
+	cp $(DEPS_DIR)/$@/src/cclog_macros.h $(INC_DIR)/
 
 cJSON:
 	$(GIT_CMD) git@github.com:DaveGamble/cJSON.git $(DEPS_DIR)/$@
@@ -32,3 +34,8 @@ cJSON:
 	cp $(DEPS_DIR)/$@/libcjson_utils.so* $(INC_DIR)/
 	cp $(DEPS_DIR)/$@/cJSON_Utils.h $(INC_DIR)/
 
+greatest:
+	$(GIT_CMD) https://github.com/silentbicycle/greatest $(DEPS_DIR)/$@
+	cp $(DEPS_DIR)/$@/greatest.h $(TOPDIR)/server/test
+	cp $(DEPS_DIR)/$@/greatest.h $(TOPDIR)/gui/test
+	cp $(DEPS_DIR)/$@/greatest.h $(INC_DIR)
