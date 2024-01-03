@@ -1,6 +1,7 @@
 #include "dhcp_server.h"
+#include "cclog_macros.h"
+#include "dhcp_packet.h"
 #include "logging.h"
-#include "message.h"
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -87,11 +88,12 @@ int dhcp_server_serve(dhcp_server_t *server)
 
 	if_null_log(server, exit, LOG_CRITICAL, NULL, "server parameter is null");
 
-	dhcp_packet_t dhcp_packet = {0};	
+        dhcp_message_t *dhcp_msg = dhcp_message_new();
+        if_null(dhcp_msg, exit);
 
 	do
 	{
-		rv = recv(server->sock_fd, &dhcp_packet, sizeof(dhcp_packet_t), 0);
+		rv = recv(server->sock_fd, &dhcp_msg->packet, sizeof(dhcp_packet_t), 0);
 		if (rv < 0 && errno == EAGAIN) {
 			continue;
 		} else if (rv < 0) {
@@ -99,9 +101,7 @@ int dhcp_server_serve(dhcp_server_t *server)
 			continue;
 		}
 
-		/* TODO, treat packet relating endianes */
-		dhcp_packet.cookie = ntohl(dhcp_packet.cookie);
-		dhcp_packet_dump(&dhcp_packet);
+		dhcp_packet_dump(&dhcp_msg->packet);
 
 	} while (server_keep_running);
 
