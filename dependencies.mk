@@ -18,7 +18,7 @@ endif
 
 CCLog:
 	$(GIT_CMD) git@github.com:CrusaderSVK287/CCLog.git $(DEPS_DIR)/$@
-	@cd $(DEPS_DIR)/$@ && git checkout -q v1.2.0
+	@cd $(DEPS_DIR)/$@ && git checkout -q v1.2.2
 	$(MAKE_CMD) $(DEPS_DIR)/$@
 	cp $(DEPS_DIR)/$@/bin/libcclog.so $(INC_DIR)/
 	cp $(DEPS_DIR)/$@/src/cclog.h $(INC_DIR)/
