@@ -4,5 +4,6 @@
 #include "greatest.h"
 
 SUITE(linked_list);
+SUITE(dhcp_options);
 
 #endif // !SERVER_TESTS

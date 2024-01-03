@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
         GREATEST_MAIN_BEGIN();
 
         RUN_SUITE(linked_list);
+        RUN_SUITE(dhcp_options);
 
         GREATEST_MAIN_END();
         return 0;
