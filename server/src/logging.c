@@ -1,6 +1,9 @@
 
 #include "logging.h"
+#include "cclog_macros.h"
+#include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #define FORMAT_FATAL "[${DATE} ${TIME}] ${FILE}:${LINE}: *** FATAL ERROR *** ${MSG}"
 #define FORMAT_ERROR "[${DATE} ${TIME}] ${FILE}: ERROR !!! ${MSG}"
@@ -15,7 +18,8 @@ int init_logging()
 {
         int rv = 1;
 
-        if_failed(cclogger_init(LOGGING_MULTIPLE_FILES, "/etc/dhcps/dhcp-log", "dhcps"), exit);
+        mkdir("/var/log/dhcps", 0777);
+        if_failed(cclogger_init(LOGGING_MULTIPLE_FILES, "/var/log/dhcps/dhcp-log", "dhcps"), exit);
         if_failed(cclogger_set_default_message_format("[${DATE} ${TIME}] ${FILE}:${LINE}: ${MSG}"), exit);
         
         cclogger_set_verbosity_level(10);
