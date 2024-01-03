@@ -95,6 +95,6 @@ void dhcp_message_destroy(dhcp_message_t **m)
         llist_destroy(&(*m)->dhcp_options);
         
         free(*m);
-        m = NULL;
+        *m = NULL;
 }
 

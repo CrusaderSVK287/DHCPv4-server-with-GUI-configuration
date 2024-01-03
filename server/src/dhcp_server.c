@@ -89,7 +89,7 @@ int dhcp_server_serve(dhcp_server_t *server)
 	if_null_log(server, exit, LOG_CRITICAL, NULL, "server parameter is null");
 
         dhcp_message_t *dhcp_msg = dhcp_message_new();
-        if_null(dhcp_msg, exit);
+        if_null_log(dhcp_msg, exit, LOG_ERROR, NULL, "Cannot allocate memory for dhcp_message_t");
 
 	do
 	{
