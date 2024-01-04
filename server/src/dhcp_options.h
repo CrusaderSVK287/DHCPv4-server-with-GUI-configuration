@@ -21,7 +21,7 @@ typedef struct dhcp_option {
     uint8_t tag;
     uint8_t lenght;
     union {
-        uint8_t number;
+        uint32_t number;
         char string[DHCP_OPTION_MAX_LENGHT];
         uint32_t ip;  
         uint8_t boolean;

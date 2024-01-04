@@ -13,6 +13,7 @@ static enum dhcp_option_type option_tag_to_type(int tag) {
         switch(tag) {
         case DHCP_OPTION_IP_FORWARDING_ENABLE_DISABLE:
         case DHCP_OPTION_NON_LOCAL_SOURCE_ROUTING_ENABLE_DISABLE:
+        case DHCP_OPTION_ROUTER_DISCOVERY:
                 return DHCP_OPTION_BOOL;
 
         case DHCP_OPTION_SUBNET_MASK:
@@ -25,6 +26,7 @@ static enum dhcp_option_type option_tag_to_type(int tag) {
         case DHCP_OPTION_BOOT_FILE_SIZE:
         case DHCP_OPTION_MERIT_DUMP:
         case DHCP_OPTION_MAX_DGRAM_REASSEMBLY_SIZE:
+        case DHCP_OPTION_IP_ADDRESS_LEASE_TIME:
                 return DHCP_OPTION_NUMERIC;
 
         case DHCP_OPTION_HOST_NAME:

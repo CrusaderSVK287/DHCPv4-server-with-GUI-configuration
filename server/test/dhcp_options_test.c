@@ -1,11 +1,12 @@
 #include "greatest.h"
 #include "tests.h"
-#include "../src/RFC/RFC-2132.h"
-#include "../src/dhcp_options.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <RFC/RFC-2132.h>
+#include <dhcp_options.h>
 
 static uint8_t raw_dhcp_options[DHCP_PACKET_OPTIONS_SIZE];
 
@@ -91,25 +92,117 @@ TEST test_add_option_to_linked_list()
         PASS();
 }
 
+TEST test_parsed_option_numeric()
+{
+        llist_t *options = llist_new();
+        dhcp_option_raw_parse(options, raw_dhcp_options);
+        
+        dhcp_option_t *o = dhcp_option_retrieve(options, 0x35);
+        ASSERT_NEQ(o, NULL);
+        ASSERT_EQ(o->type, DHCP_OPTION_NUMERIC);
+        ASSERT_EQ(o->value.number, 0x03);
+
+        llist_destroy(&options);
+        PASS();
+}
+
+TEST test_parsed_option_ip()
+{
+        llist_t *options = llist_new();
+        dhcp_option_raw_parse(options, raw_dhcp_options);
+
+        dhcp_option_t *o = dhcp_option_retrieve(options, 0x32);
+        ASSERT_NEQ(o, NULL);
+        ASSERT_EQ(o->type, DHCP_OPTION_IP);
+        ASSERT_EQ(o->value.ip, 0x70605040);
+
+        llist_destroy(&options);
+        PASS();
+}
+
+TEST test_parsed_option_boolean()
+{
+        llist_t *options = llist_new();
+        dhcp_option_raw_parse(options, raw_dhcp_options);
+
+        dhcp_option_t *o = dhcp_option_retrieve(options, 0x1f);
+        ASSERT_NEQ(o, NULL);
+        ASSERT_EQ(o->type, DHCP_OPTION_BOOL);
+        ASSERT_EQ(o->value.boolean, true);
+
+        llist_destroy(&options);
+        PASS();
+}
+
+TEST test_parsed_option_string()
+{
+        llist_t *options = llist_new();
+        dhcp_option_raw_parse(options, raw_dhcp_options);
+
+        dhcp_option_t *o = dhcp_option_retrieve(options, 0x0c);
+        ASSERT_NEQ(o, NULL);
+        ASSERT_EQ(o->type, DHCP_OPTION_STRING);
+        ASSERT_STRN_EQ(o->value.string, "MyDevice", o->lenght);
+
+        llist_destroy(&options);
+        PASS();
+}
+
+TEST test_parsed_option_binary()
+{
+        llist_t *options = llist_new();
+        dhcp_option_raw_parse(options, raw_dhcp_options);
+        uint8_t expected[] = {0x32, 0x1f, 0x0c};
+
+        dhcp_option_t *o = dhcp_option_retrieve(options, 0x37);
+        ASSERT_NEQ(o, NULL);
+        ASSERT_EQ(o->type, DHCP_OPTION_BIN);
+        ASSERT_MEM_EQ(o->value.binary_data, expected, o->lenght);
+
+        llist_destroy(&options);
+        PASS();
+}
+
+TEST test_parsed_option_numeric_with_multiple_bytes()
+{
+        llist_t *options = llist_new();
+        dhcp_option_raw_parse(options, raw_dhcp_options);
+
+        dhcp_option_t *o = dhcp_option_retrieve(options, 0x33);
+        ASSERT_NEQ(o, NULL);
+        ASSERT_EQ(o->type, DHCP_OPTION_NUMERIC);
+        ASSERT_EQ(o->value.number, 0x00015180);
+
+        llist_destroy(&options);
+        PASS();
+}
+
 SUITE(dhcp_options)
 {
         memset(raw_dhcp_options, 0, sizeof(dhcp_options));
+        uint8_t test_options[] = {
+                0x35, 0x01, 0x03, //numeric -> DHCP message type
+                0x32, 0x04, 0x70, 0x60, 0x50, 0x40, //ip -> Requested IP address
+                0x1f, 0x01, 0x01, //boolean -> DHCP option ip forwarding enable disable with value 1 (true)
+                0x0c, 0x08, 'M', 'y', 'D', 'e', 'v', 'i', 'c', 'e', //string -> domain_name
+                0x37, 0x03, 0x32, 0x1f, 0x0c, //binary -> requested parameters (the ones in previous lines without 0x35);
+                0x33, 0x04, 0x00, 0x01, 0x51, 0x80, // numeric, big number -> lease time, 86400 in dec
 
-        // Manually setting values at specific indices
-        raw_dhcp_options[0] = 0x35; // msg type
-        raw_dhcp_options[1] = 0x01; // lenght 1
-        raw_dhcp_options[2] = 0x03; // 3 - offer
-        raw_dhcp_options[3] = 0x32; // requested ip
-        raw_dhcp_options[4] = 0x04; // 4 bytes
-        raw_dhcp_options[5] = 0x70; // 112
-        raw_dhcp_options[6] = 0x60; // 96
-        raw_dhcp_options[7] = 0x50; // 80
-        raw_dhcp_options[8] = 0x40; // 64
-        raw_dhcp_options[9] = 0xff;
+                0xff
+        };
+
+        memcpy(raw_dhcp_options, test_options, sizeof(test_options));
         
         RUN_TEST(test_new_and_destroy);
         RUN_TEST(test_parse_raw_options);
         RUN_TEST(test_retrieve_option_by_tag);
         RUN_TEST(test_add_option_to_linked_list);
+
+        RUN_TEST(test_parsed_option_numeric);
+        RUN_TEST(test_parsed_option_ip);
+        RUN_TEST(test_parsed_option_boolean);
+        RUN_TEST(test_parsed_option_string);
+        RUN_TEST(test_parsed_option_binary);
+        RUN_TEST(test_parsed_option_numeric_with_multiple_bytes);
 }
 
