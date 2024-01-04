@@ -177,12 +177,33 @@ TEST test_parsed_option_numeric_with_multiple_bytes()
         PASS();
 }
 
+TEST test_parsed_option_ip_trailing_and_leading_zeros()
+{
+        llist_t *options = llist_new();
+        dhcp_option_raw_parse(options, raw_dhcp_options);
+
+        dhcp_option_t *o = dhcp_option_retrieve(options, 0x01);
+        ASSERT_NEQ(o, NULL);
+        ASSERT_EQ(o->type, DHCP_OPTION_IP);
+        ASSERT_EQ(o->value.ip, 0x70000000);
+
+        o = dhcp_option_retrieve(options, 0x03);
+        ASSERT_NEQ(o, NULL);
+        ASSERT_EQ(o->type, DHCP_OPTION_IP);
+        ASSERT_EQ(o->value.ip, 0x00005040);
+        
+        llist_destroy(&options);
+        PASS();
+}
+
 SUITE(dhcp_options)
 {
         memset(raw_dhcp_options, 0, sizeof(dhcp_options));
         uint8_t test_options[] = {
                 0x35, 0x01, 0x03, //numeric -> DHCP message type
                 0x32, 0x04, 0x70, 0x60, 0x50, 0x40, //ip -> Requested IP address
+                0x01, 0x04, 0x70, 0x00, 0x00, 0x00, //ip -> subnet mask .0.0.0 at end
+                0x03, 0x04, 0x00, 0x00, 0x50, 0x40, //ip -> router option 0.0. at beggining
                 0x1f, 0x01, 0x01, //boolean -> DHCP option ip forwarding enable disable with value 1 (true)
                 0x0c, 0x08, 'M', 'y', 'D', 'e', 'v', 'i', 'c', 'e', //string -> domain_name
                 0x37, 0x03, 0x32, 0x1f, 0x0c, //binary -> requested parameters (the ones in previous lines without 0x35);
@@ -204,5 +225,6 @@ SUITE(dhcp_options)
         RUN_TEST(test_parsed_option_string);
         RUN_TEST(test_parsed_option_binary);
         RUN_TEST(test_parsed_option_numeric_with_multiple_bytes);
+        RUN_TEST(test_parsed_option_ip_trailing_and_leading_zeros);
 }
 
