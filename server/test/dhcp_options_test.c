@@ -1,5 +1,6 @@
 #include "greatest.h"
 #include "tests.h"
+#include "utils/xtoy.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -22,7 +23,6 @@ TEST test_new_and_destroy()
 
 TEST test_parse_raw_options()
 {
-
         llist_t *options = llist_new();
         
         dhcp_option_raw_parse(options, raw_dhcp_options);
@@ -35,11 +35,11 @@ TEST test_parse_raw_options()
 
         o = dhcp_option_retrieve(options, 0x32);
         ASSERT_NEQ(o, NULL);
-        // printf("%s\n", inet_ntop(AF_INET, &o->value.ip, NULL, sizeof(o->value.ip)));
         ASSERT_EQ(o->type, DHCP_OPTION_IP);
         ASSERT_EQ(o->tag, DHCP_OPTION_REQUESTED_IP_ADDRESS);
         ASSERT_EQ(o->lenght, 4);
         ASSERT_EQ(o->value.ip, 0x70605040);
+        ASSERT_STR_EQ("112.96.80.64", uint32_to_ipv4_address(o->value.ip));
 
         llist_destroy(&options);
 
