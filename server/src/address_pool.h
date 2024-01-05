@@ -20,9 +20,11 @@ address_pool_t* address_pool_new(const char *name, uint32_t start_address,
 address_pool_t* address_pool_new_str(const char *name, const char *start_address,
         const char *end_address, const char *subnet_mask);
 
-void address_pool_destroy(address_pool_t *pool);
+void address_pool_destroy(address_pool_t **pool);
 
 bool address_belongs_to_pool(address_pool_t *pool, uint32_t address);
+
+bool address_belongs_to_pool_str(address_pool_t *pool, const char *address);
 
 
 #endif // !__ADDRESS_POOL_H__
