@@ -6,5 +6,6 @@
 SUITE(linked_list);
 SUITE(dhcp_options);
 SUITE(utils);
+SUITE(pool);
 
 #endif // !SERVER_TESTS
