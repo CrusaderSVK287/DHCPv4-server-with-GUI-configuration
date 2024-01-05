@@ -1,6 +1,7 @@
 #include "dhcp_packet.h"
 #include "logging.h"
 #include "utils/llist.h"
+#include "utils/xtoy.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,10 +25,10 @@ void dhcp_packet_dump(dhcp_packet_t *p)
         printf("secs:   %04x\n", p->secs);
         printf("flags:  %04x\n", p->flags);
 
-        printf("ciaddr: %s\n", inet_ntop(AF_INET, &p->ciaddr, NULL, sizeof(p->ciaddr)));
-        printf("yiaddr: %s\n", inet_ntop(AF_INET, &p->yiaddr, NULL, sizeof(p->yiaddr)));
-        printf("siaddr: %s\n", inet_ntop(AF_INET, &p->siaddr, NULL, sizeof(p->siaddr)));
-        printf("giaddr: %s\n", inet_ntop(AF_INET, &p->giaddr, NULL, sizeof(p->giaddr)));
+        printf("ciaddr: %s\n", uint32_to_ipv4_address(p->ciaddr));
+        printf("yiaddr: %s\n", uint32_to_ipv4_address(p->yiaddr));
+        printf("siaddr: %s\n", uint32_to_ipv4_address(p->siaddr));
+        printf("giaddr: %s\n", uint32_to_ipv4_address(p->giaddr));
         printf("chaddr: %02x:%02x:%02x:%02x:%02x:%02x\n", p->chaddr[0], p->chaddr[1], p->chaddr[2], p->chaddr[3], p->chaddr[4], p->chaddr[5]);
 
         printf("cookie: %08x\n", p->cookie);
