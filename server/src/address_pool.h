@@ -18,6 +18,11 @@ typedef struct pool {
      * be marked as available.
      */
     uint32_t *leases_bm;
+    /* 
+     * Count of curretnly not assigned addresses from this pool. 
+     * Or number of 0 valued bits in leases_bm
+     */
+    uint32_t available_addresses;
 
     llist_t *dhcp_option_override;
 } address_pool_t;

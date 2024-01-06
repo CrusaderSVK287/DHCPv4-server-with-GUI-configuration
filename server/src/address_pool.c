@@ -53,6 +53,7 @@ address_pool_t* address_pool_new(const char *name, uint32_t start_address,
 {
         if_null(name, error);
         if_false(can_range_be_on_subnet(start_address, end_address, subnet_mask), error);
+        if_false((start_address < end_address), error);
 
         address_pool_t *pool = calloc(1, sizeof(address_pool_t));
         if_null(pool, error);
@@ -76,6 +77,7 @@ address_pool_t* address_pool_new(const char *name, uint32_t start_address,
 
         pool->leases_bm = calloc(pool_range(start_address, end_address), sizeof(uint8_t));
         if_null(pool->leases_bm, error_leases);
+        pool->available_addresses = end_address - start_address + 1;
 
         log_with_pool_info(LOG_MSG, "Created new address pool from %s to %s on subnet %s",
                         start_address, end_address, subnet_mask);
@@ -86,6 +88,8 @@ error_leases:
 error_options:
         free(pool);
 error:
+        log_with_pool_info(LOG_ERROR, "Cannot create pool with range %s to %s on subnet %s",
+                        start_address, end_address, subnet_mask);
         return NULL;
 }
 
@@ -125,18 +129,26 @@ int address_pool_address_allocation_ctl(address_pool_t *pool, uint32_t address, 
         int address_number = address - pool->start_address;
         int index = address_number / 8;
         int bit = address_number % 8;
+        int address_bit = (pool->leases_bm[index] & (uint8_t)(1 << bit)) != 0;
+
 
         switch (action) {
         case 's':   // set address alocation
+                if_true(address_bit, exit);
+
                 pool->leases_bm[index] |= (uint8_t)(1 << bit);
+                pool->available_addresses -= 1;
                 rv = 0;
                 break;
         case 'c':   // clear address allocation
+                if_false(address_bit, exit);
+
                 pool->leases_bm[index] -= (uint8_t)(1 << bit);
+                pool->available_addresses += 1;
                 rv = 0;
                 break;
         case 'g':   // get address allocation
-                rv = (pool->leases_bm[index] & (uint8_t)(1 << bit)) != 0;
+                rv = address_bit;
                 break;
         default:
                 cclog(LOG_ERROR, NULL, "Invalid action \'%c\' for address allocation ctl", action);
