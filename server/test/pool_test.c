@@ -1,6 +1,7 @@
 #include "tests.h"
 #include "greatest.h"
 #include <address_pool.h>
+#include <stdio.h>
 #include <utils/xtoy.h>
 
 TEST test_create_new_pool_and_destroy_it()
@@ -31,6 +32,7 @@ TEST test_create_pool_invalid_range_edge()
         address_pool_t *pool = address_pool_new_str("test", "192.168.1.0", "192.168.1.255", "255.255.255.0");
         ASSERT_EQ(NULL, pool);
 
+        address_pool_destroy(&pool);
         PASS();
 }
 
@@ -39,8 +41,52 @@ TEST test_create_pool_invalid_range()
         address_pool_t *pool = address_pool_new_str("test", "192.168.5.130", "192.168.8.138", "255.255.255.0");
         ASSERT_EQ(NULL, pool);
 
+        address_pool_destroy(&pool);
         PASS();
+}
 
+TEST test_pool_allocate_address()
+{
+        address_pool_t *pool = address_pool_new_str("test", "192.168.1.1", "192.168.1.100", "255.255.255.0");
+        ASSERT_NEQ(NULL, pool);
+
+        int rv = address_pool_set_address_allocation_str(pool, "192.168.1.11"); // allocate 11th address (byte 2, bit 3)
+        ASSERT_EQ(0, rv);
+
+        // we expect address to be used
+        ASSERT_EQ(1, address_pool_get_address_allocation_str(pool, "192.168.1.11"));
+        // we expect second byte of of the bitmask to have only 3rd bit set to 1
+        ASSERT_EQ(0b00000100, pool->leases_bm[1]);
+
+        rv = address_pool_clear_address_allocation_str(pool, "192.168.1.11");
+
+        // we expect address to be free again
+        ASSERT_EQ(0, address_pool_get_address_allocation_str(pool, "192.168.1.11"));
+        // we expect second byte of of the bitmask to have only 3rd bit set to 1
+        ASSERT_EQ(0b00000000, pool->leases_bm[1]);
+        
+        address_pool_destroy(&pool);
+        PASS();
+}
+
+TEST test_pool_allocate_address_edge_cases()
+{
+        address_pool_t *pool = address_pool_new_str("test", "192.168.1.1", "192.168.1.254", "255.255.255.0");
+        ASSERT_NEQ(NULL, pool);
+
+        int rv = address_pool_set_address_allocation_str(pool, "192.168.1.1"); // allocate 11th address (byte 2, bit 3)
+        ASSERT_EQ(0, rv);
+        rv = address_pool_set_address_allocation_str(pool, "192.168.1.254"); // allocate 11th address (byte 2, bit 3)
+        ASSERT_EQ(0, rv);
+
+        ASSERT_EQ(1, address_pool_get_address_allocation_str(pool, "192.168.1.1"));
+        ASSERT_EQ(1, address_pool_get_address_allocation_str(pool, "192.168.1.254"));
+
+        ASSERT_EQ(0b00000001, pool->leases_bm[0]);
+        ASSERT_EQ(0b00100000, pool->leases_bm[31]);
+
+        address_pool_destroy(&pool);
+        PASS();
 }
 
 SUITE(pool)
@@ -49,5 +95,7 @@ SUITE(pool)
         RUN_TEST(test_create_pool_invalid_range);
         RUN_TEST(test_create_pool_invalid_range_edge);
         RUN_TEST(test_create_pool_valid_range_edge);
+        RUN_TEST(test_pool_allocate_address);
+        RUN_TEST(test_pool_allocate_address_edge_cases);
 }
 

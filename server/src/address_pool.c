@@ -26,6 +26,11 @@ static void log_with_pool_info(int log_level, const char *format,
         free(subnet_mask);
 }
 
+static uint32_t pool_range(uint32_t start_addr, uint32_t end_addr)
+{
+        return (end_addr - start_addr + 8) % 8;
+}
+
 static bool can_range_be_on_subnet(uint32_t start, uint32_t end, uint32_t mask)
 {
         uint32_t subnet_start = start & mask;
@@ -57,12 +62,10 @@ address_pool_t* address_pool_new(const char *name, uint32_t start_address,
         pool->name = name;
         pool->mask = subnet_mask;
         pool->dhcp_option_override = llist_new();
+        if_null(pool->dhcp_option_override, error_options);
 
         dhcp_option_t *opt_subnet_mask = dhcp_option_new();
-        if (!opt_subnet_mask) {
-                free(pool);
-                goto error;
-        }
+        if_null(opt_subnet_mask, error_options);
 
         opt_subnet_mask->tag = DHCP_OPTION_SUBNET_MASK;
         opt_subnet_mask->type = DHCP_OPTION_IP;
@@ -71,9 +74,17 @@ address_pool_t* address_pool_new(const char *name, uint32_t start_address,
 
         if_failed(dhcp_option_add(pool->dhcp_option_override, opt_subnet_mask), error);
 
+        pool->leases_bm = calloc(pool_range(start_address, end_address), sizeof(uint8_t));
+        if_null(pool->leases_bm, error_leases);
+
         log_with_pool_info(LOG_MSG, "Created new address pool from %s to %s on subnet %s",
                         start_address, end_address, subnet_mask);
         return pool;
+
+error_leases:
+        llist_destroy(&pool->dhcp_option_override);
+error_options:
+        free(pool);
 error:
         return NULL;
 }
@@ -103,5 +114,65 @@ bool address_belongs_to_pool(address_pool_t *pool, uint32_t address)
 bool address_belongs_to_pool_str(address_pool_t *pool, const char *address)
 {
         return address_belongs_to_pool(pool, ipv4_address_to_uint32(address));
+}
+
+int address_pool_address_allocation_ctl(address_pool_t *pool, uint32_t address, int action)
+{
+        int rv = -1;
+        if_null(pool, exit);
+        if_false(address_belongs_to_pool(pool, address), exit);
+
+        int address_number = address - pool->start_address;
+        int index = address_number / 8;
+        int bit = address_number % 8;
+
+        switch (action) {
+        case 's':   // set address alocation
+                pool->leases_bm[index] |= (uint8_t)(1 << bit);
+                rv = 0;
+                break;
+        case 'c':   // clear address allocation
+                pool->leases_bm[index] -= (uint8_t)(1 << bit);
+                rv = 0;
+                break;
+        case 'g':   // get address allocation
+                rv = (pool->leases_bm[index] & (uint8_t)(1 << bit)) != 0;
+                break;
+        default:
+                cclog(LOG_ERROR, NULL, "Invalid action \'%c\' for address allocation ctl", action);
+        }
+
+exit:
+        return rv;
+}
+
+int address_pool_set_address_allocation(address_pool_t *pool, uint32_t address)
+{
+        return address_pool_address_allocation_ctl(pool, address, 's');
+}
+
+int address_pool_set_address_allocation_str(address_pool_t *pool, const char *address)
+{
+        return address_pool_address_allocation_ctl(pool, ipv4_address_to_uint32(address), 's');
+}
+
+int address_pool_get_address_allocation(address_pool_t *pool, uint32_t address)
+{
+        return address_pool_address_allocation_ctl(pool, address, 'g');
+}
+
+int address_pool_get_address_allocation_str(address_pool_t *pool, const char *address)
+{
+        return address_pool_address_allocation_ctl(pool, ipv4_address_to_uint32(address), 'g');
+}
+
+int address_pool_clear_address_allocation(address_pool_t *pool, uint32_t address)
+{
+        return address_pool_address_allocation_ctl(pool, address, 'c');
+}
+
+int address_pool_clear_address_allocation_str(address_pool_t *pool, const char *address)
+{
+        return address_pool_address_allocation_ctl(pool, ipv4_address_to_uint32(address), 'c');
 }
 

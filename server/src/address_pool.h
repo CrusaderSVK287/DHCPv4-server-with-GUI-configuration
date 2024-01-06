@@ -11,6 +11,14 @@ typedef struct pool {
     uint32_t end_address;
     uint32_t mask;
 
+    /* 
+     * Bitmask storing information about which IP address in pool is leased and 
+     * which is available. 0 Means it is available, 1 means it is in use.
+     * NOTE: Even if address is reserved, if the client is not using it it should 
+     * be marked as available.
+     */
+    uint32_t *leases_bm;
+
     llist_t *dhcp_option_override;
 } address_pool_t;
 
@@ -26,5 +34,24 @@ bool address_belongs_to_pool(address_pool_t *pool, uint32_t address);
 
 bool address_belongs_to_pool_str(address_pool_t *pool, const char *address);
 
+/**
+ * Function controlls pools allocation tracking bitmask. sets or gets appropriate 
+ * bit belonging to address in pools leases_bm bitmask.
+ * Actions:
+ * 's' : set address allocation to 1
+ * 'c' : set address allocation to 0
+ * 'g' : return address allocation 
+ * In action s and c, the function returns 0 on success, -1 on error.
+ * Below are declared helper functions for this function
+ */
+int address_pool_address_allocation_ctl(address_pool_t *pool, uint32_t address, int action);
 
+int address_pool_set_address_allocation(address_pool_t *pool, uint32_t address);
+int address_pool_set_address_allocation_str(address_pool_t *pool, const char *address);
+
+int address_pool_get_address_allocation(address_pool_t *pool, uint32_t address);
+int address_pool_get_address_allocation_str(address_pool_t *pool, const char *address);
+
+int address_pool_clear_address_allocation(address_pool_t *pool, uint32_t address);
+int address_pool_clear_address_allocation_str(address_pool_t *pool, const char *address);
 #endif // !__ADDRESS_POOL_H__
