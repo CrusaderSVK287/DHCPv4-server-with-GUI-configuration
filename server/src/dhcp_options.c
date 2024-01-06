@@ -72,7 +72,7 @@ static void parse_option_value_string(dhcp_option_t *o, uint8_t v[DHCP_OPTION_MA
 
 static void parse_option_value_binary(dhcp_option_t *o, uint8_t v[DHCP_OPTION_MAX_LENGHT])
 {
-        memcpy(o->value.binary_data, v, o->lenght);
+        memcpy(o->value.binary_data, v, DHCP_OPTION_MAX_LENGHT - 1);
 }
 
 static int parse_option_value(dhcp_option_t *o, uint8_t v[DHCP_OPTION_MAX_LENGHT])
