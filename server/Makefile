@@ -31,7 +31,7 @@
 # Compiler flags
 CC = gcc
 LDLIBS = -lcclog -lcjson -lcjson_utils
-CFLAGS = -Wall -Werror
+CFLAGS = -Wall -Werror -std=gnu17 
 LDFLAGS =
 DEBUG_FLAGS = -g3 -DDEBUG
 
