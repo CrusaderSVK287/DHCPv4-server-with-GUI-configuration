@@ -17,7 +17,7 @@ typedef struct pool {
      * NOTE: Even if address is reserved, if the client is not using it it should 
      * be marked as available.
      */
-    uint32_t *leases_bm;
+    uint8_t *leases_bm;
     /* 
      * Count of curretnly not assigned addresses from this pool. 
      * Or number of 0 valued bits in leases_bm

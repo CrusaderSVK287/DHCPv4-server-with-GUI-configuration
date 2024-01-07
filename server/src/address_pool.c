@@ -28,7 +28,7 @@ static void log_with_pool_info(int log_level, const char *format,
 
 static uint32_t pool_range(uint32_t start_addr, uint32_t end_addr)
 {
-        return (end_addr - start_addr + 8) % 8;
+        return (end_addr - start_addr + 8) / 8;
 }
 
 static bool can_range_be_on_subnet(uint32_t start, uint32_t end, uint32_t mask)
@@ -106,6 +106,8 @@ void address_pool_destroy(address_pool_t **pool)
         if (!pool || !(*pool))
                 return;
 
+        llist_destroy(&(*pool)->dhcp_option_override);
+        free((*pool)->leases_bm);
         free(*pool);
         *pool = NULL;
 }
@@ -126,11 +128,10 @@ int address_pool_address_allocation_ctl(address_pool_t *pool, uint32_t address, 
         if_null(pool, exit);
         if_false(address_belongs_to_pool(pool, address), exit);
 
-        int address_number = address - pool->start_address;
-        int index = address_number / 8;
-        int bit = address_number % 8;
-        int address_bit = (pool->leases_bm[index] & (uint8_t)(1 << bit)) != 0;
-
+        uint32_t address_number = address - pool->start_address;
+        uint32_t index = address_number / 8;
+        uint8_t bit = address_number % 8;
+        uint8_t address_bit = (pool->leases_bm[index] & (uint8_t)(1 << bit)) != 0;
 
         switch (action) {
         case 's':   // set address alocation
