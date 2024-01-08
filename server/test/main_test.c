@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
         RUN_SUITE(dhcp_options);
         RUN_SUITE(utils);
         RUN_SUITE(pool);
+        RUN_SUITE(allocator);
 
         cclogger_uninit();
 

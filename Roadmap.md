@@ -10,7 +10,7 @@ This roadmap may change in future
     - Logging setup (CCLog) [Done - commit f82c0a834e15434ec4631010c01f8e079e3c191a]
     - Server logic
     - DHCP message parser and builder
-    - Basic IP allocator API
+    - Basic IP allocator API [Done - commit 190e4cc3f95ecebca981bb1a2a1635d7da70de7c]
 * UNIX server and commands implementation for configuring:
     - UNIX server for ipc communication with gui
     - Command usage API (Maybe command execution could be made on separate thread if doesnt require server cooperation, e.g. changing config file without applying changes)
