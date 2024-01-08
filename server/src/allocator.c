@@ -107,6 +107,7 @@ int allocator_add_pool(address_allocator_t *allocator, address_pool_t *pool)
 
         if_failed(llist_append(allocator->address_pools, pool, true), error);
 
+        rv = ALLOCATOR_OK;
 error:
         if_failed_log_ng(rv, LOG_ERROR, NULL, "Error creating pool %s:(%d) %s", 
                         pool->name, rv, allocator_error_str(rv));
@@ -264,6 +265,7 @@ int allocator_change_dhcp_option(address_allocator_t *allocator, uint32_t tag,
         if_null(new_value, exit);
 
         dhcp_option_t *option = dhcp_option_retrieve(allocator->default_options, tag);
+        rv = ALLOCATOR_OPTION_INVALID;
         if_null_log(option, exit, LOG_ERROR, NULL, "Option with tag %lu doesnt exist", tag);
 
         memcpy(option->value.binary_data, new_value, new_length);

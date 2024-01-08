@@ -19,7 +19,7 @@ enum allocator_status {
     ALLOCATOR_POOL_DEPLETED = -8,
 };
 
-typedef struct allocaor {
+typedef struct allocator {
     llist_t *default_options;
     llist_t *address_pools;
 } address_allocator_t;
@@ -51,7 +51,7 @@ int allocator_request_this_address(address_allocator_t *allocator,
 int allocator_request_this_address_str(address_allocator_t *allocator,
         const char *requested_addres, uint32_t *addr_buf);
 
-/* release address allocation (probably will need to refactor) */
+/* release address allocation (probably will need to refactored) */
 int allocator_release_address(address_allocator_t *allocator, uint32_t address);
 int allocator_release_address_str(address_allocator_t *allocator, const char *address);
 
