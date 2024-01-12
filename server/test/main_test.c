@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
         RUN_SUITE(utils);
         RUN_SUITE(pool);
         RUN_SUITE(allocator);
+        RUN_SUITE(packet_parser_builder);
 
         cclogger_uninit();
 

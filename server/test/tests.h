@@ -8,5 +8,6 @@ SUITE(dhcp_options);
 SUITE(utils);
 SUITE(pool);
 SUITE(allocator);
+SUITE(packet_parser_builder);
 
 #endif // !SERVER_TESTS
