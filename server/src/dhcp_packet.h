@@ -84,7 +84,7 @@ int dhcp_packet_parse(dhcp_message_t *m);
  * Builds a raw packet in network byte order (m->dhcp_packet_t) using information 
  * from parent dhcp_message_t struct. This packet is than ready to be sent.
  */
-int dhcp_message_build_packet(dhcp_message_t *m);
+int dhcp_packet_build(dhcp_message_t *m);
 
 /**
  * Allocates space in memory to store a dhcp_message_t struct.

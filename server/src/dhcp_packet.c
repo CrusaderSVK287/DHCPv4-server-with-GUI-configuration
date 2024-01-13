@@ -104,7 +104,7 @@ exit:
         return rv;
 }
 
-int dhcp_message_build_packet(dhcp_message_t *m)
+int dhcp_packet_build(dhcp_message_t *m)
 {
         int rv = -1;
         if_null(m, exit);
