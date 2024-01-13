@@ -44,7 +44,13 @@ void dhcp_option_destroy(dhcp_option_t **option);
  * Parse raw_options[] into multiple dhcp_option_t and put them into the 
  * dest linked list 
  */
-int dhcp_option_raw_parse(llist_t *dest, uint8_t raw_options[]);
+int dhcp_option_parse(llist_t *dest, uint8_t raw_options[]);
+
+/**
+ * Serializes parsed dhcp options from linked list to raw_options,
+ * which can be sent as a part of DHCP message
+ */
+int dhcp_options_serialize(llist_t *options, uint8_t raw_options[]);
 
 /**
  * Retrieve a dhcp_option_t from linked list based on tag 

@@ -86,7 +86,7 @@ int dhcp_packet_parse(dhcp_message_t *m)
         }
 
         if_null(m->dhcp_options, exit);
-        if_failed(dhcp_option_raw_parse(m->dhcp_options, m->packet.options), exit);
+        if_failed(dhcp_option_parse(m->dhcp_options, m->packet.options), exit);
 
         /* 
          * Assign the message a type. This is required by this implementation of 
@@ -109,7 +109,35 @@ int dhcp_message_build_packet(dhcp_message_t *m)
         int rv = -1;
         if_null(m, exit);
 
+        m->packet.opcode = m->opcode;
+        m->packet.htype = m->htype;
+        m->packet.hlen = m->hlen;
+        m->packet.hops = m->hops;
+
+        m->packet.xid = htonl(m->xid);
+        m->packet.secs = htons(m->secs);
+        m->packet.flags = htons(m->flags);
+
+
+        m->packet.ciaddr = htonl(m->ciaddr);
+        m->packet.yiaddr = htonl(m->yiaddr);
+        m->packet.siaddr = htonl(m->siaddr);
+        m->packet.giaddr = htonl(m->giaddr);
+
+        memcpy(m->packet.chaddr, m->chaddr, 16);
+        memcpy(m->packet.sname, m->sname, 64);
+        memcpy(m->packet.filename, m->filename, 128);
         
+        if (m->cookie != MAGIC_COOKIE) {
+                cclog(LOG_WARN, NULL, 
+                        "Created DHCP message has invalid cookie, terminating packet build");
+                goto exit;
+        }
+
+        m->packet.cookie = htonl(m->cookie); 
+
+        if_failed_log(dhcp_options_serialize(m->dhcp_options, m->packet.options), exit, LOG_ERROR,
+                        NULL, "Failed to serialize dhcp options, terminating packet build");
 
         rv = 0;
 exit:

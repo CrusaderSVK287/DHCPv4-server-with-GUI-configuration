@@ -1,6 +1,9 @@
 #include "greatest.h"
 #include "tests.h"
+#include "utils/llist.h"
 #include "utils/xtoy.h"
+#include <cclog_macros.h>
+#include <netinet/in.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -10,6 +13,7 @@
 #include <dhcp_options.h>
 
 static uint8_t raw_dhcp_options[DHCP_PACKET_OPTIONS_SIZE];
+static llist_t *parsed_raw_options = NULL;
 
 TEST test_new_and_destroy()
 {
@@ -21,11 +25,11 @@ TEST test_new_and_destroy()
         PASS();
 }
 
-TEST test_parse_raw_options()
+TEST test_parse_options()
 {
         llist_t *options = llist_new();
         
-        dhcp_option_raw_parse(options, raw_dhcp_options);
+        dhcp_option_parse(options, raw_dhcp_options);
 
         dhcp_option_t *o = dhcp_option_retrieve(options, 0x35);
         ASSERT_NEQ(o, NULL);
@@ -41,16 +45,33 @@ TEST test_parse_raw_options()
         ASSERT_EQ(o->value.ip, 0x70605040);
         ASSERT_STR_EQ("112.96.80.64", uint32_to_ipv4_address(o->value.ip));
 
-        llist_destroy(&options);
+        /* Used in another test, freed there */
+        parsed_raw_options = options;
 
         PASS();
+}
+
+TEST test_serialize_options() 
+{
+        if_null(parsed_raw_options, skip);
+
+        uint8_t serialized[DHCP_PACKET_OPTIONS_SIZE];
+        memset(serialized, 0, DHCP_PACKET_OPTIONS_SIZE);
+        ASSERT_EQ(0, dhcp_options_serialize(parsed_raw_options, serialized));
+
+        ASSERT_MEM_EQ(raw_dhcp_options, serialized, sizeof(raw_dhcp_options));
+
+        llist_destroy(&parsed_raw_options);
+        PASS();
+skip:
+        SKIP();
 }
 
 TEST test_retrieve_option_by_tag()
 {
         llist_t *options = llist_new();
 
-        dhcp_option_raw_parse(options, raw_dhcp_options);
+        dhcp_option_parse(options, raw_dhcp_options);
 
         dhcp_option_t *o = dhcp_option_retrieve(options, 0x35);
         ASSERT_NEQ(o, NULL);
@@ -71,7 +92,7 @@ TEST test_add_option_to_linked_list()
 {
         llist_t *options = llist_new();
 
-        dhcp_option_raw_parse(options, raw_dhcp_options);
+        dhcp_option_parse(options, raw_dhcp_options);
 
         dhcp_option_t *o = dhcp_option_new();
         o->type = DHCP_OPTION_STRING;
@@ -95,7 +116,7 @@ TEST test_add_option_to_linked_list()
 TEST test_parsed_option_numeric()
 {
         llist_t *options = llist_new();
-        dhcp_option_raw_parse(options, raw_dhcp_options);
+        dhcp_option_parse(options, raw_dhcp_options);
         
         dhcp_option_t *o = dhcp_option_retrieve(options, 0x35);
         ASSERT_NEQ(o, NULL);
@@ -109,7 +130,7 @@ TEST test_parsed_option_numeric()
 TEST test_parsed_option_ip()
 {
         llist_t *options = llist_new();
-        dhcp_option_raw_parse(options, raw_dhcp_options);
+        dhcp_option_parse(options, raw_dhcp_options);
 
         dhcp_option_t *o = dhcp_option_retrieve(options, 0x32);
         ASSERT_NEQ(o, NULL);
@@ -123,7 +144,7 @@ TEST test_parsed_option_ip()
 TEST test_parsed_option_boolean()
 {
         llist_t *options = llist_new();
-        dhcp_option_raw_parse(options, raw_dhcp_options);
+        dhcp_option_parse(options, raw_dhcp_options);
 
         dhcp_option_t *o = dhcp_option_retrieve(options, 0x1f);
         ASSERT_NEQ(o, NULL);
@@ -137,7 +158,7 @@ TEST test_parsed_option_boolean()
 TEST test_parsed_option_string()
 {
         llist_t *options = llist_new();
-        dhcp_option_raw_parse(options, raw_dhcp_options);
+        dhcp_option_parse(options, raw_dhcp_options);
 
         dhcp_option_t *o = dhcp_option_retrieve(options, 0x0c);
         ASSERT_NEQ(o, NULL);
@@ -151,7 +172,7 @@ TEST test_parsed_option_string()
 TEST test_parsed_option_binary()
 {
         llist_t *options = llist_new();
-        dhcp_option_raw_parse(options, raw_dhcp_options);
+        dhcp_option_parse(options, raw_dhcp_options);
         uint8_t expected[] = {0x32, 0x1f, 0x0c};
 
         dhcp_option_t *o = dhcp_option_retrieve(options, 0x37);
@@ -166,7 +187,7 @@ TEST test_parsed_option_binary()
 TEST test_parsed_option_numeric_with_multiple_bytes()
 {
         llist_t *options = llist_new();
-        dhcp_option_raw_parse(options, raw_dhcp_options);
+        dhcp_option_parse(options, raw_dhcp_options);
 
         dhcp_option_t *o = dhcp_option_retrieve(options, 0x33);
         ASSERT_NEQ(o, NULL);
@@ -180,7 +201,7 @@ TEST test_parsed_option_numeric_with_multiple_bytes()
 TEST test_parsed_option_ip_trailing_and_leading_zeros()
 {
         llist_t *options = llist_new();
-        dhcp_option_raw_parse(options, raw_dhcp_options);
+        dhcp_option_parse(options, raw_dhcp_options);
 
         dhcp_option_t *o = dhcp_option_retrieve(options, 0x01);
         ASSERT_NEQ(o, NULL);
@@ -215,7 +236,8 @@ SUITE(dhcp_options)
         memcpy(raw_dhcp_options, test_options, sizeof(test_options));
         
         RUN_TEST(test_new_and_destroy);
-        RUN_TEST(test_parse_raw_options);
+        RUN_TEST(test_parse_options);
+        RUN_TEST(test_serialize_options);
         RUN_TEST(test_retrieve_option_by_tag);
         RUN_TEST(test_add_option_to_linked_list);
 

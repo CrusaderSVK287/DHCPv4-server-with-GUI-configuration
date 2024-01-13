@@ -64,15 +64,44 @@ static void parse_option_value_bool(dhcp_option_t *o, uint8_t v[DHCP_OPTION_MAX_
         o->value.boolean = !!v[0];
 }
 
-static void parse_option_value_string(dhcp_option_t *o, uint8_t v[DHCP_OPTION_MAX_LENGHT])
+static void serialize_option_numeric(dhcp_option_t *o, uint8_t raw_options[])
 {
-        memset(o->value.string, 0, DHCP_OPTION_MAX_LENGHT);
-        memcpy(o->value.string, v, o->lenght);
+        for (size_t i = 0; i < o->lenght; i++) {
+                raw_options[o->lenght - i - 1] = (o->value.number >> (8*i)) & 0xff;
+        }
 }
 
-static void parse_option_value_binary(dhcp_option_t *o, uint8_t v[DHCP_OPTION_MAX_LENGHT])
+static void serialize_option_ip(dhcp_option_t *o, uint8_t raw_options[])
 {
-        memcpy(o->value.binary_data, v, DHCP_OPTION_MAX_LENGHT - 1);
+        for (size_t i = 0; i < o->lenght; i++) {
+                //o->value.ip = (o->value.ip << 8) | v[i];
+                raw_options[o->lenght - i - 1] = (o->value.ip >> (8*i)) & 0xff;
+        }
+
+}
+
+static int serialize_option_value(dhcp_option_t *o, uint8_t raw_options[])
+{
+        int rv = -1;
+        if_null(o, exit);
+        if_null(raw_options, exit);
+
+        switch (o->type) {
+                case DHCP_OPTION_NUMERIC: serialize_option_numeric(o, raw_options); break;
+                case DHCP_OPTION_IP:      serialize_option_ip(o, raw_options);      break;
+                case DHCP_OPTION_BIN:
+                case DHCP_OPTION_BOOL:
+                case DHCP_OPTION_STRING:
+                        memcpy(raw_options, o->value.binary_data, o->lenght);
+                        break;
+                default:
+                        cclog(LOG_ERROR, NULL, "Inalid DHCP option type %d", o->type);
+                        goto exit;
+        }
+        rv = 0;
+exit:
+        return rv;
+
 }
 
 static int parse_option_value(dhcp_option_t *o, uint8_t v[DHCP_OPTION_MAX_LENGHT])
@@ -85,8 +114,11 @@ static int parse_option_value(dhcp_option_t *o, uint8_t v[DHCP_OPTION_MAX_LENGHT
                 case DHCP_OPTION_NUMERIC: parse_option_value_numeric(o, v); break;
                 case DHCP_OPTION_IP:      parse_option_value_ip(o, v);      break;
                 case DHCP_OPTION_BOOL:    parse_option_value_bool(o, v);    break;
-                case DHCP_OPTION_STRING:  parse_option_value_string(o, v);  break;
-                case DHCP_OPTION_BIN:     parse_option_value_binary(o, v);  break;
+                case DHCP_OPTION_STRING:  
+                case DHCP_OPTION_BIN:
+                        memset(o->value.binary_data, 0, DHCP_OPTION_MAX_LENGHT);
+                        memcpy(o->value.binary_data, v, o->lenght);
+                        break;
                 default:
                         cclog(LOG_ERROR, NULL, "Inalid DHCP option type %d", o->type);
                         goto exit;
@@ -96,7 +128,7 @@ exit:
         return rv;
 }
 
-int dhcp_option_raw_parse(llist_t *dest, uint8_t raw_options[])
+int dhcp_option_parse(llist_t *dest, uint8_t raw_options[])
 {
         int rv = -1;
         if_null_log(dest, exit, LOG_ERROR, NULL, "destination is NULL");
@@ -126,6 +158,43 @@ int dhcp_option_raw_parse(llist_t *dest, uint8_t raw_options[])
 
                 i += option->lenght;
         }       
+
+        rv = 0;
+exit:
+        return rv;
+}
+
+int dhcp_options_serialize(llist_t *options, uint8_t raw_options[])
+{
+        int rv = -1;
+        if_null(options, exit);
+        if_null(raw_options, exit);
+
+        dhcp_option_t *o = NULL;
+        size_t bytes = 0;
+
+        llist_foreach(options, {
+                o = (dhcp_option_t*)node->data;
+                if (!o)
+                        continue;
+
+                if ((bytes + 2 + o->lenght) > DHCP_PACKET_OPTIONS_SIZE) {
+                        cclog(LOG_INFO, NULL, "Cannot serialize option %d and onwards: maximum "
+                                        "dhcp options size would be exceeded", o->tag);
+                        raw_options[bytes] = 0xff;
+                        goto exit;
+                }
+
+                raw_options[bytes++] = o->tag;
+                raw_options[bytes++] = o->lenght;
+                if_failed_log(serialize_option_value(o, raw_options+bytes), exit, LOG_WARN, NULL, 
+                                "Invalid DHCP option %d value, cannot serialize", o->tag);
+
+                bytes += o->lenght;
+        })
+
+        /* Terminate DHCP options */
+        raw_options[bytes] = 0xff;
 
         rv = 0;
 exit:
