@@ -39,7 +39,7 @@ address_allocator_t* address_allocator_new()
         return a;
 
 error_options:
-        free(a->address_pools);
+        llist_destroy(&(*a).address_pools);
 error_pools:
         free(a);
 error_all:
@@ -51,8 +51,14 @@ void allocator_destroy(address_allocator_t **a)
         if (!(*a))
                 return;
 
+        dhcp_option_destroy_list(&(*a)->default_options);
+        
+        address_pool_t *ap;
+        llist_foreach((*a)->address_pools, {
+                ap = (address_pool_t*) node->data;
+                address_pool_destroy(&ap);
+        })
         llist_destroy(&(*a)->address_pools);
-        llist_destroy(&(*a)->default_options);
 
         free(*a);
         *a = NULL;
@@ -105,7 +111,7 @@ int allocator_add_pool(address_allocator_t *allocator, address_pool_t *pool)
                 goto error;
         }
 
-        if_failed(llist_append(allocator->address_pools, pool, true), error);
+        if_failed(llist_append(allocator->address_pools, pool, false), error);
 
         rv = ALLOCATOR_OK;
 error:
@@ -249,7 +255,7 @@ int allocator_add_dhcp_option(address_allocator_t *allocator, dhcp_option_t *opt
                 goto exit;
         }
 
-        if_failed_log(llist_append(allocator->default_options, option, true), exit,
+        if_failed_log(llist_append(allocator->default_options, option, false), exit,
                         LOG_ERROR, NULL,"Failed to add dhcp option to allocator");
 
         rv = ALLOCATOR_OK;

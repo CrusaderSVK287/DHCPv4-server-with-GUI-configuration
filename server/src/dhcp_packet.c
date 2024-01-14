@@ -162,7 +162,7 @@ void dhcp_message_destroy(dhcp_message_t **m)
         if (!m)
                 return;
 
-        llist_destroy(&(*m)->dhcp_options);
+        dhcp_option_destroy_list(&(*m)->dhcp_options);
         
         free(*m);
         *m = NULL;

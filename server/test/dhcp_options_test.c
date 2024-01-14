@@ -61,7 +61,7 @@ TEST test_serialize_options()
 
         ASSERT_MEM_EQ(raw_dhcp_options, serialized, sizeof(raw_dhcp_options));
 
-        llist_destroy(&parsed_raw_options);
+        dhcp_option_destroy_list(&parsed_raw_options);
         PASS();
 skip:
         SKIP();
@@ -83,7 +83,7 @@ TEST test_retrieve_option_by_tag()
         ASSERT_EQ(o->type, DHCP_OPTION_IP);
         ASSERT_EQ(o->tag, DHCP_OPTION_REQUESTED_IP_ADDRESS);
 
-        llist_destroy(&options);
+        dhcp_option_destroy_list(&options);
 
         PASS();
 }
@@ -108,7 +108,7 @@ TEST test_add_option_to_linked_list()
         ASSERT_EQ(o->type, DHCP_OPTION_STRING);
         ASSERT_STR_EQ(o->value.string, "192.168.1.1");
 
-        llist_destroy(&options);
+        dhcp_option_destroy_list(&options);
 
         PASS();
 }
@@ -123,7 +123,7 @@ TEST test_parsed_option_numeric()
         ASSERT_EQ(o->type, DHCP_OPTION_NUMERIC);
         ASSERT_EQ(o->value.number, 0x03);
 
-        llist_destroy(&options);
+        dhcp_option_destroy_list(&options);
         PASS();
 }
 
@@ -137,7 +137,7 @@ TEST test_parsed_option_ip()
         ASSERT_EQ(o->type, DHCP_OPTION_IP);
         ASSERT_EQ(o->value.ip, 0x70605040);
 
-        llist_destroy(&options);
+        dhcp_option_destroy_list(&options);
         PASS();
 }
 
@@ -151,7 +151,7 @@ TEST test_parsed_option_boolean()
         ASSERT_EQ(o->type, DHCP_OPTION_BOOL);
         ASSERT_EQ(o->value.boolean, true);
 
-        llist_destroy(&options);
+        dhcp_option_destroy_list(&options);
         PASS();
 }
 
@@ -165,7 +165,7 @@ TEST test_parsed_option_string()
         ASSERT_EQ(o->type, DHCP_OPTION_STRING);
         ASSERT_STRN_EQ(o->value.string, "MyDevice", o->lenght);
 
-        llist_destroy(&options);
+        dhcp_option_destroy_list(&options);
         PASS();
 }
 
@@ -180,7 +180,7 @@ TEST test_parsed_option_binary()
         ASSERT_EQ(o->type, DHCP_OPTION_BIN);
         ASSERT_MEM_EQ(o->value.binary_data, expected, o->lenght);
 
-        llist_destroy(&options);
+        dhcp_option_destroy_list(&options);
         PASS();
 }
 
@@ -194,7 +194,7 @@ TEST test_parsed_option_numeric_with_multiple_bytes()
         ASSERT_EQ(o->type, DHCP_OPTION_NUMERIC);
         ASSERT_EQ(o->value.number, 0x00015180);
 
-        llist_destroy(&options);
+        dhcp_option_destroy_list(&options);
         PASS();
 }
 
@@ -213,7 +213,7 @@ TEST test_parsed_option_ip_trailing_and_leading_zeros()
         ASSERT_EQ(o->type, DHCP_OPTION_IP);
         ASSERT_EQ(o->value.ip, 0x00005040);
         
-        llist_destroy(&options);
+        dhcp_option_destroy_list(&options);
         PASS();
 }
 

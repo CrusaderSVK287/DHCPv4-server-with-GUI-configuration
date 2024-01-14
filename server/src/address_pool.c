@@ -60,7 +60,8 @@ address_pool_t* address_pool_new(const char *name, uint32_t start_address,
 
         pool->start_address = start_address;
         pool->end_address = end_address;
-        pool->name = name;
+        pool->name = strdup(name);
+        if_null(pool->name, error_options);
         pool->mask = subnet_mask;
         pool->dhcp_option_override = llist_new();
         if_null(pool->dhcp_option_override, error_options);
@@ -84,7 +85,7 @@ address_pool_t* address_pool_new(const char *name, uint32_t start_address,
         return pool;
 
 error_leases:
-        llist_destroy(&pool->dhcp_option_override);
+        dhcp_option_destroy_list(&pool->dhcp_option_override);
 error_options:
         free(pool);
 error:
@@ -106,8 +107,9 @@ void address_pool_destroy(address_pool_t **pool)
         if (!pool || !(*pool))
                 return;
 
-        llist_destroy(&(*pool)->dhcp_option_override);
+        dhcp_option_destroy_list(&(*pool)->dhcp_option_override);
         free((*pool)->leases_bm);
+        free((*pool)->name);
         free(*pool);
         *pool = NULL;
 }

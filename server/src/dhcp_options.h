@@ -41,6 +41,11 @@ dhcp_option_t* dhcp_option_new();
 void dhcp_option_destroy(dhcp_option_t **option);
 
 /**
+ * Destroys list of DHCP options 
+ */
+void dhcp_option_destroy_list(llist_t **ll);
+
+/**
  * Parse raw_options[] into multiple dhcp_option_t and put them into the 
  * dest linked list 
  */

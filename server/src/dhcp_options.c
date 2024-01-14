@@ -216,7 +216,7 @@ error:
 
 int dhcp_option_add(llist_t *dest, dhcp_option_t *option)
 {
-        return llist_append(dest, option, true);
+        return llist_append(dest, option, false);
 }
 
 dhcp_option_t* dhcp_option_new()
@@ -230,10 +230,24 @@ dhcp_option_t* dhcp_option_new()
 
 void dhcp_option_destroy(dhcp_option_t **option)
 {
-        if (!(*option))
+        if (!option || !(*option))
                 return;
 
         free(*option);
         *option = NULL;
 }
 
+void dhcp_option_destroy_list(llist_t **ll)
+{
+        if (!ll)
+                return;
+
+        dhcp_option_t *o;
+
+        llist_foreach(*ll, {
+                o = (dhcp_option_t*)node->data;
+                dhcp_option_destroy(&o);
+        })
+
+        llist_destroy(ll);
+}

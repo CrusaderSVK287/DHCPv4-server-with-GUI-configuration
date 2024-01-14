@@ -12,28 +12,28 @@ static address_allocator_t *a;
 
 TEST test_create_and_destroy_allocator()
 {
-        address_allocator_t *a = address_allocator_new();
-        ASSERT_NEQ(a, NULL);
+        address_allocator_t *allocator = address_allocator_new();
+        ASSERT_NEQ(allocator, NULL);
 
-        allocator_destroy(&a);
-        ASSERT_EQ(a, NULL);
+        allocator_destroy(&allocator);
+        ASSERT_EQ(allocator, NULL);
 
         PASS();
 }
 
 TEST test_allocator_add_pool()
 {
-        address_allocator_t *a = address_allocator_new();
-        ASSERT_NEQ(a, NULL);
+        address_allocator_t *allocator = address_allocator_new();
+        ASSERT_NEQ(allocator, NULL);
 
         address_pool_t *p = address_pool_new_str("test", "192.168.1.1", "192.168.1.254", "255.255.255.0");
         ASSERT_NEQ(p, NULL);
 
-        ASSERT_EQ (ALLOCATOR_OK ,allocator_add_pool(a, p));
-        ASSERT_NEQ (NULL, a->address_pools->first);
-        ASSERT_EQ (a->address_pools->first, a->address_pools->last);
+        ASSERT_EQ (ALLOCATOR_OK ,allocator_add_pool(allocator, p));
+        ASSERT_NEQ (NULL, allocator->address_pools->first);
+        ASSERT_EQ (allocator->address_pools->first, allocator->address_pools->last);
 
-        allocator_destroy(&a);
+        allocator_destroy(&allocator);
         PASS();
 }
 

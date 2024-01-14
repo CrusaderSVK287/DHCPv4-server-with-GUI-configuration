@@ -4,8 +4,11 @@
 #include "utils/llist.h"
 #include <stdbool.h>
 #include <stdint.h>
+
+#define ADDRESS_POOL_NAME_MAX_LENGHT 64
+
 typedef struct pool {
-    const char *name;
+    char *name;
 
     uint32_t start_address;
     uint32_t end_address;
