@@ -14,5 +14,8 @@ enum dhcp_message_type {
     DHCP_INFORM = 8
 };
 
+/* Convert dhcp_message_type enum to string */
+const char* rfc2131_dhcp_message_type_to_str(enum dhcp_message_type t);
+
 #endif // !__RFC_2131_H__
 

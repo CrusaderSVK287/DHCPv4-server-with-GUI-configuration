@@ -1,7 +1,14 @@
 #include "dhcp_server.h"
+#include "RFC/RFC-2131.h"
+#include "cclog.h"
 #include "cclog_macros.h"
 #include "dhcp_packet.h"
 #include "logging.h"
+#include "messages/DHCPDECLINE.h"
+#include "messages/DHCPDISCOVER.h"
+#include "messages/DHCPINFORM.h"
+#include "messages/DHCPRELEASE.h"
+#include "messages/DHCPREQUEST.h"
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -101,7 +108,30 @@ int dhcp_server_serve(dhcp_server_t *server)
 			continue;
 		}
 
-		dhcp_packet_dump(&dhcp_msg->packet);
+                /* Parse the packet, errors in packet parsing are handled in the parse function */
+                rv = dhcp_packet_parse(dhcp_msg);
+                if (rv < 0)
+                        continue;
+
+                switch (dhcp_msg->type) {
+                        case DHCP_DISCOVER: message_DHCPDISCOVER_handle(server, dhcp_msg); break;
+                        case DHCP_REQUEST:  message_DHCPREQUEST_handle(server, dhcp_msg);  break;
+                        case DHCP_DECLINE:  message_DHCPDECLINE_handle(server, dhcp_msg);  break;
+                        case DHCP_INFORM:   message_DHCPINFORM_handle(server, dhcp_msg);   break;
+                        case DHCP_RELEASE:  message_DHCPRELEASE_handle(server, dhcp_msg);  break;
+
+                        case DHCP_OFFER:
+                        case DHCP_ACK:
+                        case DHCP_NAK:
+                                cclog(LOG_INFO, NULL, "Received message of type %d, "
+                                        "server cannot handle, dropping", dhcp_msg->type);
+                                break;
+
+                        default:
+                                cclog(LOG_WARN, NULL, "Invalid DHCP message type received (%d), "
+                                                "dropping message", dhcp_msg->type);
+                                break;
+                }
 
 	} while (server_keep_running);
 
