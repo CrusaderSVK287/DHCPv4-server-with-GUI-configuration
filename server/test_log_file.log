@@ -1,0 +1,98 @@
+[2024-1-21_0:10:17]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.5.130 - 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:10:17]src/address_pool.c:22:Cannot create pool with range 192.168.5.130 to 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:10:17]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.1.0 - 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:10:17]src/address_pool.c:22:Cannot create pool with range 192.168.1.0 to 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:10:17]src/address_pool.c:22:Cannot create pool with range 192.168.1.254 to 192.168.1.1 on subnet 255.255.255.0
+[2024-1-21_0:10:17]src/allocator.c:175:Pool named nonexistentpool wasnt found, make sure it exists
+[2024-1-21_0:10:17]src/allocator.c:275:Option with tag 200 doesnt exist
+[2024-1-21_0:10:17]src/allocator.c:118:Error creating pool pool:(-5) Pool already exists
+[2024-1-21_0:10:17]src/lease.c:153:Cannot add lease, failed to open /etc/dhcp/lease/tmp_pool.lease file
+[2024-1-21_0:12:25]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.5.130 - 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:12:25]src/address_pool.c:22:Cannot create pool with range 192.168.5.130 to 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:12:25]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.1.0 - 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:12:25]src/address_pool.c:22:Cannot create pool with range 192.168.1.0 to 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:12:25]src/address_pool.c:22:Cannot create pool with range 192.168.1.254 to 192.168.1.1 on subnet 255.255.255.0
+[2024-1-21_0:12:25]src/allocator.c:175:Pool named nonexistentpool wasnt found, make sure it exists
+[2024-1-21_0:12:25]src/allocator.c:275:Option with tag 200 doesnt exist
+[2024-1-21_0:12:25]src/allocator.c:118:Error creating pool pool:(-5) Pool already exists
+[2024-1-21_0:12:25]src/lease.c:153:Cannot add lease, failed to open /etc/dhcp/lease/tmp_pool.lease file
+[2024-1-21_0:23:0]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.5.130 - 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:23:0]src/address_pool.c:22:Cannot create pool with range 192.168.5.130 to 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:23:0]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.1.0 - 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:23:0]src/address_pool.c:22:Cannot create pool with range 192.168.1.0 to 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:23:0]src/address_pool.c:22:Cannot create pool with range 192.168.1.254 to 192.168.1.1 on subnet 255.255.255.0
+[2024-1-21_0:23:0]src/allocator.c:175:Pool named nonexistentpool wasnt found, make sure it exists
+[2024-1-21_0:23:0]src/allocator.c:275:Option with tag 200 doesnt exist
+[2024-1-21_0:23:0]src/allocator.c:118:Error creating pool pool:(-5) Pool already exists
+[2024-1-21_0:25:49]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.5.130 - 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:25:49]src/address_pool.c:22:Cannot create pool with range 192.168.5.130 to 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:25:49]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.1.0 - 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:25:49]src/address_pool.c:22:Cannot create pool with range 192.168.1.0 to 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:25:49]src/address_pool.c:22:Cannot create pool with range 192.168.1.254 to 192.168.1.1 on subnet 255.255.255.0
+[2024-1-21_0:25:49]src/allocator.c:175:Pool named nonexistentpool wasnt found, make sure it exists
+[2024-1-21_0:25:49]src/allocator.c:275:Option with tag 200 doesnt exist
+[2024-1-21_0:25:49]src/allocator.c:118:Error creating pool pool:(-5) Pool already exists
+[2024-1-21_0:26:44]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.5.130 - 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:26:44]src/address_pool.c:22:Cannot create pool with range 192.168.5.130 to 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:26:44]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.1.0 - 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:26:44]src/address_pool.c:22:Cannot create pool with range 192.168.1.0 to 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:26:44]src/address_pool.c:22:Cannot create pool with range 192.168.1.254 to 192.168.1.1 on subnet 255.255.255.0
+[2024-1-21_0:26:44]src/allocator.c:175:Pool named nonexistentpool wasnt found, make sure it exists
+[2024-1-21_0:26:44]src/allocator.c:275:Option with tag 200 doesnt exist
+[2024-1-21_0:26:44]src/allocator.c:118:Error creating pool pool:(-5) Pool already exists
+[2024-1-21_0:27:30]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.5.130 - 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:27:30]src/address_pool.c:22:Cannot create pool with range 192.168.5.130 to 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:27:30]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.1.0 - 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:27:30]src/address_pool.c:22:Cannot create pool with range 192.168.1.0 to 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:27:30]src/address_pool.c:22:Cannot create pool with range 192.168.1.254 to 192.168.1.1 on subnet 255.255.255.0
+[2024-1-21_0:27:30]src/allocator.c:175:Pool named nonexistentpool wasnt found, make sure it exists
+[2024-1-21_0:27:30]src/allocator.c:275:Option with tag 200 doesnt exist
+[2024-1-21_0:27:30]src/allocator.c:118:Error creating pool pool:(-5) Pool already exists
+[2024-1-21_0:28:14]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.5.130 - 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:28:14]src/address_pool.c:22:Cannot create pool with range 192.168.5.130 to 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:28:14]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.1.0 - 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:28:14]src/address_pool.c:22:Cannot create pool with range 192.168.1.0 to 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:28:14]src/address_pool.c:22:Cannot create pool with range 192.168.1.254 to 192.168.1.1 on subnet 255.255.255.0
+[2024-1-21_0:28:14]src/allocator.c:175:Pool named nonexistentpool wasnt found, make sure it exists
+[2024-1-21_0:28:14]src/allocator.c:275:Option with tag 200 doesnt exist
+[2024-1-21_0:28:14]src/allocator.c:118:Error creating pool pool:(-5) Pool already exists
+[2024-1-21_0:30:7]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.5.130 - 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:30:7]src/address_pool.c:22:Cannot create pool with range 192.168.5.130 to 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:30:7]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.1.0 - 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:30:7]src/address_pool.c:22:Cannot create pool with range 192.168.1.0 to 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:30:7]src/address_pool.c:22:Cannot create pool with range 192.168.1.254 to 192.168.1.1 on subnet 255.255.255.0
+[2024-1-21_0:30:7]src/allocator.c:175:Pool named nonexistentpool wasnt found, make sure it exists
+[2024-1-21_0:30:7]src/allocator.c:275:Option with tag 200 doesnt exist
+[2024-1-21_0:30:7]src/allocator.c:118:Error creating pool pool:(-5) Pool already exists
+[2024-1-21_0:31:51]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.5.130 - 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:31:51]src/address_pool.c:22:Cannot create pool with range 192.168.5.130 to 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:31:51]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.1.0 - 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:31:51]src/address_pool.c:22:Cannot create pool with range 192.168.1.0 to 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:31:51]src/address_pool.c:22:Cannot create pool with range 192.168.1.254 to 192.168.1.1 on subnet 255.255.255.0
+[2024-1-21_0:31:51]src/allocator.c:175:Pool named nonexistentpool wasnt found, make sure it exists
+[2024-1-21_0:31:51]src/allocator.c:275:Option with tag 200 doesnt exist
+[2024-1-21_0:31:51]src/allocator.c:118:Error creating pool pool:(-5) Pool already exists
+[2024-1-21_0:32:19]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.5.130 - 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:32:19]src/address_pool.c:22:Cannot create pool with range 192.168.5.130 to 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:32:19]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.1.0 - 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:32:19]src/address_pool.c:22:Cannot create pool with range 192.168.1.0 to 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:32:19]src/address_pool.c:22:Cannot create pool with range 192.168.1.254 to 192.168.1.1 on subnet 255.255.255.0
+[2024-1-21_0:32:19]src/allocator.c:175:Pool named nonexistentpool wasnt found, make sure it exists
+[2024-1-21_0:32:19]src/allocator.c:275:Option with tag 200 doesnt exist
+[2024-1-21_0:32:19]src/allocator.c:118:Error creating pool pool:(-5) Pool already exists
+[2024-1-21_0:36:42]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.5.130 - 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:36:42]src/address_pool.c:22:Cannot create pool with range 192.168.5.130 to 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_0:36:42]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.1.0 - 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:36:42]src/address_pool.c:22:Cannot create pool with range 192.168.1.0 to 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_0:36:42]src/address_pool.c:22:Cannot create pool with range 192.168.1.254 to 192.168.1.1 on subnet 255.255.255.0
+[2024-1-21_0:36:42]src/allocator.c:175:Pool named nonexistentpool wasnt found, make sure it exists
+[2024-1-21_0:36:42]src/allocator.c:275:Option with tag 200 doesnt exist
+[2024-1-21_0:36:42]src/allocator.c:118:Error creating pool pool:(-5) Pool already exists
+[2024-1-21_1:1:9]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.5.130 - 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_1:1:9]src/address_pool.c:22:Cannot create pool with range 192.168.5.130 to 192.168.8.138 on subnet 255.255.255.0
+[2024-1-21_1:1:9]src/address_pool.c:22:Invalid start and end addresses in pool 192.168.1.0 - 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_1:1:9]src/address_pool.c:22:Cannot create pool with range 192.168.1.0 to 192.168.1.255 on subnet 255.255.255.0
+[2024-1-21_1:1:9]src/address_pool.c:22:Cannot create pool with range 192.168.1.254 to 192.168.1.1 on subnet 255.255.255.0
+[2024-1-21_1:1:9]src/allocator.c:175:Pool named nonexistentpool wasnt found, make sure it exists
+[2024-1-21_1:1:9]src/allocator.c:275:Option with tag 200 doesnt exist
+[2024-1-21_1:1:9]src/allocator.c:118:Error creating pool pool:(-5) Pool already exists

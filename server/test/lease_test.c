@@ -214,11 +214,11 @@ TEST test_remove_lease()
 SUITE(lease)
 {
         RUN_TEST(test_undef_lease_path_for_testing);
-        if (lease_path_ok < 0) {
-                printf("LEASE_PATH_PREFIX does not equal ./test/test_leases, skipping lease tests\n"
-                                "Uncomment line 8 (#define LEASES_TEST_BUILD)"
-                                "of file lease.h to enabled lease tests\n");
-        }
+        // if (lease_path_ok < 0) {
+        //         printf("LEASE_PATH_PREFIX does not equal ./test/test_leases, skipping lease tests\n"
+        //                         "Uncomment line 8 (#define LEASES_TEST_BUILD)"
+        //                         "of file lease.h to enabled lease tests\n");
+        // }
 
         RUN_TEST(test_lease_file_init);
         RUN_TEST(test_add_leases);
