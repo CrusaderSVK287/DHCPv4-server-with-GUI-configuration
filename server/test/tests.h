@@ -3,11 +3,6 @@
 
 #include "greatest.h"
 
-#ifdef LEASE_PATH_PREFIX
-#undef LEASE_PATH_PREFIX
-#define LEASE_PATH_PREFIX "./test/test_leases"
-#endif // LEASE_PATH_PREFIX
-
 SUITE(linked_list);
 SUITE(dhcp_options);
 SUITE(utils);
