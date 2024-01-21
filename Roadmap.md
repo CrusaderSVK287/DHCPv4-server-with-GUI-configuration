@@ -9,7 +9,7 @@ This roadmap may change in future
 * Make DORA handshake with multiple clients from pool:
     - Logging setup (CCLog) [Done - commit f82c0a834e15434ec4631010c01f8e079e3c191a]
     - Server logic
-    - DHCP message parser and builder
+    - DHCP message parser and builder [Done - commit d661b10d5e470c9151353485ac3dda4a361db6fc]
     - Basic IP allocator API [Done - commit 190e4cc3f95ecebca981bb1a2a1635d7da70de7c]
 * UNIX server and commands implementation for configuring:
     - UNIX server for ipc communication with gui
