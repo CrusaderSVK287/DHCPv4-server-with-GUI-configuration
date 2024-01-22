@@ -14,6 +14,11 @@ enum dhcp_message_type {
     DHCP_INFORM = 8
 };
 
+enum bootp_opcode {
+    BOOTREQUEST = 1,
+    BOOTREPLY   = 2,
+};
+
 /* Convert dhcp_message_type enum to string */
 const char* rfc2131_dhcp_message_type_to_str(enum dhcp_message_type t);
 

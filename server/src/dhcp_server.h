@@ -1,8 +1,11 @@
 #ifndef __DHCP_SERVER_H__
 #define __DHCP_SERVER_H__
 
+#include "allocator.h"
+
 typedef struct dhcp_server {
     int sock_fd;
+    address_allocator_t *allocator;
 } dhcp_server_t;
 
 /**

@@ -1,16 +1,15 @@
 #include "dhcp_server.h"
 #include "RFC/RFC-2131.h"
+#include "allocator.h"
 #include "cclog.h"
 #include "cclog_macros.h"
 #include "dhcp_packet.h"
 #include "logging.h"
-#include "messages/DHCPDECLINE.h"
-#include "messages/DHCPDISCOVER.h"
-#include "messages/DHCPINFORM.h"
-#include "messages/DHCPRELEASE.h"
-#include "messages/DHCPREQUEST.h"
+#include "messages/dhcp_messages.h"
+#include "utils/xtoy.h"
 
 #include <arpa/inet.h>
+#include <stdint.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -69,8 +68,10 @@ int init_dhcp_server(dhcp_server_t *server)
 	}
 	cclog(LOG_MSG, NULL, "Signal handler set successfully");
 
+        server->allocator = address_allocator_new();
+        if_null_log(server->allocator, exit, LOG_CRITICAL, NULL, "Failed to initialise server allocator");
+
 	rv = 0;
-	
 exit:
 	return rv;
 }
@@ -82,6 +83,7 @@ int uninit_dhcp_server(dhcp_server_t *server)
 	if_null_log(server, exit, LOG_INFO, NULL, "server parameter is null");
 
 	if_failed_log(close(server->sock_fd), exit, LOG_ERROR, NULL, "Failed to close socket");
+        allocator_destroy(&server->allocator);
 
 	cclog(LOG_MSG, NULL, "Server stoped successfully");
 	rv = 0;
@@ -109,23 +111,25 @@ int dhcp_server_serve(dhcp_server_t *server)
 		}
 
                 /* Parse the packet, errors in packet parsing are handled in the parse function */
-                rv = dhcp_packet_parse(dhcp_msg);
-                if (rv < 0)
+                if (dhcp_packet_parse(dhcp_msg) < 0)
                         continue;
 
-                switch (dhcp_msg->type) {
-                        case DHCP_DISCOVER: message_DHCPDISCOVER_handle(server, dhcp_msg); break;
-                        case DHCP_REQUEST:  message_DHCPREQUEST_handle(server, dhcp_msg);  break;
-                        case DHCP_DECLINE:  message_DHCPDECLINE_handle(server, dhcp_msg);  break;
-                        case DHCP_INFORM:   message_DHCPINFORM_handle(server, dhcp_msg);   break;
-                        case DHCP_RELEASE:  message_DHCPRELEASE_handle(server, dhcp_msg);  break;
+                /* If we capture a message sent by a server, drop it */
+                if (dhcp_msg->type == DHCP_OFFER || 
+                        dhcp_msg->type == DHCP_ACK || 
+                        dhcp_msg->type == DHCP_NAK)
+                        continue;
 
-                        case DHCP_OFFER:
-                        case DHCP_ACK:
-                        case DHCP_NAK:
-                                cclog(LOG_INFO, NULL, "Received message of type %d, "
-                                        "server cannot handle, dropping", dhcp_msg->type);
-                                break;
+                cclog(LOG_MSG, NULL, "Received message of type %s from %s", 
+                                rfc2131_dhcp_message_type_to_str(dhcp_msg->type),
+                                uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr));
+
+                switch (dhcp_msg->type) {
+                        case DHCP_DISCOVER: message_dhcpdiscover_handle(server, dhcp_msg); break;
+                        case DHCP_REQUEST:  message_dhcprequest_handle(server, dhcp_msg);  break;
+                        case DHCP_DECLINE:  message_dhcpdecline_handle(server, dhcp_msg);  break;
+                        case DHCP_INFORM:   message_dhcpinform_handle(server, dhcp_msg);   break;
+                        case DHCP_RELEASE:  message_dhcprelease_handle(server, dhcp_msg);  break;
 
                         default:
                                 cclog(LOG_WARN, NULL, "Invalid DHCP message type received (%d), "

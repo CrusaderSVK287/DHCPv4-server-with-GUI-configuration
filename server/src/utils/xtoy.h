@@ -12,5 +12,10 @@ const char* uint32_to_ipv4_address(uint32_t a);
 
 uint32_t ipv4_address_to_uint32(const char *s);
 
+/* Convert uint8 array of size 6 to string mac and vice versa */
+void mac_to_uint8_array(const char *mac, uint8_t array[]);
+
+const char *uint8_array_to_mac(uint8_t mac[]);
+
 #endif // !__XTOY_H__
 

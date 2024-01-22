@@ -33,6 +33,9 @@ typedef struct dhcp_option {
  * Allocate memory for dhcp_option_t struct */
 dhcp_option_t* dhcp_option_new();
 
+/* Same as dhcp_option_new, but you can specify parameters */
+dhcp_option_t* dhcp_option_new_values(int tag, int lenght, void* value);
+
 /**
  * Frees memory allocated to dhcp_option_t struct. Dont call for options inside 
  * a linked list! Do llist_append(list, option, true) instead or use

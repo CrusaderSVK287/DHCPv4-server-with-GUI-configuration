@@ -6,7 +6,7 @@
 
 #include <stdint.h>
 
-#define CHADDR_STRLEN 18
+#define CHADDR_LEN 18
 
 /*
  * Raw dhcp packet as received from recv() syscall. 
@@ -61,7 +61,7 @@ typedef struct dhcp_message {
     uint32_t siaddr;
     uint32_t giaddr;
     
-    char chaddr[CHADDR_STRLEN];
+    char chaddr[CHADDR_LEN];
     char sname[64];
     char filename[128];
     uint32_t cookie;

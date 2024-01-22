@@ -6,7 +6,7 @@
 #include "../dhcp_packet.h"
 
 /* Handle DHCPINFORM messages */
-int message_DHCPINFORM_handle(dhcp_server_t *server, dhcp_message_t *message);
+int message_dhcpinform_handle(dhcp_server_t *server, dhcp_message_t *message);
 
 #endif // !__DHCPINFORM_H__
 

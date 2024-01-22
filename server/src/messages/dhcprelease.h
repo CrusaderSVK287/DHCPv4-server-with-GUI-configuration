@@ -6,7 +6,7 @@
 #include "../dhcp_packet.h"
 
 /* Handle DHCPRELEASE messages */
-int message_DHCPRELEASE_handle(dhcp_server_t *server, dhcp_message_t *message);
+int message_dhcprelease_handle(dhcp_server_t *server, dhcp_message_t *message);
 
 #endif // !__DHCPRELEASE_H__
 

@@ -22,6 +22,7 @@ static enum dhcp_option_type option_tag_to_type(int tag) {
         case DHCP_OPTION_SUBNET_MASK:
         case DHCP_OPTION_ROUTER:
         case DHCP_OPTION_REQUESTED_IP_ADDRESS:
+        case DHCP_OPTION_SERVER_IDENTIFIER:
                 return DHCP_OPTION_IP;
 
         case DHCP_OPTION_DHCP_MESSAGE_TYPE:
@@ -227,6 +228,22 @@ dhcp_option_t* dhcp_option_new()
 
         return o;
 }
+
+dhcp_option_t* dhcp_option_new_values(int tag, int lenght, void* value)
+{
+        dhcp_option_t *o = dhcp_option_new();
+        if_null(o, error);
+
+        o->tag = tag;
+        o->lenght = lenght;
+        memcpy(o->value.binary_data, value, lenght);
+        o->type = option_tag_to_type(tag);
+
+        return o;
+error:
+        return NULL;
+}
+
 
 void dhcp_option_destroy(dhcp_option_t **option)
 {

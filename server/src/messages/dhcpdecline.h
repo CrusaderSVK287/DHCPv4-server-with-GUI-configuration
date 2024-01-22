@@ -6,7 +6,7 @@
 #include "../dhcp_packet.h"
 
 /* Handle DHCPDECLINE messages */
-int message_DHCPDECLINE_handle(dhcp_server_t *server, dhcp_message_t *message);
+int message_dhcpdecline_handle(dhcp_server_t *server, dhcp_message_t *message);
 
 #endif // !__DHCPDECLINE_H__
 

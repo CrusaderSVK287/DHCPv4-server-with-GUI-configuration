@@ -25,6 +25,33 @@ TEST test_new_and_destroy()
         PASS();
 }
 
+TEST test_new_with_parameters()
+{
+        uint32_t lease_time = 86400;
+        dhcp_option_t *o = dhcp_option_new_values(DHCP_OPTION_IP_ADDRESS_LEASE_TIME,
+                                                  4, &lease_time);
+        ASSERT_NEQ(NULL, o);
+        ASSERT_EQ(DHCP_OPTION_IP_ADDRESS_LEASE_TIME, o->tag);
+        ASSERT_EQ(DHCP_OPTION_NUMERIC, o->type);
+        ASSERT_EQ(4, o->lenght);
+        ASSERT_EQ(lease_time, o->value.number);
+
+        uint32_t ip = ipv4_address_to_uint32("192.168.5.20");
+        dhcp_option_t *o_ip = dhcp_option_new_values(DHCP_OPTION_SERVER_IDENTIFIER,
+                                                  4, &ip);
+        ASSERT_NEQ(NULL, o_ip);
+        ASSERT_EQ(DHCP_OPTION_SERVER_IDENTIFIER, o_ip->tag);
+        ASSERT_EQ(DHCP_OPTION_IP, o_ip->type);
+        ASSERT_EQ(4, o_ip->lenght);
+        ASSERT_EQ(ip, o_ip->value.ip);
+
+        dhcp_option_destroy(&o);
+        ASSERT_EQ(NULL, o);
+        dhcp_option_destroy(&o_ip);
+        ASSERT_EQ(NULL, o_ip);
+        PASS();
+}
+
 TEST test_parse_options()
 {
         llist_t *options = llist_new();
@@ -236,6 +263,7 @@ SUITE(dhcp_options)
         memcpy(raw_dhcp_options, test_options, sizeof(test_options));
         
         RUN_TEST(test_new_and_destroy);
+        RUN_TEST(test_new_with_parameters);
         RUN_TEST(test_parse_options);
         RUN_TEST(test_serialize_options);
         RUN_TEST(test_retrieve_option_by_tag);

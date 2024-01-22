@@ -6,7 +6,7 @@
 #include "../dhcp_packet.h"
 
 /* Handle DHCPNAK messages */
-int message_DHCPNAK_send(dhcp_server_t *server, dhcp_message_t *message);
+int message_dhcpnak_send(dhcp_server_t *server, dhcp_message_t *message);
 
 #endif // !__DHCPNAK_H__
 
