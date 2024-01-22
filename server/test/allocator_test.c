@@ -263,6 +263,37 @@ TEST test_allocator_add_duplicite_option()
         PASS();
 }
 
+TEST test_get_pool_by_name()
+{
+        if (!a)
+                SKIP();
+
+        ASSERT_NEQ(NULL, allocator_get_pool_by_name(a, "pool"));
+        ASSERT_NEQ(NULL, allocator_get_pool_by_name(a, "small_pool"));
+        ASSERT_EQ(NULL, allocator_get_pool_by_name(a, "nonexistentpool"));
+
+        PASS();
+}
+
+TEST test_get_pool_by_address()
+{
+        if (!a)
+                SKIP();
+
+        address_pool_t *p = allocator_get_pool_by_address(a, ipv4_address_to_uint32("192.168.1.100"));
+        ASSERT_NEQ(NULL, p);
+        ASSERT_STR_EQ("pool", p->name);
+
+        p = allocator_get_pool_by_address(a, ipv4_address_to_uint32("192.168.10.15"));
+        ASSERT_NEQ(NULL, p);
+        ASSERT_STR_EQ("small_pool", p->name);
+
+        p = allocator_get_pool_by_address(a, ipv4_address_to_uint32("100.100.100.150"));
+        ASSERT_EQ(NULL, p);
+        
+        PASS();
+}
+
 SUITE(allocator)
 {
         a = address_allocator_new();
@@ -290,6 +321,8 @@ SUITE(allocator)
         RUN_TEST(test_allocator_add_duplicite_option);
         RUN_TEST(test_request_already_assigned_address);
         RUN_TEST(test_release_address_not_in_use);
+        RUN_TEST(test_get_pool_by_name);
+        RUN_TEST(test_get_pool_by_address);
 
         if (a)
                 allocator_destroy(&a);

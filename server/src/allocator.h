@@ -30,6 +30,9 @@ typedef struct allocator {
  */
 address_allocator_t* address_allocator_new();
 
+/* Convert allocator API return value to string error representation */
+const char* allocator_strerror(enum allocator_status s);
+
 /**
  * Destroys allocator and all its members, sets the pointer to NULL
  */
@@ -65,5 +68,10 @@ int allocator_change_dhcp_option(address_allocator_t *allocator, uint32_t tag,
 /* Check if address is available for lease */
 bool allocator_is_address_available(address_allocator_t *allocator, uint32_t address);
 bool allocator_is_address_available_str(address_allocator_t *allocator, const char *address);
+
+/* Return address_pool_t that contains address addr */
+address_pool_t* allocator_get_pool_by_address(address_allocator_t *a, uint32_t addr);
+/* Return address_pool_t by its name */
+address_pool_t* allocator_get_pool_by_name(address_allocator_t* a, const char* name);
 
 #endif /* __ALLOCATOR_H__ */

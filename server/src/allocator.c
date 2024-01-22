@@ -11,9 +11,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const char* allocator_error_str(int err)
+const char* allocator_strerror(enum allocator_status s)
 {
-        switch (err) {
+        switch (s) {
                 case ALLOCATOR_OK: return "OK";
                 case ALLOCATOR_ERROR: return "Error";
                 case ALLOCATOR_POOL_DUPLICITE: return "Pool already exists";
@@ -64,7 +64,7 @@ void allocator_destroy(address_allocator_t **a)
         *a = NULL;
 }
 
-static address_pool_t* allocator_get_pool_by_address(address_allocator_t *a, uint32_t addr)
+address_pool_t* allocator_get_pool_by_address(address_allocator_t *a, uint32_t addr)
 {
         if_null(a, exit);
 
@@ -81,7 +81,7 @@ exit:
 }
 
 /* Returns pool from list of pools by name. If the pool doesnt exist, returns NULL */
-static address_pool_t* allocator_get_pool_by_name(address_allocator_t* a, const char* name)
+address_pool_t* allocator_get_pool_by_name(address_allocator_t* a, const char* name)
 {
         if_null(a, exit);
         if_null(name, exit);
@@ -116,7 +116,7 @@ int allocator_add_pool(address_allocator_t *allocator, address_pool_t *pool)
         rv = ALLOCATOR_OK;
 error:
         if_failed_log_ng(rv, LOG_ERROR, NULL, "Error creating pool %s:(%d) %s", 
-                        pool->name, rv, allocator_error_str(rv));
+                        pool->name, rv, allocator_strerror(rv));
         return rv;
 }
 
