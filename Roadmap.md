@@ -6,7 +6,7 @@ Tasks may be worked on even when flagged as done, flag just means that the featu
 This roadmap may change in future
 
 ## Server:
-* Make DORA handshake with multiple clients from pool:
+* [Done - PR 966bd1d07aa8bf8c861643c3a206b0e51e035941] Make DORA handshake with multiple clients from pool:
     - Logging setup (CCLog) [Done - commit f82c0a834e15434ec4631010c01f8e079e3c191a]
     - Server logic [Done - commit b64510aa38ab2a2346b3ffd7048b0c18b67d02bd]
     - DHCP message parser and builder [Done - commit d661b10d5e470c9151353485ac3dda4a361db6fc]
