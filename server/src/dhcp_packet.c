@@ -26,15 +26,15 @@ void dhcp_packet_dump(dhcp_packet_t *p)
         printf("hlen:   %02x\n", p->hlen);
         printf("hops:   %02x\n", p->hops);
 
-        printf("xid:    %08x\n", p->xid);
+        printf("xid:    %08x\n", ntohl(p->xid));
 
         printf("secs:   %04x\n", p->secs);
         printf("flags:  %04x\n", p->flags);
 
-        printf("ciaddr: %s\n", uint32_to_ipv4_address(p->ciaddr));
-        printf("yiaddr: %s\n", uint32_to_ipv4_address(p->yiaddr));
-        printf("siaddr: %s\n", uint32_to_ipv4_address(p->siaddr));
-        printf("giaddr: %s\n", uint32_to_ipv4_address(p->giaddr));
+        printf("ciaddr: %s\n", uint32_to_ipv4_address(ntohl(p->ciaddr)));
+        printf("yiaddr: %s\n", uint32_to_ipv4_address(ntohl(p->yiaddr)));
+        printf("siaddr: %s\n", uint32_to_ipv4_address(ntohl(p->siaddr)));
+        printf("giaddr: %s\n", uint32_to_ipv4_address(ntohl(p->giaddr)));
         printf("chaddr: %02x:%02x:%02x:%02x:%02x:%02x\n", 
                         p->chaddr[0],
                         p->chaddr[1], 
@@ -86,7 +86,8 @@ int dhcp_packet_parse(dhcp_message_t *m)
         }
 
         if_null(m->dhcp_options, exit);
-        if_failed(dhcp_option_parse(m->dhcp_options, m->packet.options), exit);
+        if_failed_log(dhcp_option_parse(m->dhcp_options, m->packet.options), exit, LOG_WARN,
+                        NULL, "Failed to parse dhcp options");
 
         /* 
          * Assign the message a type. This is required by this implementation of 

@@ -4,7 +4,6 @@
 #include "utils/llist.h"
 #include "utils/xtoy.h"
 #include "logging.h"
-#include <alloca.h>
 #include <cclog.h>
 #include <cclog_macros.h>
 #include <stdint.h>
@@ -22,6 +21,7 @@ const char* allocator_strerror(enum allocator_status s)
                 case ALLOCATOR_ADDR_NOT_IN_USE: return "Address not in use";
                 case ALLOCATOR_ADDR_RESERVED: return "Address reserved";
                 case ALLOCATOR_OPTION_INVALID: return "Option invalid";
+                case ALLOCATOR_CANNOT_CREATE_LEASE: return "Cannot create lease";
                 default: return "Uknown error code";
         }
 }
@@ -189,9 +189,12 @@ int allocator_request_this_address(address_allocator_t *allocator,
         if_null(addr_buf, exit);
 
         address_pool_t *p = allocator_get_pool_by_address(allocator, requested_addres);
-        if_null_log(p, exit, LOG_WARN, NULL, 
-                        "Pool containing address %s was not found, make sure it exists",
-                        uint32_to_ipv4_address(requested_addres));
+        if(!p) {
+                cclog(LOG_WARN, NULL, "Pool containing address %s was not "
+                        "found, make sure it exists", uint32_to_ipv4_address(requested_addres));
+                rv = ALLOCATOR_CANNOT_CREATE_LEASE;
+                goto exit;
+        }
 
         if (address_pool_get_address_allocation(p, requested_addres) == 1) {
                 rv = ALLOCATOR_ADDR_IN_USE;
@@ -291,8 +294,9 @@ bool allocator_is_address_available(address_allocator_t *allocator, uint32_t add
                         "Pool containing address %s was not found, make sure it exists",
                         uint32_to_ipv4_address(address));
 
-        return !address_pool_get_address_allocation(p, address);
-
+        int res = address_pool_get_address_allocation(p, address);
+ 
+        return !res;
 exit:
         /* To be safe, return false so we dont try to use the address */
         return false;

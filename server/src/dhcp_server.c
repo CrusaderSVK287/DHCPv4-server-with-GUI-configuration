@@ -1,15 +1,20 @@
 #include "dhcp_server.h"
 #include "RFC/RFC-2131.h"
+#include "RFC/RFC-2132.h"
 #include "allocator.h"
 #include "cclog.h"
 #include "cclog_macros.h"
+#include "dhcp_options.h"
 #include "dhcp_packet.h"
 #include "logging.h"
 #include "messages/dhcp_messages.h"
+#include "utils/llist.h"
 #include "utils/xtoy.h"
 
 #include <arpa/inet.h>
+#include <asm-generic/socket.h>
 #include <stdint.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -42,7 +47,12 @@ int init_dhcp_server(dhcp_server_t *server)
 	if_failed_log(setsockopt(server->sock_fd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(int)), 
 		exit, LOG_CRITICAL, NULL, "Failed to set reuse address socket option");
 
-	/* Setting up non-blocking socket */
+	/* Setting socket option to reuse address */
+	int broadcast = 1;
+	if_failed_log(setsockopt(server->sock_fd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(int)), 
+		exit, LOG_CRITICAL, NULL, "Failed to set broadcast socket option");
+	
+        /* Setting up non-blocking socket */
 	int flags = fcntl(server->sock_fd, F_GETFL, 0);
 	if_failed_log_n(flags, exit, LOG_CRITICAL, NULL, "Failed to obtain socket fd flags");
 
@@ -102,6 +112,12 @@ int dhcp_server_serve(dhcp_server_t *server)
 
 	do
 	{
+                if (rv >= 0) {
+                        memset(&dhcp_msg->packet, 0, sizeof(dhcp_packet_t));
+                        dhcp_option_destroy_list(&dhcp_msg->dhcp_options);
+                        dhcp_msg->dhcp_options = llist_new();
+                }
+
 		rv = recv(server->sock_fd, &dhcp_msg->packet, sizeof(dhcp_packet_t), 0);
 		if (rv < 0 && errno == EAGAIN) {
 			continue;
@@ -125,7 +141,12 @@ int dhcp_server_serve(dhcp_server_t *server)
                                 uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr));
 
                 switch (dhcp_msg->type) {
-                        case DHCP_DISCOVER: message_dhcpdiscover_handle(server, dhcp_msg); break;
+                        case DHCP_DISCOVER: 
+                                if_failed_log_n_ng((rv = message_dhcpdiscover_handle(server, dhcp_msg)), 
+                                        LOG_ERROR, NULL, 
+                                        "Failed to handle DHCPDISCOVER message from %s ret %d",
+                                        uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr), rv); 
+                                break;
                         case DHCP_REQUEST:  message_dhcprequest_handle(server, dhcp_msg);  break;
                         case DHCP_DECLINE:  message_dhcpdecline_handle(server, dhcp_msg);  break;
                         case DHCP_INFORM:   message_dhcpinform_handle(server, dhcp_msg);   break;

@@ -244,6 +244,29 @@ TEST test_parsed_option_ip_trailing_and_leading_zeros()
         PASS();
 }
 
+TEST test_duplicite_option()
+{
+        uint32_t lease_time = 86400;
+        dhcp_option_t *o = dhcp_option_new_values(DHCP_OPTION_IP_ADDRESS_LEASE_TIME,
+                                                  4, &lease_time);
+        ASSERT_NEQ(NULL, o);
+        ASSERT_EQ(DHCP_OPTION_IP_ADDRESS_LEASE_TIME, o->tag);
+        ASSERT_EQ(DHCP_OPTION_NUMERIC, o->type);
+        ASSERT_EQ(4, o->lenght);
+        ASSERT_EQ(lease_time, o->value.number);
+
+        llist_t *option_list = llist_new();
+        ASSERT_EQ(0, dhcp_option_add(option_list, o));
+        ASSERT_EQ(0, dhcp_option_add(option_list, o));
+        ASSERT_EQ(0, dhcp_option_add(option_list, o));
+        ASSERT_EQ(0, dhcp_option_add(option_list, o));
+
+        ASSERT_EQ(option_list->first, option_list->last);
+
+        dhcp_option_destroy_list(&option_list);
+        PASS();
+}
+
 SUITE(dhcp_options)
 {
         memset(raw_dhcp_options, 0, sizeof(dhcp_options));
@@ -276,5 +299,6 @@ SUITE(dhcp_options)
         RUN_TEST(test_parsed_option_binary);
         RUN_TEST(test_parsed_option_numeric_with_multiple_bytes);
         RUN_TEST(test_parsed_option_ip_trailing_and_leading_zeros);
+        RUN_TEST(test_duplicite_option);
 }
 

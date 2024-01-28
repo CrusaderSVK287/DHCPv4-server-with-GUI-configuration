@@ -1,0 +1,64 @@
+00:01:45.816895 IP (tos 0x0, ttl 64, id 19015, offset 0, flags [none], proto UDP (17), length 328)
+    0.0.0.0.bootpc > 255.255.255.255.bootps: [udp sum ok] BOOTP/DHCP, Request from d8:3a:dd:38:f2:15 (oui Unknown), length 300, xid 0xcd1da6e7, Flags [none] (0x0000)
+	  Client-Ethernet-Address d8:3a:dd:38:f2:15 (oui Unknown)
+	  Vendor-rfc1048 Extensions
+	    Magic Cookie 0x63825363
+	    DHCP-Message (53), length 1: Discover
+	    Client-ID (61), length 7: ether d8:3a:dd:38:f2:15
+	    SLP-NA (80), length 0""
+	    NOAUTO (116), length 1: Y
+	    MSZ (57), length 2: 1472
+	    Hostname (12), length 11: "raspberrypi"
+	    Unknown (145), length 1: 1
+	    Parameter-Request (55), length 14:
+	      Subnet-Mask (1), Classless-Static-Route (121), Static-Route (33), Default-Gateway (3)
+	      Domain-Name-Server (6), Hostname (12), Domain-Name (15), MTU (26)
+	      BR (28), Lease-Time (51), Server-ID (54), RN (58)
+	      RB (59), Unknown (119)
+	    END (255), length 0
+	    PAD (0), length 0, occurs 6
+00:01:45.817137 IP (tos 0x0, ttl 64, id 15475, offset 0, flags [DF], proto UDP (17), length 604)
+    lukasbelan.bootps > 192.168.1.255.bootpc: [bad udp cksum 0x87a3 -> 0x057f!] BOOTP/DHCP, Reply, length 576, xid 0xcd1da6e7, Flags [none] (0x0000)
+	  Your-IP 192.168.1.1
+	  Server-IP lukasbelan
+	  Client-Ethernet-Address d8:3a:dd:38:f2:15 (oui Unknown)
+	  Vendor-rfc1048 Extensions
+	    Magic Cookie 0x63825363
+	    DHCP-Message (53), length 1: Offer
+	    Lease-Time (51), length 4: 86400
+	    Server-ID (54), length 4: lukasbelan
+	    Client-ID (61), length 7: ether d8:3a:dd:38:f2:15
+	    Subnet-Mask (1), length 4: 255.255.255.0
+	    END (255), length 0
+	    PAD (0), length 0, occurs 305
+00:01:45.817604 IP (tos 0x0, ttl 64, id 36027, offset 0, flags [none], proto UDP (17), length 329)
+    0.0.0.0.bootpc > 255.255.255.255.bootps: [udp sum ok] BOOTP/DHCP, Request from d8:3a:dd:38:f2:15 (oui Unknown), length 301, xid 0xcd1da6e7, Flags [none] (0x0000)
+	  Client-Ethernet-Address d8:3a:dd:38:f2:15 (oui Unknown)
+	  Vendor-rfc1048 Extensions
+	    Magic Cookie 0x63825363
+	    DHCP-Message (53), length 1: Request
+	    Client-ID (61), length 7: ether d8:3a:dd:38:f2:15
+	    Requested-IP (50), length 4: 192.168.1.1
+	    Server-ID (54), length 4: lukasbelan
+	    MSZ (57), length 2: 1472
+	    Hostname (12), length 11: "raspberrypi"
+	    Unknown (145), length 1: 1
+	    Parameter-Request (55), length 14:
+	      Subnet-Mask (1), Classless-Static-Route (121), Static-Route (33), Default-Gateway (3)
+	      Domain-Name-Server (6), Hostname (12), Domain-Name (15), MTU (26)
+	      BR (28), Lease-Time (51), Server-ID (54), RN (58)
+	      RB (59), Unknown (119)
+	    END (255), length 0
+00:01:45.817965 IP (tos 0x0, ttl 64, id 15476, offset 0, flags [DF], proto UDP (17), length 604)
+    lukasbelan.bootps > 192.168.1.255.bootpc: [bad udp cksum 0x87a3 -> 0x359f!] BOOTP/DHCP, Reply, length 576, xid 0xcd1da6e7, Flags [none] (0x0000)
+	  Your-IP 192.168.1.1
+	  Server-IP lukasbelan
+	  Client-Ethernet-Address d8:3a:dd:38:f2:15 (oui Unknown)
+	  Vendor-rfc1048 Extensions
+	    Magic Cookie 0x63825363
+	    DHCP-Message (53), length 1: ACK
+	    Lease-Time (51), length 4: 3232236026
+	    Server-ID (54), length 4: 255.255.255.250
+	    END (255), length 0
+	    PAD (0), length 0, occurs 320
+

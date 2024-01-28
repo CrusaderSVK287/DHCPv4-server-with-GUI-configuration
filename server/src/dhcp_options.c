@@ -217,6 +217,14 @@ error:
 
 int dhcp_option_add(llist_t *dest, dhcp_option_t *option)
 {
+        if (!dest || !option)
+                return -1;
+
+        /* Dont add duplicite options */
+        if (dhcp_option_retrieve(dest, option->tag)) {
+                return 0;
+        }
+
         return llist_append(dest, option, false);
 }
 
@@ -267,4 +275,27 @@ void dhcp_option_destroy_list(llist_t **ll)
         })
 
         llist_destroy(ll);
+}
+
+void dhcp_options_dump(llist_t *l)
+{
+        if_null(l, exit);
+
+        dhcp_option_t *o = NULL;
+
+        llist_foreach(l, {
+                o = (dhcp_option_t*)node->data;
+
+                printf("Tag:      %d\n"
+                       "Lenght:   %d\n"
+                       "Value:    ", o->tag, o->lenght);
+                for(int i = 0; i < o->lenght; i++)
+                        printf("%02x ", o->value.binary_data[i]);
+
+                printf("\n");
+        })
+        printf("END OF OPTION DUMP\n");
+
+exit:
+        return;
 }

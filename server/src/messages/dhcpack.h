@@ -9,6 +9,6 @@
 int message_dhcpack_send(dhcp_server_t *server, dhcp_message_t *message);
 
 int message_dhcpack_build(dhcp_server_t *server, dhcp_message_t *dhcp_request, 
-    uint32_t offered_lease_duration);
+    uint32_t offered_lease_duration, uint32_t leased_address);
 #endif // !__DHCPACK_H__
 

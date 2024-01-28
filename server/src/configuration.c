@@ -46,7 +46,7 @@ int init_dhcp_options(dhcp_server_t *server)
         if_null(server, error);
         if_null(server->allocator, error);
  
-        uint32_t ip = ipv4_address_to_uint32("192.168.0.250");
+        uint32_t ip = ipv4_address_to_uint32("192.168.1.250");
         if_failed(dhcp_option_add(server->allocator->default_options, dhcp_option_new_values(
                                         DHCP_OPTION_SERVER_IDENTIFIER, 4, &ip)), error);
 

@@ -20,7 +20,7 @@ int init_logging()
 
         mkdir("/var/log/dhcps", 0777);
         if_failed(cclogger_init(LOGGING_MULTIPLE_FILES, "/var/log/dhcps/dhcp-log", "dhcps"), exit);
-        if_failed(cclogger_set_default_message_format("[${DATE} ${TIME}] ${FILE}:${LINE}: ${MSG}"), exit);
+        if_failed(cclogger_set_default_message_format("[${DATE} ${TIME}] ${FILE}: ${MSG}"), exit);
         
         cclogger_set_verbosity_level(10);
         cclogger_reset_log_levels();

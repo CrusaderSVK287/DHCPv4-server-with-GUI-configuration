@@ -17,6 +17,7 @@ enum allocator_status {
     ALLOCATOR_OPTION_DUPLICITE = -6,
     ALLOCATOR_OPTION_INVALID = -7,
     ALLOCATOR_POOL_DEPLETED = -8,
+    ALLOCATOR_CANNOT_CREATE_LEASE = -9,
 };
 
 typedef struct allocator {

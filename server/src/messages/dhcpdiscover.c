@@ -1,4 +1,5 @@
 #include "dhcpdiscover.h"
+#include "dhcpoffer.h"
 #include <locale.h>
 #include <netdb.h>
 #include <stdint.h>
@@ -23,7 +24,7 @@ static uint32_t allocate_particular_address(dhcp_server_t *server,
         if_null(o50, exit);
         
         rv = allocator_request_this_address(server->allocator, o50->value.ip, &address);
-        if_failed_log_ne_ng(rv, LOG_WARN, NULL, "Error allocating address %s: %s", 
+        if_failed_log_n_ng(rv, LOG_WARN, NULL, "Error allocating address %s: %s", 
                                 uint32_to_ipv4_address(o50->value.ip), allocator_strerror(rv));
         
 exit:
@@ -39,7 +40,7 @@ static uint32_t allocate_random_address(address_allocator_t *allocator)
         uint32_t address = 0;
 
         rv = allocator_request_any_address(allocator, &address);
-        if_failed_log_ne_ng(rv, LOG_WARN, NULL, "Failed to allocate any address: %s",
+        if_failed_log_n_ng(rv, LOG_WARN, NULL, "Failed to allocate any address: %s",
                         allocator_strerror(rv));
 
         return address;
@@ -87,7 +88,7 @@ int message_dhcpdiscover_handle(dhcp_server_t *server, dhcp_message_t *message)
                                         DHCP_OPTION_REQUESTED_IP_ADDRESS)) {
                 new_address = allocate_particular_address(server, message);
         }
-
+        
         if (new_address == 0) {
                 new_address = allocate_random_address(server->allocator);
         }
@@ -101,6 +102,8 @@ int message_dhcpdiscover_handle(dhcp_server_t *server, dhcp_message_t *message)
         if (lease_time == 0)
                 goto exit;
 
+        if_failed(message_dhcpoffer_build(server, message, new_address, lease_time), exit);
+        
         rv = 0;
 exit:
         return rv;

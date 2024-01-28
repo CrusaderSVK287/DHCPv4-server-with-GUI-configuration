@@ -70,4 +70,6 @@ dhcp_option_t* dhcp_option_retrieve(llist_t *options, uint8_t tag);
  */
 int dhcp_option_add(llist_t *dest, dhcp_option_t *option);
 
+void dhcp_options_dump(llist_t *o);
+
 #endif // !__DHCP_OPTIONS_H__
