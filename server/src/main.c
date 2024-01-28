@@ -1,40 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <cJSON_Utils.h>
-#include <cclog.h>
-#include <cJSON.h>
+#include "cclog_macros.h"
+#include "logging.h"
+#include "dhcp_server.h"
+#include "configuration.h"
 
 int main(int argc, char *argv[])
 {
-        cclogger_init(LOGGING_SINGLE_FILE, "/tmp/log", "progname");
-        cclogger_uninit();
+        int rv = 1;
+        dhcp_server_t dhcp_server = {0};
 
-        // Creating a JSON object
-        cJSON *root = cJSON_CreateObject();
-        if (root == NULL) {
-                printf("Error creating JSON object!\n");
-                return 1;
-        }
+        if_failed(init_logging(), exit);
+        if_failed(init_dhcp_server(&dhcp_server), exit);
+        if_failed(init_allocator(&dhcp_server), exit);
+        if_failed(init_address_pools(&dhcp_server), exit);
+        if_failed(init_dhcp_options(&dhcp_server), exit);
 
-        // Adding key-value pairs to the JSON object
-        cJSON_AddItemToObject(root, "name", cJSON_CreateString("John Doe"));
-        cJSON_AddItemToObject(root, "age", cJSON_CreateNumber(30));
-        cJSON_AddItemToObject(root, "isStudent", cJSON_CreateBool(0));
+        dhcp_server_serve(&dhcp_server);
 
-        // Convert JSON object to string and print
-        char *jsonString = cJSON_Print(root);
-        if (jsonString == NULL) {
-                printf("Error converting JSON to string!\n");
-                cJSON_Delete(root);
-                return 1;
-        }
-    
-        printf("JSON Object:\n%s\n", jsonString);
+        uninit_dhcp_server(&dhcp_server);
+        uninit_logging();
 
-        // Cleanup
-        cJSON_Delete(root);
-        free(jsonString);
-
-        return 0;
+        rv = 0;
+exit:
+        return rv;
 }

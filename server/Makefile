@@ -30,9 +30,9 @@
 ################################ CONFIGURATION #################################
 # Compiler flags
 CC = gcc
-LDLIBS =-lm
-CFLAGS = -Wall -Werror
-LDFLAGS = -lcclog -lcjson -lcjson_utils
+LDLIBS = -lcclog -lcjson -lcjson_utils
+CFLAGS = -Wall -Werror -std=gnu17 
+LDFLAGS =
 DEBUG_FLAGS = -g3 -DDEBUG
 
 # Source and build directories ending with /
@@ -43,7 +43,7 @@ BINDIR  = bin/
 TESTDIR = test/
 
 # Result binary name
-BINNAME = result_binary
+BINNAME = dhcps
 
 ################################################################################
 #                                                                              #

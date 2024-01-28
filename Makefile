@@ -74,7 +74,7 @@ endif
 
 test:
 	@for dir in $(PROJECTS); do \
-        $(MAKE) $(MAKE_FLAGS) -C $$dir test; \
+        $(MAKE) $(MAKE_FLAGS) INC_DIR=$(INC_DIR) -C $$dir test; \
     done
 
 clean:
