@@ -20,6 +20,8 @@ This roadmap may change in future
     - Configuration option for dhcp options.
 * DHCP messages communication
     - Implement rest of DHCP message types handling
+    - Implement cache for transactions to store for parameter checks
+    - Bring all messages handlers up to RFC-2131 standard
 * Transaction database
     - Transaction database structure
     - Database API to store, retrieve data etc.

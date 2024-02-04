@@ -112,12 +112,6 @@ int dhcp_server_serve(dhcp_server_t *server)
 
 	do
 	{
-                if (rv >= 0) {
-                        memset(&dhcp_msg->packet, 0, sizeof(dhcp_packet_t));
-                        dhcp_option_destroy_list(&dhcp_msg->dhcp_options);
-                        dhcp_msg->dhcp_options = llist_new();
-                }
-
 		rv = recv(server->sock_fd, &dhcp_msg->packet, sizeof(dhcp_packet_t), 0);
 		if (rv < 0 && errno == EAGAIN) {
 			continue;
