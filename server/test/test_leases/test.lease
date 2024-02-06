@@ -1,0 +1,11 @@
+{
+	"leases":	[{
+			"address":	"192.168.1.10",
+			"subnet":	"255.255.255.0",
+			"xid":	305419896,
+			"lease_start":	10,
+			"lease_expire":	100,
+			"flags":	0,
+			"client_mac_address":	"aa:bb:cc:dd:ee:ff"
+		}]
+}

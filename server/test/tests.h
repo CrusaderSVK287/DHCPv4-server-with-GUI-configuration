@@ -10,5 +10,6 @@ SUITE(pool);
 SUITE(allocator);
 SUITE(packet_parser_builder);
 SUITE(lease);
+SUITE(dhcp_message_handlers);
 
 #endif // !SERVER_TESTS
