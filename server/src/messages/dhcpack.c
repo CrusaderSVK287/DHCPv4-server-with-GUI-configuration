@@ -36,6 +36,9 @@ exit:
         return rv;
 }
 
+
+// TODO: Make this function generic, move it to dhcp_options API, do like and array and must be 
+// options and must not options for the requested options (e.g. no lease time if response to DHCPINFORM)
 static int get_requested_dhcp_options(address_allocator_t *allocator, dhcp_message_t *dhcp_request,
                 uint32_t acked_lease_duration, dhcp_message_t *dhcp_ack)
 {

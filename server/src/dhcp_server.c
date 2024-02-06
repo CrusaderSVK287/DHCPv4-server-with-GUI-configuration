@@ -78,9 +78,6 @@ int init_dhcp_server(dhcp_server_t *server)
 	}
 	cclog(LOG_MSG, NULL, "Signal handler set successfully");
 
-        server->allocator = address_allocator_new();
-        if_null_log(server->allocator, exit, LOG_CRITICAL, NULL, "Failed to initialise server allocator");
-
 	rv = 0;
 exit:
 	return rv;
@@ -129,6 +126,13 @@ int dhcp_server_serve(dhcp_server_t *server)
                         dhcp_msg->type == DHCP_ACK || 
                         dhcp_msg->type == DHCP_NAK)
                         continue;
+
+                if (dhcp_msg->opcode != BOOTREQUEST) {
+                        cclog(LOG_WARN, NULL, "Received message of type %s from %s that is not BOOTREQUEST!",
+                                rfc2131_dhcp_message_type_to_str(dhcp_msg->type),
+                                uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr));
+                        continue;
+                }
 
                 cclog(LOG_MSG, NULL, "Received message of type %s from %s", 
                                 rfc2131_dhcp_message_type_to_str(dhcp_msg->type),
