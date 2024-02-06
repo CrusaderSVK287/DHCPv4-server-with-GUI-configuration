@@ -241,6 +241,9 @@ int lease_retrieve(lease_t *result, uint32_t addr, char *pool_name)
         close(fd);
         cJSON_Delete(root);
 
+        /* Copy pool name to lease */
+        result->pool_name = pool_name;
+
 exit:
         return rv;
 }
