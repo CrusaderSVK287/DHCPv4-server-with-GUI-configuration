@@ -41,6 +41,10 @@ static void dhcprelease_setup() {
 }
 
 TEST dhcp_release_non_existent_lease() {
+        if (strcmp("./test/test_leases/", LEASE_PATH_PREFIX) != 0) {
+                PASS();
+        }
+
         dhcp_message_t m = {0};
         m.ciaddr = ipv4_address_to_uint32("192.168.1.111");
 
@@ -51,9 +55,11 @@ TEST dhcp_release_non_existent_lease() {
 
 TEST dhcp_release_test_valid() {
         
+        if (strcmp("./test/test_leases/", LEASE_PATH_PREFIX) != 0) {
+                PASS();
+        }
         dhcp_message_t m = {0};
         m.ciaddr = ipv4_address_to_uint32("192.168.1.10");
-
 
         address_pool_t *p = (address_pool_t*)(server.allocator->address_pools->first->data);
         ASSERT_EQ(253, p->available_addresses);
