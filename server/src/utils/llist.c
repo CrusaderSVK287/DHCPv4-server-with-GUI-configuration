@@ -50,16 +50,7 @@ void llist_destroy(llist_t **list_ptr)
 
         llist_t *list = *list_ptr;
 
-        llnode_t *node = list->first;
-        llnode_t *tmp = list->first;
-        while (node) {
-                if (node->free)
-                        free(node->data);
-                
-                tmp = node;
-                node = node->next;
-                free(tmp);
-        }
+        llist_clear(list);
 
         free(list);
         *list_ptr = NULL;
@@ -79,5 +70,27 @@ llnode_t* llist_get_index(llist_t *list, int index)
         }
 
         return node;
+}
+
+void llist_clear(llist_t *list)
+{
+        if (!list)
+                return;
+
+        llnode_t *node = list->first;
+        llnode_t *tmp;
+
+        while (node) {
+                if (node->free) {
+                        free(node->data);
+                }
+
+                tmp = node;
+                node = node->next;
+                free(tmp);
+        }
+
+        list->first = NULL;
+        list->last = NULL;
 }
 

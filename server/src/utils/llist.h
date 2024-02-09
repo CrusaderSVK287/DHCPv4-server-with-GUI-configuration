@@ -35,6 +35,9 @@ void llist_destroy(llist_t **list);
 
 llnode_t* llist_get_index(llist_t *list, int index);
 
+/* Clears the list of all the nodes without destroying the list itself */
+void llist_clear(llist_t *list);
+
 /** 
  * Convenience macro. Each node in a list is retrieved and CODE is ran with it.
  * llnode_t *node is type and identificator of the variable to work with 
