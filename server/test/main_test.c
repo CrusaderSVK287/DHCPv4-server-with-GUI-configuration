@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
         RUN_SUITE(packet_parser_builder);
         RUN_SUITE(lease);
         RUN_SUITE(dhcp_message_handlers);
+        RUN_SUITE(transaction);
 
         cclogger_uninit();
 

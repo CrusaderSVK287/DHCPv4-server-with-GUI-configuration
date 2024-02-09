@@ -11,5 +11,6 @@ SUITE(allocator);
 SUITE(packet_parser_builder);
 SUITE(lease);
 SUITE(dhcp_message_handlers);
+SUITE(transaction);
 
 #endif // !SERVER_TESTS
