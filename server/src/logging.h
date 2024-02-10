@@ -50,6 +50,16 @@ enum LOG_LEVELS {
 }
 #endif
 
+#ifdef if_not_null_log 
+#undef if_not_null_log
+#define if_not_null_log(val, label, log_level, priv, msg, ...) {\
+    if (val != NULL) {\
+        cclog(log_level, priv, msg, ## __VA_ARGS__);\
+        goto label;\
+    }\
+}
+#endif
+
 /* Initialises logging for dhcp server */
 int init_logging();
 
