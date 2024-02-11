@@ -20,6 +20,7 @@ int message_dhcpack_send(dhcp_server_t *server, dhcp_message_t *message)
         struct sockaddr_in addr = {0};
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
+        // TODO: make possible to unicast
         addr.sin_port = htons(68);
         addr.sin_addr.s_addr = inet_addr("192.168.1.255");
 
