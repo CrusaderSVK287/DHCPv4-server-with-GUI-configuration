@@ -26,7 +26,7 @@ static int dhcp_requst_commit_lease(dhcp_server_t *server, dhcp_message_t *reque
         if_null(lease, exit);
 
         lease->xid = request->xid;
-        // TODO: Implement flags
+        // TODO: Implement flags like static lease - reserved lease(permanent lease etc)
         lease->flags = 0;
         lease->address = leased_address;
         lease->subnet = pool->mask;

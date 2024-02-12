@@ -138,6 +138,7 @@ int dhcp_server_serve(dhcp_server_t *server)
                                 rfc2131_dhcp_message_type_to_str(dhcp_msg->type),
                                 uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr));
 
+                // TODO: Store message in cache for future reference
                 switch (dhcp_msg->type) {
                         case DHCP_DISCOVER: 
                                 if_failed_log_n_ng((rv = message_dhcpdiscover_handle(server, dhcp_msg)), 
