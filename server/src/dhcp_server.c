@@ -10,6 +10,7 @@
 #include "messages/dhcp_messages.h"
 #include "utils/llist.h"
 #include "utils/xtoy.h"
+#include "transaction_cache.h"
 
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
@@ -91,6 +92,7 @@ int uninit_dhcp_server(dhcp_server_t *server)
 
 	if_failed_log(close(server->sock_fd), exit, LOG_ERROR, NULL, "Failed to close socket");
         allocator_destroy(&server->allocator);
+        trans_cache_destroy(&server->trans_cache);
 
 	cclog(LOG_MSG, NULL, "Server stoped successfully");
 	rv = 0;
@@ -127,18 +129,15 @@ int dhcp_server_serve(dhcp_server_t *server)
                         dhcp_msg->type == DHCP_NAK)
                         continue;
 
-                if (dhcp_msg->opcode != BOOTREQUEST) {
-                        cclog(LOG_WARN, NULL, "Received message of type %s from %s that is not BOOTREQUEST!",
-                                rfc2131_dhcp_message_type_to_str(dhcp_msg->type),
-                                uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr));
-                        continue;
-                }
-
+                /* Store the received message in cache for future use */
                 cclog(LOG_MSG, NULL, "Received message of type %s from %s", 
                                 rfc2131_dhcp_message_type_to_str(dhcp_msg->type),
                                 uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr));
 
-                // TODO: Store message in cache for future reference
+                /* Store message in cache for future reference */
+                if_failed_log_ng(trans_cache_add_message(server->trans_cache, dhcp_msg), 
+                        LOG_WARN, NULL, "Server failed to store message in transaction cache");
+                
                 switch (dhcp_msg->type) {
                         case DHCP_DISCOVER: 
                                 if_failed_log_n_ng((rv = message_dhcpdiscover_handle(server, dhcp_msg)), 

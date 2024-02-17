@@ -45,6 +45,100 @@ exit:
         return rv;
 }
 
+static bool validate_client_id_and_requested_params(transaction_cache_t *cache, 
+                dhcp_message_t *request)
+{
+        if (!cache || !request)
+                goto error;
+
+        dhcp_message_t *discover = trans_cache_retrieve_message(cache, request->xid, DHCP_DISCOVER);
+        if_null(discover, error);
+
+        /* Validate client identifier, it MUST be same in all messages */
+        dhcp_option_t *request_o61 = dhcp_option_retrieve(request->dhcp_options, 
+                        DHCP_OPTION_CLIENT_IDENTIFIER);
+        dhcp_option_t *discover_o61 = dhcp_option_retrieve(discover->dhcp_options, 
+                        DHCP_OPTION_CLIENT_IDENTIFIER);
+
+        /* We only need to verify if the client sent option in both messages */
+        if (request_o61 && discover_o61) {
+                if_failed_log(memcmp(request_o61->value.binary_data, discover_o61->value.binary_data, 
+                        request_o61->lenght), error, LOG_WARN, NULL, 
+                        "Inconsistent client identifier, transaction will not proceed");
+        }
+
+        /* Validate parameter request list, it MUST be same in all messages */
+        dhcp_option_t *request_o55 = dhcp_option_retrieve(request->dhcp_options, 
+                        DHCP_OPTION_PARAMETER_REQUEST_LIST);
+        dhcp_option_t *discover_o55 = dhcp_option_retrieve(discover->dhcp_options, 
+                        DHCP_OPTION_PARAMETER_REQUEST_LIST);
+
+        if (!request_o55 || !discover_o55) {
+                cclog(LOG_WARN, NULL, "Parameter list was not found in a message, treating as invalid");
+                goto error;
+        }
+
+        if_failed_log(memcmp(request_o55->value.binary_data, discover_o55->value.binary_data, 
+                request_o61->lenght), error, LOG_WARN, NULL, 
+                "Inconsistent parameter request list , transaction will not proceed");
+
+        return true;
+error:
+        return false;
+}
+
+/*
+ * Function tries to retrieve ip address from dhcp options of dhcprequest, if it 
+ * fails, it tries to look for previously offered address instead.
+ * Function returns 0 on error ! On success returns clients IP address
+ */
+static uint32_t retrieve_client_address(dhcp_message_t *request, transaction_cache_t *cache)
+{
+        if (!request || !cache)
+                goto error;
+
+        dhcp_option_t *o50 = dhcp_option_retrieve(request->dhcp_options, 
+                        DHCP_OPTION_REQUESTED_IP_ADDRESS);
+
+        /* If client didnt request address, look for previously offered address */
+        if (o50) {
+                dhcp_message_t *offer = trans_cache_retrieve_message(cache, request->xid, DHCP_OFFER);
+                if_null(offer, error);
+                o50 = dhcp_option_retrieve(offer->dhcp_options, DHCP_OPTION_REQUESTED_IP_ADDRESS);
+                if_null(o50, error);
+        }
+
+        return o50->value.ip;
+error:
+        return 0;
+}
+
+/*
+ * Function retrieves lease time configured for the pool to which the address 
+ * belongs. If the lease time is not configured there, it */
+static uint32_t retrieve_lease_time(uint32_t address, address_allocator_t *allocator)
+{
+        if (!allocator || address == 0)
+                goto error;
+
+        address_pool_t *pool = allocator_get_pool_by_address(allocator, address);
+
+        dhcp_option_t *o51 = dhcp_option_retrieve(pool->dhcp_option_override, 
+                        DHCP_OPTION_IP_ADDRESS_LEASE_TIME);
+
+        /* If the pool doesnt have lease time configured, fetch the global one */
+        if (!o51) {
+                o51 = dhcp_option_retrieve(allocator->default_options,
+                                DHCP_OPTION_IP_ADDRESS_LEASE_TIME);
+        }
+        
+        if_null_log(o51, error, LOG_ERROR, NULL, "Option 51 (lease time) is not configured");
+
+        return o51->value.number;
+error:
+        return 0;
+}
+
 static int dhcp_request_response_to_offer(dhcp_server_t *server, dhcp_message_t *request, 
                 dhcp_option_t *o54)
 {
@@ -61,33 +155,29 @@ static int dhcp_request_response_to_offer(dhcp_server_t *server, dhcp_message_t 
                 goto exit;
         }
 
-        /* TODO: make more robust validation (will be implemented with the cache) */
         /* dhcp message validation, ciaddr and yiaddr must be 0 if the request is response to offer */
-        /* TODO: store transaction in cache, when client sends request, see if he sends requested ip address, if not, look for offered address in trnasaction */
         rv = DHCP_REQUEST_INVALID;
         if_false((request->ciaddr == 0), exit);
         if_false((request->yiaddr == 0), exit);
+        if_false(validate_client_id_and_requested_params(server->trans_cache, request), exit);
 
-        dhcp_option_t *o50 = dhcp_option_retrieve(request->dhcp_options,
-                                                DHCP_OPTION_REQUESTED_IP_ADDRESS);
-        if_null_log(o50, exit, LOG_WARN, NULL,
-                        "Response to offer doesnt contain requested ip address option");
+        uint32_t requested_ip = retrieve_client_address(request, server->trans_cache);
+        if_failed_log_ne(requested_ip, exit, LOG_WARN, NULL, "Cannot obtain requested IP address");
 
-        if (allocator_is_address_available(server->allocator, o50->value.ip)) { 
-                cclog(LOG_WARN, NULL, "Address %s is not in offered state", 
-                                uint32_to_ipv4_address(o50->value.ip));
+        if (allocator_is_address_available(server->allocator, requested_ip)) { 
+                cclog(LOG_WARN, NULL, "Address %s is not currently being offered", 
+                                uint32_to_ipv4_address(requested_ip));
                 goto exit;
         }
 
-        /* Retrieve requred options and commit the lease */
-        dhcp_option_t *o51 = dhcp_option_retrieve(server->allocator->default_options, 
-                                                DHCP_OPTION_IP_ADDRESS_LEASE_TIME);
-        if_null(o51, exit);
+        /* Retrieve lease time  */
+        uint32_t lease_time = retrieve_lease_time(requested_ip, server->allocator);
+        if_failed_ne(lease_time, exit);
 
-        /* All good, we can proceed and commit configuration */ 
-        if_failed_log_n(dhcp_requst_commit_lease(server, request, o51->value.number, o50->value.ip), 
+        /* All good, we can proceed and commit lease */ 
+        if_failed_log_n(dhcp_requst_commit_lease(server, request, lease_time, requested_ip), 
                 exit, LOG_ERROR, NULL, 
-                "Failed to commit lease of address %s", uint32_to_ipv4_address(o50->value.ip));
+                "Failed to commit lease of address %s", uint32_to_ipv4_address(requested_ip));
 
         rv = DHCP_REQUEST_OK;
 exit:
@@ -114,8 +204,10 @@ int message_dhcprequest_handle(dhcp_server_t *server, dhcp_message_t *request)
          */
         if (o54) {
                 if (dhcp_request_response_to_offer(server, request, o54) < 0) {
-                        // ERROR, send NAK
+                        /* Error, send DHCPNAK to client and free lease */
+                        // TODO:
                 } else {
+                        /* Success, send DHCPACK to client */
                         dhcp_option_t *o50 = dhcp_option_retrieve(request->dhcp_options, 
                                         DHCP_OPTION_REQUESTED_IP_ADDRESS);
                         if_failed_n(message_dhcpack_build(server, request, o54->value.number, 

@@ -1,4 +1,3 @@
-
 #include "dhcpoffer.h"
 #include <errno.h>
 #include <netdb.h>
@@ -11,7 +10,6 @@
 #include "../allocator.h"
 #include "../utils/llist.h"
 #include "../logging.h"
-#include "cclog_macros.h"
 #include "../dhcp_packet.h"
 
 int message_dhcpoffer_send(dhcp_server_t *server, dhcp_message_t *message)

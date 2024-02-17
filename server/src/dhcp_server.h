@@ -2,10 +2,13 @@
 #define __DHCP_SERVER_H__
 
 #include "allocator.h"
+#include "transaction.h"
+#include "transaction_cache.h"
 
 typedef struct dhcp_server {
     int sock_fd;
     address_allocator_t *allocator;
+    transaction_cache_t *trans_cache;
 } dhcp_server_t;
 
 /**
