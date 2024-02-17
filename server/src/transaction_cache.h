@@ -27,7 +27,7 @@ typedef struct transaction_cache {
  * Initialise a transaction_cache. The cache pointer MUST be NULL 
  * Returns 0 on success and -1 on failure
  */
-transaction_cache_t *trans_cache_new();
+transaction_cache_t *trans_cache_new(int size);
 
 int trans_cache_add_message(transaction_cache_t *cache, dhcp_message_t *message);
 

@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
         if_failed(init_allocator(&dhcp_server), exit);
         if_failed(init_address_pools(&dhcp_server), exit);
         if_failed(init_dhcp_options(&dhcp_server), exit);
+        if_failed(init_cache(&dhcp_server), exit);
 
         dhcp_server_serve(&dhcp_server);
 

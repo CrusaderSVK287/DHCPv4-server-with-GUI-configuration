@@ -4,14 +4,13 @@
 #include "transaction.h"
 #include <stdint.h>
 
-transaction_cache_t *trans_cache_new()
+transaction_cache_t *trans_cache_new(int size)
 {
-
         transaction_cache_t *cache = calloc(1, sizeof(transaction_cache_t));
         if_null_log(cache, error, LOG_ERROR, NULL, "Failed to allocate transaction cache");
 
         // TODO: Configuration transaction cache size 
-        cache->size = TRANSACTION_CACHE_DEFAULT_SIZE;
+        cache->size = size;
         cache->transactions = malloc(sizeof(transaction_t*) * cache->size);
         if_null_log(cache->transactions, error, LOG_ERROR, NULL, "Failed to allocate transaction cache");
 

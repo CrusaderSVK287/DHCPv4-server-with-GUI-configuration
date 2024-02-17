@@ -5,6 +5,7 @@
 #include "cclog_macros.h"
 #include "dhcp_options.h"
 #include "logging.h"
+#include "transaction_cache.h"
 #include "utils/xtoy.h"
 #include <stdint.h>
 
@@ -20,7 +21,7 @@ int init_allocator(dhcp_server_t *server)
         
         return 0;
 error:
-        cclog(LOG_ERROR, NULL, "Failed to initialise allocator");
+        cclog(LOG_CRITICAL, NULL, "Failed to initialise allocator");
         return -1;
 }
 
@@ -37,7 +38,7 @@ int init_address_pools(dhcp_server_t *server)
         
         return 0;
 error:
-        cclog(LOG_ERROR, NULL, "Failed to initialise address pools");
+        cclog(LOG_CRITICAL, NULL, "Failed to initialise address pools");
         return -1;
 }
 
@@ -60,6 +61,17 @@ int init_dhcp_options(dhcp_server_t *server)
         
         return 0;
 error:
-        cclog(LOG_ERROR, NULL, "Failed to initialise dhcp options");
+        cclog(LOG_CRITICAL, NULL, "Failed to initialise dhcp options");
+        return -1;
+}
+
+int init_cache(dhcp_server_t *server)
+{
+        if_null(server, error);
+        
+        server->trans_cache = trans_cache_new(TRANSACTION_CACHE_DEFAULT_SIZE);
+
+error:
+        cclog(LOG_CRITICAL, NULL, "Failed to initialise transaction cache");
         return -1;
 }
