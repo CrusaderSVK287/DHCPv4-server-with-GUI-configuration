@@ -8,7 +8,7 @@
 
 static transaction_t *setup_transaction() 
 {
-        transaction_t *t = transaction_new();
+        transaction_t *t = trans_new();
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
         dhcp_message_t *msg2 = calloc(1, sizeof(dhcp_message_t));
@@ -23,27 +23,27 @@ static transaction_t *setup_transaction()
         msg4->type = DHCP_ACK;
         msg4->xid = 0x5555;
 
-        transaction_add(t, msg1);
-        transaction_add(t, msg2);
-        transaction_add(t, msg3);
-        transaction_add(t, msg4);
+        trans_add(t, msg1);
+        trans_add(t, msg2);
+        trans_add(t, msg3);
+        trans_add(t, msg4);
 
         return t;        
 }
 
-TEST test_transaction_new_and_destroy()
+TEST test_trans_new_and_destroy()
 {
-        transaction_t *t = transaction_new();
+        transaction_t *t = trans_new();
         ASSERT_NEQ(NULL, t);
         ASSERT_NEQ(NULL, t->messages_ll);
 
-        transaction_destroy(&t);
+        trans_destroy(&t);
         ASSERT_EQ(NULL, t);
         PASS();
 }
 
 TEST test_transaction_add() {
-        transaction_t *t = transaction_new();
+        transaction_t *t = trans_new();
         ASSERT_NEQ(NULL, t);
         ASSERT_NEQ(NULL, t->messages_ll);
         
@@ -56,18 +56,18 @@ TEST test_transaction_add() {
         msg2->type = DHCP_OFFER;
         msg2->xid = 0x5555;
 
-        ASSERT_EQ(0, transaction_add(t, msg1));
-        ASSERT_EQ(0, transaction_add(t, msg2));
+        ASSERT_EQ(0, trans_add(t, msg1));
+        ASSERT_EQ(0, trans_add(t, msg2));
 
         ASSERT_EQ(2, t->num_of_messages);
         ASSERT_EQ(0x5555, t->xid);
 
-        transaction_destroy(&t);
+        trans_destroy(&t);
         PASS();
 }
 
 TEST test_transaction_add_mismatched_xid() {
-        transaction_t *t = transaction_new();
+        transaction_t *t = trans_new();
         ASSERT_NEQ(NULL, t);
         ASSERT_NEQ(NULL, t->messages_ll);
         
@@ -80,13 +80,13 @@ TEST test_transaction_add_mismatched_xid() {
         msg2->type = DHCP_OFFER;
         msg2->xid = 0x6666;
 
-        ASSERT_EQ(0, transaction_add(t, msg1));
-        ASSERT_EQ(-1, transaction_add(t, msg2));
+        ASSERT_EQ(0, trans_add(t, msg1));
+        ASSERT_EQ(-1, trans_add(t, msg2));
 
         ASSERT_EQ(1, t->num_of_messages);
         ASSERT_EQ(0x5555, t->xid);
 
-        transaction_destroy(&t);
+        trans_destroy(&t);
         PASS();
 }
 
@@ -95,10 +95,10 @@ TEST test_transaction_get_index()
         transaction_t *t = setup_transaction();
         ASSERT_NEQ(NULL, t);
 
-        dhcp_message_t *m = transaction_get_index(t, 2);
+        dhcp_message_t *m = trans_get_index(t, 2);
         ASSERT_EQ(DHCP_REQUEST, m->type);
 
-        transaction_destroy(&t);
+        trans_destroy(&t);
         PASS();
 }
 
@@ -116,22 +116,22 @@ TEST test_tramsaction_search_for()
         msg2->type = DHCP_ACK;
         msg2->xid = 0x5555;
 
-        ASSERT_EQ(0, transaction_add(t, msg1));
-        ASSERT_EQ(0, transaction_add(t, msg2));
+        ASSERT_EQ(0, trans_add(t, msg1));
+        ASSERT_EQ(0, trans_add(t, msg2));
 
-        dhcp_message_t *check_ptr = transaction_get_index(t, 3);
-        dhcp_message_t *value_ptr = transaction_search_for(t, DHCP_ACK);
+        dhcp_message_t *check_ptr = trans_get_index(t, 3);
+        dhcp_message_t *value_ptr = trans_search_for(t, DHCP_ACK);
         ASSERT_EQ(DHCP_ACK, check_ptr->type);
         ASSERT_EQ(DHCP_ACK, value_ptr->type);
         ASSERT_EQ(check_ptr, value_ptr);
 
-        check_ptr = transaction_get_index(t, 1);
-        value_ptr = transaction_search_for(t, DHCP_OFFER);
+        check_ptr = trans_get_index(t, 1);
+        value_ptr = trans_search_for(t, DHCP_OFFER);
         ASSERT_EQ(DHCP_OFFER, check_ptr->type);
         ASSERT_EQ(DHCP_OFFER, value_ptr->type);
         ASSERT_EQ(check_ptr, value_ptr);
 
-        transaction_destroy(&t);
+        trans_destroy(&t);
         PASS();
 }
 
@@ -149,26 +149,26 @@ TEST test_tramsaction_search_for_last()
         msg2->type = DHCP_ACK;
         msg2->xid = 0x5555;
 
-        ASSERT_EQ(0, transaction_add(t, msg1));
-        ASSERT_EQ(0, transaction_add(t, msg2));
+        ASSERT_EQ(0, trans_add(t, msg1));
+        ASSERT_EQ(0, trans_add(t, msg2));
 
-        dhcp_message_t *check_ptr = transaction_get_index(t, 5);
-        dhcp_message_t *value_ptr = transaction_search_for_last(t, DHCP_ACK);
+        dhcp_message_t *check_ptr = trans_get_index(t, 5);
+        dhcp_message_t *value_ptr = trans_search_for_last(t, DHCP_ACK);
         ASSERT_EQ(DHCP_ACK, check_ptr->type);
         ASSERT_EQ(DHCP_ACK, value_ptr->type);
         ASSERT_EQ(check_ptr, value_ptr);
 
-        transaction_destroy(&t);
+        trans_destroy(&t);
         PASS();
 }
 
 TEST test_cache_init_and_destroy() 
 {
-        transaction_cache_t *cache = transaction_cache_new();
+        transaction_cache_t *cache = trans_cache_new();
         ASSERT_NEQ(NULL, cache);
         ASSERT_EQ(0, cache->_offset);
 
-        transaction_cache_destroy(&cache);
+        trans_cache_destroy(&cache);
         ASSERT_EQ(NULL, cache);
 
         PASS();
@@ -176,7 +176,7 @@ TEST test_cache_init_and_destroy()
 
 TEST test_cache_add_message() 
 {
-        transaction_cache_t *cache = transaction_cache_new();
+        transaction_cache_t *cache = trans_cache_new();
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -184,18 +184,18 @@ TEST test_cache_add_message()
         msg1->type = DHCP_DISCOVER;
         msg1->xid = 0x5555;
         
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg1));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
         ASSERT_EQ(1, cache->_offset);
         ASSERT_EQ(1, cache->transactions[1]->num_of_messages);
         ASSERT_EQ(0x5555, cache->transactions[1]->xid);
 
-        transaction_cache_destroy(&cache);
+        trans_cache_destroy(&cache);
         PASS();
 }
 
 TEST test_cache_add_multiple_messages_to_same_transaction()
 {
-        transaction_cache_t *cache = transaction_cache_new();
+        transaction_cache_t *cache = trans_cache_new();
         ASSERT_NEQ(NULL, cache);
        
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -207,19 +207,19 @@ TEST test_cache_add_multiple_messages_to_same_transaction()
         msg2->type = DHCP_ACK;
         msg2->xid = 0x5555;
         
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg1));
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg2));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg2));
         ASSERT_EQ(1, cache->_offset);
         ASSERT_EQ(2, cache->transactions[1]->num_of_messages);
         ASSERT_EQ(0x5555, cache->transactions[1]->xid);
         
-        transaction_cache_destroy(&cache);
+        trans_cache_destroy(&cache);
         PASS();
 }
 
 TEST test_cache_add_multiple_messages_to_different_transactions()
 {
-        transaction_cache_t *cache = transaction_cache_new();
+        transaction_cache_t *cache = trans_cache_new();
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -239,10 +239,10 @@ TEST test_cache_add_multiple_messages_to_different_transactions()
         msg3->xid = 0x6666;
         msg4->xid = 0x7777;
         
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg1));
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg2));
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg3));
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg4));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg2));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg3));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg4));
         
         ASSERT_EQ(3, cache->_offset);
         ASSERT_EQ(1, cache->transactions[1]->num_of_messages);
@@ -252,13 +252,13 @@ TEST test_cache_add_multiple_messages_to_different_transactions()
         ASSERT_EQ(0x6666, cache->transactions[2]->xid);
         ASSERT_EQ(0x7777, cache->transactions[3]->xid);
         
-        transaction_cache_destroy(&cache);
+        trans_cache_destroy(&cache);
         PASS();
 }
 
 TEST test_cache_overflow_cache_size()
 {
-        transaction_cache_t *cache = transaction_cache_new();
+        transaction_cache_t *cache = trans_cache_new();
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -268,7 +268,7 @@ TEST test_cache_overflow_cache_size()
 
         for(int i = 0; i < 18; i++) {
                 msg1->xid = 1000 + i;
-                ASSERT_EQ(0, transaction_cache_add_message(cache, msg1));
+                ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
         }
 
         ASSERT_EQ(3, cache->_offset);
@@ -279,51 +279,51 @@ TEST test_cache_overflow_cache_size()
         ASSERT_EQ(1016, cache->transactions[2]->xid);
         ASSERT_EQ(1017, cache->transactions[3]->xid);
         
-        transaction_cache_destroy(&cache);
+        trans_cache_destroy(&cache);
         PASS();
 }
 
 TEST test_cache_retrieve_transaction()
 {
-        transaction_cache_t *cache = transaction_cache_new();
+        transaction_cache_t *cache = trans_cache_new();
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
         ASSERT_NEQ(NULL, msg1);
         msg1->type = DHCP_DISCOVER;
         msg1->xid = 1000;
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg1));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
 
-        transaction_t *t = transaction_cache_retrieve_transaction(cache, 1000);
+        transaction_t *t = trans_cache_retrieve_transaction(cache, 1000);
         ASSERT_NEQ(NULL, t);
         ASSERT_EQ(1, t->num_of_messages);
         ASSERT_EQ(1000, t->xid);
         
-        transaction_cache_destroy(&cache);
+        trans_cache_destroy(&cache);
         PASS();
 }
 
 TEST test_cache_retrieve_non_existent_transaction()
 {
-        transaction_cache_t *cache = transaction_cache_new();
+        transaction_cache_t *cache = trans_cache_new();
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
         ASSERT_NEQ(NULL, msg1);
         msg1->type = DHCP_DISCOVER;
         msg1->xid = 1000;
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg1));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
 
-        transaction_t *t = transaction_cache_retrieve_transaction(cache, 9999);
+        transaction_t *t = trans_cache_retrieve_transaction(cache, 9999);
         ASSERT_EQ(NULL, t);
         
-        transaction_cache_destroy(&cache);
+        trans_cache_destroy(&cache);
         PASS();
 }
 
 TEST test_cache_retrieve_messages_from_transaction()
 {
-        transaction_cache_t *cache = transaction_cache_new();
+        transaction_cache_t *cache = trans_cache_new();
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -343,32 +343,32 @@ TEST test_cache_retrieve_messages_from_transaction()
         msg3->xid = 0x6666;
         msg4->xid = 0x6666;
         
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg1));
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg1));
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg1));
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg2));
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg3));
-        ASSERT_EQ(0, transaction_cache_add_message(cache, msg4));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg2));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg3));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg4));
         
-        dhcp_message_t *check_ptr = transaction_cache_retrieve_message(cache, 0x6666, DHCP_REQUEST);
-        dhcp_message_t *value_ptr = transaction_cache_retrieve_message_index(cache, 0x6666, 4);
+        dhcp_message_t *check_ptr = trans_cache_retrieve_message(cache, 0x6666, DHCP_REQUEST);
+        dhcp_message_t *value_ptr = trans_cache_retrieve_message_index(cache, 0x6666, 4);
         ASSERT_EQ(DHCP_REQUEST, check_ptr->type);
         ASSERT_EQ(DHCP_REQUEST, value_ptr->type);
         ASSERT_EQ(check_ptr, value_ptr);
 
-        check_ptr = transaction_cache_retrieve_message_last(cache, 0x6666, DHCP_DISCOVER);
-        value_ptr = transaction_cache_retrieve_message_index(cache, 0x6666, 2);
+        check_ptr = trans_cache_retrieve_message_last(cache, 0x6666, DHCP_DISCOVER);
+        value_ptr = trans_cache_retrieve_message_index(cache, 0x6666, 2);
         ASSERT_EQ(DHCP_DISCOVER, check_ptr->type);
         ASSERT_EQ(DHCP_DISCOVER, value_ptr->type);
         ASSERT_EQ(check_ptr, value_ptr);
 
-        transaction_cache_destroy(&cache);
+        trans_cache_destroy(&cache);
         PASS();
 }
 
 TEST test_cache_purge()
 {
-        transaction_cache_t *cache = transaction_cache_new();
+        transaction_cache_t *cache = trans_cache_new();
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -378,10 +378,10 @@ TEST test_cache_purge()
 
         for(int i = 0; i < 18; i++) {
                 msg1->xid = 1000 + i;
-                ASSERT_EQ(0, transaction_cache_add_message(cache, msg1));
+                ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
         }
         
-        transaction_cache_purge(cache);
+        trans_cache_purge(cache);
         ASSERT_NEQ(NULL, cache);
 
         for(int i = 0; i < cache->size; i++) {
@@ -390,13 +390,13 @@ TEST test_cache_purge()
                 ASSERT_EQ(0, cache->transactions[i]->transaction_begin);
         }
 
-        transaction_cache_destroy(&cache);
+        trans_cache_destroy(&cache);
         PASS();
 }
 
 SUITE(transaction) 
 {
-        RUN_TEST(test_transaction_new_and_destroy);
+        RUN_TEST(test_trans_new_and_destroy);
         RUN_TEST(test_transaction_add);
         RUN_TEST(test_transaction_add_mismatched_xid);
         RUN_TEST(test_transaction_get_index);

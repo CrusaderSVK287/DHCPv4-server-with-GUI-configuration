@@ -14,29 +14,29 @@ typedef struct transaction {
 } transaction_t;
 
 /* Allocate space for a new transaction */
-transaction_t *transaction_new();
+transaction_t *trans_new();
 
 /* Free transaction from memory */
-void transaction_destroy(transaction_t **transaction);
+void trans_destroy(transaction_t **transaction);
 
 /* Clears data from transaction, does NOT free from memory */
-void transaction_clear(transaction_t *transaction);
+void trans_clear(transaction_t *transaction);
 
 /* Add message to transaction, */
-int transaction_add(transaction_t *transaction, const dhcp_message_t *message);
+int trans_add(transaction_t *transaction, const dhcp_message_t *message);
 
 /* Retrieve a message with specific index. 
  * Example, if the transaction has DORA messages.
  * Calling this function with index parameter to 2 will return dhcp_message_t
  * corresponding to the DHCPREQUEST message 
  */
-dhcp_message_t *transaction_get_index(transaction_t *transaction, uint8_t index);
+dhcp_message_t *trans_get_index(transaction_t *transaction, uint8_t index);
 
 /* Returns first DHCP message that matches the type */
-dhcp_message_t *transaction_search_for(transaction_t *transaction, enum dhcp_message_type type);
+dhcp_message_t *trans_search_for(transaction_t *transaction, enum dhcp_message_type type);
 
 /* Returns last DHCP message that matches the type */
-dhcp_message_t *transaction_search_for_last(transaction_t *transaction, enum dhcp_message_type type);
+dhcp_message_t *trans_search_for_last(transaction_t *transaction, enum dhcp_message_type type);
 
 #endif // !__TRANSACTION_H__
 

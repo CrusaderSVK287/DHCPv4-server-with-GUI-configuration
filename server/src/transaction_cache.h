@@ -27,29 +27,29 @@ typedef struct transaction_cache {
  * Initialise a transaction_cache. The cache pointer MUST be NULL 
  * Returns 0 on success and -1 on failure
  */
-transaction_cache_t *transaction_cache_new();
+transaction_cache_t *trans_cache_new();
 
-int transaction_cache_add_message(transaction_cache_t *cache, dhcp_message_t *message);
+int trans_cache_add_message(transaction_cache_t *cache, dhcp_message_t *message);
 
 /* Retrieve transaction with specified xid */
-transaction_t *transaction_cache_retrieve_transaction(transaction_cache_t *cache, uint32_t xid);
+transaction_t *trans_cache_retrieve_transaction(transaction_cache_t *cache, uint32_t xid);
 
 /* Retrieve first message of type from transaction in cache */
-dhcp_message_t *transaction_cache_retrieve_message(transaction_cache_t *cache, 
+dhcp_message_t *trans_cache_retrieve_message(transaction_cache_t *cache, 
         uint32_t xid, enum dhcp_message_type type);
 
 /* Retrieve last message of type from transaction in cache */
-dhcp_message_t *transaction_cache_retrieve_message_last(transaction_cache_t *cache, 
+dhcp_message_t *trans_cache_retrieve_message_last(transaction_cache_t *cache, 
         uint32_t xid, enum dhcp_message_type type);
 
 /* Retrieve message on index from transaction in cache */
-dhcp_message_t *transaction_cache_retrieve_message_index(transaction_cache_t *cache, uint32_t xid,
+dhcp_message_t *trans_cache_retrieve_message_index(transaction_cache_t *cache, uint32_t xid,
         uint32_t index);
 
 /* Remove all transactions from cache */
-int transaction_cache_purge(transaction_cache_t *cache);
+int trans_cache_purge(transaction_cache_t *cache);
 
-void transaction_cache_destroy(transaction_cache_t **cache);
+void trans_cache_destroy(transaction_cache_t **cache);
 
 #endif // !__TRANSACTION_CACHE_H__
 

@@ -4,7 +4,7 @@
 #include "transaction.h"
 #include <stdint.h>
 
-transaction_cache_t *transaction_cache_new()
+transaction_cache_t *trans_cache_new()
 {
 
         transaction_cache_t *cache = calloc(1, sizeof(transaction_cache_t));
@@ -16,7 +16,7 @@ transaction_cache_t *transaction_cache_new()
         if_null_log(cache->transactions, error, LOG_ERROR, NULL, "Failed to allocate transaction cache");
 
         for (uint32_t i = 0; i < cache->size; i++) {
-                cache->transactions[i] = transaction_new();
+                cache->transactions[i] = trans_new();
                 if_null_log(cache->transactions[i], error, LOG_ERROR, NULL, 
                         "Failed to allocate transaction %u/%u in cache", i, cache->size);
         }
@@ -42,28 +42,28 @@ error:
         return NULL;
 }
 
-int transaction_cache_add_message(transaction_cache_t *cache, dhcp_message_t *message)
+int trans_cache_add_message(transaction_cache_t *cache, dhcp_message_t *message)
 {
         if (!cache || !message)
                 return -1;
 
         int rv = -1;
 
-        transaction_t *transaction = transaction_cache_retrieve_transaction(cache, message->xid);
+        transaction_t *transaction = trans_cache_retrieve_transaction(cache, message->xid);
         if (!transaction) {
                 // No transaction, get next transaction
                 transaction = cache_get_next_transaction(cache);
                 if_null(transaction, exit);
-                transaction_clear(transaction);
+                trans_clear(transaction);
         } 
         
-        rv = transaction_add(transaction, message);
+        rv = trans_add(transaction, message);
 exit:
         return rv;
 }
 
 /* Retrieve transaction with specified xid */
-transaction_t *transaction_cache_retrieve_transaction(transaction_cache_t *cache, uint32_t xid)
+transaction_t *trans_cache_retrieve_transaction(transaction_cache_t *cache, uint32_t xid)
 {
         if (!cache)
                 return NULL;
@@ -77,45 +77,45 @@ transaction_t *transaction_cache_retrieve_transaction(transaction_cache_t *cache
 }
 
 /* Retrieve first message of type from transaction in cache */
-dhcp_message_t *transaction_cache_retrieve_message(transaction_cache_t *cache, 
+dhcp_message_t *trans_cache_retrieve_message(transaction_cache_t *cache, 
         uint32_t xid, enum dhcp_message_type type)
 {
-        return transaction_search_for(transaction_cache_retrieve_transaction(cache, xid), type);
+        return trans_search_for(trans_cache_retrieve_transaction(cache, xid), type);
 }
 
 /* Retrieve last message of type from transaction in cache */
-dhcp_message_t *transaction_cache_retrieve_message_last(transaction_cache_t *cache, 
+dhcp_message_t *trans_cache_retrieve_message_last(transaction_cache_t *cache, 
         uint32_t xid, enum dhcp_message_type type)
 {
-        return transaction_search_for_last(transaction_cache_retrieve_transaction(cache, xid), type);
+        return trans_search_for_last(trans_cache_retrieve_transaction(cache, xid), type);
 }
 
 /* Retrieve message on index from transaction in cache */
-dhcp_message_t *transaction_cache_retrieve_message_index(transaction_cache_t *cache, uint32_t xid,
+dhcp_message_t *trans_cache_retrieve_message_index(transaction_cache_t *cache, uint32_t xid,
                 uint32_t index)
 {
-        return transaction_get_index(transaction_cache_retrieve_transaction(cache, xid), index);
+        return trans_get_index(trans_cache_retrieve_transaction(cache, xid), index);
 }
 
 /* Clear all transactions from cache */
-int transaction_cache_purge(transaction_cache_t *cache)
+int trans_cache_purge(transaction_cache_t *cache)
 {
         if (!cache)
                 return -1;
 
         for (uint32_t i = 0; i < cache->size; i++) {
-                transaction_clear(cache->transactions[i]);
+                trans_clear(cache->transactions[i]);
         }
 
         return 0;
 }
 
-void transaction_cache_destroy(transaction_cache_t **cache)
+void trans_cache_destroy(transaction_cache_t **cache)
 {
         if (!cache || ! *cache)
                 return;
 
-        transaction_cache_purge(*cache);
+        trans_cache_purge(*cache);
         free(*cache);
         *cache = NULL;
 }

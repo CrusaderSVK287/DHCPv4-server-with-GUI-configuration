@@ -6,21 +6,21 @@
 #include <string.h>
 #include <time.h>
 
-transaction_t *transaction_new()
+transaction_t *trans_new()
 {
         transaction_t *t = calloc(1, sizeof(transaction_t));
         if_null(t, error);
         
         t->messages_ll = llist_new();
         if_null(t, error);
-        transaction_clear(t);
+        trans_clear(t);
 
         return t;
 error:
         return NULL;
 }
 
-void transaction_destroy(transaction_t **transaction)
+void trans_destroy(transaction_t **transaction)
 {
         if (!transaction || ! (*transaction))
                 return;
@@ -31,7 +31,7 @@ void transaction_destroy(transaction_t **transaction)
         *transaction = NULL;
 }
 
-void transaction_clear(transaction_t *transaction)
+void trans_clear(transaction_t *transaction)
 {
         if (!transaction || !transaction->messages_ll)
                 return;
@@ -42,7 +42,7 @@ void transaction_clear(transaction_t *transaction)
         llist_clear(&(*transaction->messages_ll));
 }
 
-int transaction_add(transaction_t *transaction, const dhcp_message_t *message)
+int trans_add(transaction_t *transaction, const dhcp_message_t *message)
 {
         if (!transaction || !message)
                 return -1;
@@ -73,7 +73,7 @@ exit:
         return rv;
 }
 
-dhcp_message_t *transaction_get_index(transaction_t *transaction, uint8_t index)
+dhcp_message_t *trans_get_index(transaction_t *transaction, uint8_t index)
 {
         if (!transaction)
                 goto error;
@@ -86,7 +86,7 @@ error:
         return NULL;
 }
 
-dhcp_message_t *transaction_search_for(transaction_t *transaction, enum dhcp_message_type type)
+dhcp_message_t *trans_search_for(transaction_t *transaction, enum dhcp_message_type type)
 {
         if (!transaction)
                 goto error;
@@ -103,7 +103,7 @@ error:
         return NULL;
 }
 
-dhcp_message_t *transaction_search_for_last(transaction_t *transaction, enum dhcp_message_type type)
+dhcp_message_t *trans_search_for_last(transaction_t *transaction, enum dhcp_message_type type)
 {
         if (!transaction)
                 goto error;
