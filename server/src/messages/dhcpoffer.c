@@ -11,6 +11,7 @@
 #include "../utils/llist.h"
 #include "../logging.h"
 #include "../dhcp_packet.h"
+#include "cclog_macros.h"
 
 int message_dhcpoffer_send(dhcp_server_t *server, dhcp_message_t *message)
 {
@@ -109,11 +110,9 @@ int message_dhcpoffer_build(dhcp_server_t *server, dhcp_message_t *dhcp_discover
                                 offered_lease_duration, offered_address, offer), 
                         exit);
 
-        if_failed_log(dhcp_packet_build(offer), exit, LOG_ERROR, NULL, 
-                        "Failed to build DHCPOFFER message");
-
+        if_failed(dhcp_packet_build(offer), exit);
         if_failed(message_dhcpoffer_send(server,offer), exit);
-        dhcp_message_destroy(&offer);
+        if_failed(trans_cache_add_message(server->trans_cache, offer), exit);
 
         rv = 0;
 exit:

@@ -24,6 +24,7 @@ int message_dhcpack_send(dhcp_server_t *server, dhcp_message_t *message)
         addr.sin_family = AF_INET;
         // TODO: make possible to unicast
         addr.sin_port = htons(68);
+        // TODO: Replace inet_addr with inet_aton etc.
         addr.sin_addr.s_addr = inet_addr("192.168.1.255");
 
         cclog(LOG_MSG, NULL, "Sending dhcp ack message acknownledging address %s",
@@ -99,12 +100,26 @@ int message_dhcpack_build(dhcp_server_t *server, dhcp_message_t *dhcp_request,
                                 acked_lease_duration, leased_address, ack), 
                         exit);
 
-        if_failed_log(dhcp_packet_build(ack), exit, LOG_ERROR, NULL, 
-                        "Failed to build DHCPACK message");
-
+        if_failed(dhcp_packet_build(ack), exit);
         if_failed(message_dhcpack_send(server,ack), exit);
-        dhcp_message_destroy(&ack);
+        if_failed(trans_cache_add_message(server->trans_cache, ack), exit);
+
+        rv = 0;
 exit:
         return rv;
 }
 
+int message_dhcpack_build_lease_renew(dhcp_server_t *server, dhcp_message_t *request, 
+        uint32_t lease_duration, uint32_t renewed_address)
+{
+        if (!server || !request)
+                return -1;
+
+        int rv = -1;
+
+        // TODO: must be unicast to request->ciaddr
+
+        rv = 0;
+// exit:
+        return rv;
+}

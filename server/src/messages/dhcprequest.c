@@ -186,7 +186,41 @@ exit:
 
 static int dhcp_request_renew_lease(dhcp_server_t *server, dhcp_message_t *request)
 {
-        return 0;
+        if (!server || !request)
+                return -1;
+
+        int rv = -1;
+
+        /* If client doesnt specify its address, exit */
+        if_false(request->ciaddr, exit);
+
+        /* Retrieve lease from persistent database */
+        lease_t lease = {0};
+        if_failed(lease_retrieve_address(&lease, request->ciaddr, server->allocator->address_pools),
+                exit);
+
+        /* Verify client hardware address */
+        if_failed(memcmp(lease.client_mac_address, request->chaddr, 6), exit);
+
+
+        /* Delete existing lease */
+        if_failed_log(lease_remove(&lease), exit, LOG_WARN, NULL, 
+                "Failed step 1 of renewing lease of address %s", 
+                uint32_to_ipv4_address(request->ciaddr));
+        
+        /* Set new expiration time for lease */
+        lease.lease_start = time(NULL);
+        lease.lease_expire = lease.lease_start + retrieve_lease_time(request->ciaddr, 
+                                                        server->allocator);
+
+        /* Renew lease */
+        if_failed_log(lease_add(&lease), exit, LOG_WARN, NULL, 
+                "Failed step 2 of renewing lease of address %s", 
+                uint32_to_ipv4_address(request->ciaddr));
+
+        rv = 0;
+exit:
+        return rv;
 }
 
 int message_dhcprequest_handle(dhcp_server_t *server, dhcp_message_t *request)
@@ -204,8 +238,9 @@ int message_dhcprequest_handle(dhcp_server_t *server, dhcp_message_t *request)
          */
         if (o54) {
                 if (dhcp_request_response_to_offer(server, request, o54) < 0) {
-                        /* Error, send DHCPNAK to client and free lease */
-                        // TODO:
+                        /* Error, send DHCPNAK to client, lease will be freed when transaction expires */
+                        // TODO: transaction timeout refactoring
+                        if_failed_n(message_dhcpnak_build(server, request), exit);
                 } else {
                         /* Success, send DHCPACK to client */
                         dhcp_option_t *o50 = dhcp_option_retrieve(request->dhcp_options, 
@@ -214,7 +249,8 @@ int message_dhcprequest_handle(dhcp_server_t *server, dhcp_message_t *request)
                                                 o50->value.ip), exit);
                 }
         } else {
-                if_failed_n(dhcp_request_renew_lease(server, request), exit);           
+                if_failed_n(dhcp_request_renew_lease(server, request), exit);
+                // TODO: check the renew lease thing, send ack if renewing, dont send anything if not
         }
 
         rv = 0;
