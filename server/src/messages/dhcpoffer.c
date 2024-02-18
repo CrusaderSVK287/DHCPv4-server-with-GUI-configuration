@@ -29,7 +29,7 @@ int message_dhcpoffer_send(dhcp_server_t *server, dhcp_message_t *message)
         cclog(LOG_MSG, NULL, "Sending DHCP offer message offering address %s to client %s",
                         uint32_to_ipv4_address(message->yiaddr), 
                         uint8_array_to_mac((uint8_t*)message->chaddr));
-        // TODO: make proper unicast messaging if applicable
+        /* No need to implement unicast, since dhcpoffer is always broadcasted */
         if_failed_log_n(sendto(server->sock_fd, &message->packet, sizeof(dhcp_packet_t), 0,
                                 (struct sockaddr*)&addr, sizeof(addr)), 
                         exit, LOG_ERROR, NULL, "Failed to send dhcp OFFER message: %s", 
@@ -118,3 +118,4 @@ int message_dhcpoffer_build(dhcp_server_t *server, dhcp_message_t *dhcp_discover
 exit:
         return rv;
 }
+

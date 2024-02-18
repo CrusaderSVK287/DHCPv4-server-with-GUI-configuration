@@ -249,8 +249,12 @@ int message_dhcprequest_handle(dhcp_server_t *server, dhcp_message_t *request)
                                                 o50->value.ip), exit);
                 }
         } else {
-                if_failed_n(dhcp_request_renew_lease(server, request), exit);
-                // TODO: check the renew lease thing, send ack if renewing, dont send anything if not
+                /*
+                 * RFC-2131 states that the server SHOULD send dhcpack regardless of 
+                 * whether it extended the lease or not
+                 */
+                dhcp_request_renew_lease(server, request);
+                if_failed(message_dhcpack_build_lease_renew(server, request), exit);
         }
 
         rv = 0;
