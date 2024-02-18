@@ -19,9 +19,9 @@ This roadmap may change in future
     - Extend IP allocator API
     - Configuration option for dhcp options.
 * DHCP messages communication
-    - Implement rest of DHCP message types handling
-    - Implement cache for transactions to store for parameter checks
-    - Bring all messages handlers up to RFC-2131 standard
+    - Implement rest of DHCP message types handling [Done - commit c3148ac2c67409cd6d37b3a7c3900e879a13ddfb]
+    - Implement cache for transactions to store for parameter checks [Done - commit 15843add110a872005f8c4722abd142f3fd32118]
+    - Implement automatic lease releasing mechanism
 * Transaction database
     - Transaction database structure
     - Database API to store, retrieve data etc.
