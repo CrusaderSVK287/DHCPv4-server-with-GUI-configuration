@@ -18,5 +18,8 @@ int message_dhcpack_build(dhcp_server_t *server, dhcp_message_t *dhcp_request,
     uint32_t offered_lease_duration, uint32_t leased_address);
 
 int message_dhcpack_build_lease_renew(dhcp_server_t *server, dhcp_message_t *request);
+
+/* Build dhcpack message as a response to dhcpinform and send it */
+int message_dhcpack_build_inform_response(dhcp_server_t *server, dhcp_message_t *inform);
 #endif // !__DHCPACK_H__
 
