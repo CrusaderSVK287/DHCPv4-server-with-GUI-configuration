@@ -8,6 +8,7 @@
 #include "dhcp_packet.h"
 #include "logging.h"
 #include "messages/dhcp_messages.h"
+#include "transaction.h"
 #include "utils/llist.h"
 #include "utils/xtoy.h"
 #include "transaction_cache.h"
@@ -100,6 +101,15 @@ exit:
 	return rv;
 }
 
+void update_timers(dhcp_server_t *server)
+{
+        /* Update timers on transaction cache entries. */
+        for (int i = 0; i < server->trans_cache->size; i++) {
+                if (server->trans_cache->transactions[i]->timer->is_running)
+                        trans_update_timer(server->trans_cache->transactions[i]);
+        }
+}
+
 int dhcp_server_serve(dhcp_server_t *server)
 {
 	int rv = -1;
@@ -111,6 +121,9 @@ int dhcp_server_serve(dhcp_server_t *server)
 
 	do
 	{
+                /* Update various timers used by server (e.g. transaction cache timers )*/
+                update_timers(server);        
+
 		rv = recv(server->sock_fd, &dhcp_msg->packet, sizeof(dhcp_packet_t), 0);
 		if (rv < 0 && errno == EAGAIN) {
 			continue;
@@ -134,9 +147,12 @@ int dhcp_server_serve(dhcp_server_t *server)
                                 rfc2131_dhcp_message_type_to_str(dhcp_msg->type),
                                 uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr));
 
-                /* Store message in cache for future reference */
-                if_failed_log_ng(trans_cache_add_message(server->trans_cache, dhcp_msg), 
-                        LOG_WARN, NULL, "Server failed to store message in transaction cache");
+                /*
+                 * Store message in cache for future reference, drop communication if the message 
+                 * cannot be stored, for example due to full cache (log should be made)
+                 */
+                if (trans_cache_add_message(server->trans_cache, dhcp_msg) < 0)
+                        continue;
                 
                 switch (dhcp_msg->type) {
                         case DHCP_DISCOVER: 
