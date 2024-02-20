@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
         RUN_SUITE(lease);
         RUN_SUITE(dhcp_message_handlers);
         RUN_SUITE(transaction);
+        RUN_SUITE(timer);
 
         cclogger_uninit();
 

@@ -12,5 +12,6 @@ SUITE(packet_parser_builder);
 SUITE(lease);
 SUITE(dhcp_message_handlers);
 SUITE(transaction);
+SUITE(timer);
 
 #endif // !SERVER_TESTS
