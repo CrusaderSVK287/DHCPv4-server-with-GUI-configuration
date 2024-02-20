@@ -1,10 +1,17 @@
 #include "transaction.h"
 #include "cclog_macros.h"
 #include "logging.h"
+#include "timer.h"
 #include "utils/llist.h"
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+static int trans_timer_cb_clear(uint32_t time, void *priv)
+{
+        trans_clear((transaction_t*)priv);
+        return 0;
+}
 
 transaction_t *trans_new()
 {
@@ -13,6 +20,9 @@ transaction_t *trans_new()
         
         t->messages_ll = llist_new();
         if_null(t, error);
+        t->timer = timer_new(TIMER_ONCE, TRANSACTION_TIMEOUT_DEFAULT, false, trans_timer_cb_clear);
+        if_null(t->timer, error);
+
         trans_clear(t);
 
         return t;
@@ -26,6 +36,7 @@ void trans_destroy(transaction_t **transaction)
                 return;
 
         llist_destroy(&((*transaction)->messages_ll));
+        timer_destroy(&((*transaction)->timer));
 
         free(*transaction);
         *transaction = NULL;
@@ -40,6 +51,12 @@ void trans_clear(transaction_t *transaction)
         transaction->transaction_begin = 0;
         transaction->xid = 0;
         llist_clear(&(*transaction->messages_ll));
+
+        /* Reset and stop the timer if it is running */
+        if (transaction->timer->is_running) {
+                timer_reset(transaction->timer);
+                timer_stop(transaction->timer);
+        }
 }
 
 int trans_add(transaction_t *transaction, const dhcp_message_t *message)
@@ -67,6 +84,10 @@ int trans_add(transaction_t *transaction, const dhcp_message_t *message)
         if_failed_log(llist_append(transaction->messages_ll, message_copy, true), exit, LOG_ERROR,
                         NULL, "Failed to append message to transaction");
         transaction->num_of_messages += 1;
+
+        /* When we add first message, start transaction timer */
+        if (transaction->num_of_messages == 1) 
+                timer_start(transaction->timer);
 
         rv = 0;
 exit:
@@ -125,5 +146,10 @@ dhcp_message_t *trans_search_for_last(transaction_t *transaction, enum dhcp_mess
         return last;
 error:
         return NULL;
+}
+
+int trans_update_timer(transaction_t *transaction)
+{
+        return timer_update(transaction->timer, transaction);
 }
 

@@ -21,7 +21,6 @@
 typedef struct transaction_cache {
     transaction_t **transactions;
     uint32_t size;
-    uint32_t _offset;
 } transaction_cache_t;
 
 /* 

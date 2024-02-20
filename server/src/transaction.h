@@ -4,13 +4,18 @@
 #include "RFC/RFC-2131.h"
 #include "utils/llist.h"
 #include "dhcp_packet.h"
+#include "timer.h"
 #include <stdint.h>
+
+// TODO: implement config 
+#define TRANSACTION_TIMEOUT_DEFAULT 60
 
 typedef struct transaction {
     uint32_t transaction_begin;
     uint32_t xid;
     uint8_t num_of_messages;
     llist_t *messages_ll;
+    struct timer *timer;
 } transaction_t;
 
 /* Allocate space for a new transaction */
@@ -37,6 +42,8 @@ dhcp_message_t *trans_search_for(transaction_t *transaction, enum dhcp_message_t
 
 /* Returns last DHCP message that matches the type */
 dhcp_message_t *trans_search_for_last(transaction_t *transaction, enum dhcp_message_type type);
+
+int trans_update_timer(transaction_t *transaction);
 
 #endif // !__TRANSACTION_H__
 

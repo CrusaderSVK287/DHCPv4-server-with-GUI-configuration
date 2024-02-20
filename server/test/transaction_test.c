@@ -5,6 +5,7 @@
 #include "transaction.h"
 #include <transaction_cache.h>
 #include <stdio.h>
+#include <unistd.h>
 
 static transaction_t *setup_transaction() 
 {
@@ -166,7 +167,8 @@ TEST test_cache_init_and_destroy()
 {
         transaction_cache_t *cache = trans_cache_new(15);
         ASSERT_NEQ(NULL, cache);
-        ASSERT_EQ(0, cache->_offset);
+        for (int i = 0; i < 15; i++)
+                ASSERT_EQ(false, cache->transactions[i]->timer->is_running);
 
         trans_cache_destroy(&cache);
         ASSERT_EQ(NULL, cache);
@@ -185,9 +187,9 @@ TEST test_cache_add_message()
         msg1->xid = 0x5555;
         
         ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
-        ASSERT_EQ(1, cache->_offset);
-        ASSERT_EQ(1, cache->transactions[1]->num_of_messages);
-        ASSERT_EQ(0x5555, cache->transactions[1]->xid);
+        ASSERT_EQ(true, cache->transactions[0]->timer->is_running);
+        ASSERT_EQ(1, cache->transactions[0]->num_of_messages);
+        ASSERT_EQ(0x5555, cache->transactions[0]->xid);
 
         trans_cache_destroy(&cache);
         PASS();
@@ -209,9 +211,9 @@ TEST test_cache_add_multiple_messages_to_same_transaction()
         
         ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
         ASSERT_EQ(0, trans_cache_add_message(cache, msg2));
-        ASSERT_EQ(1, cache->_offset);
-        ASSERT_EQ(2, cache->transactions[1]->num_of_messages);
-        ASSERT_EQ(0x5555, cache->transactions[1]->xid);
+        ASSERT_EQ(true, cache->transactions[0]->timer->is_running);
+        ASSERT_EQ(2, cache->transactions[0]->num_of_messages);
+        ASSERT_EQ(0x5555, cache->transactions[0]->xid);
         
         trans_cache_destroy(&cache);
         PASS();
@@ -244,13 +246,15 @@ TEST test_cache_add_multiple_messages_to_different_transactions()
         ASSERT_EQ(0, trans_cache_add_message(cache, msg3));
         ASSERT_EQ(0, trans_cache_add_message(cache, msg4));
         
-        ASSERT_EQ(3, cache->_offset);
-        ASSERT_EQ(1, cache->transactions[1]->num_of_messages);
-        ASSERT_EQ(2, cache->transactions[2]->num_of_messages);
-        ASSERT_EQ(1, cache->transactions[3]->num_of_messages);
-        ASSERT_EQ(0x5555, cache->transactions[1]->xid);
-        ASSERT_EQ(0x6666, cache->transactions[2]->xid);
-        ASSERT_EQ(0x7777, cache->transactions[3]->xid);
+        ASSERT_EQ(true, cache->transactions[0]->timer->is_running);
+        ASSERT_EQ(true, cache->transactions[1]->timer->is_running);
+        ASSERT_EQ(true, cache->transactions[2]->timer->is_running);
+        ASSERT_EQ(1, cache->transactions[0]->num_of_messages);
+        ASSERT_EQ(2, cache->transactions[1]->num_of_messages);
+        ASSERT_EQ(1, cache->transactions[2]->num_of_messages);
+        ASSERT_EQ(0x5555, cache->transactions[0]->xid);
+        ASSERT_EQ(0x6666, cache->transactions[1]->xid);
+        ASSERT_EQ(0x7777, cache->transactions[2]->xid);
         
         trans_cache_destroy(&cache);
         PASS();
@@ -266,18 +270,22 @@ TEST test_cache_overflow_cache_size()
         msg1->type = DHCP_DISCOVER;
         msg1->xid = 1000;
 
-        for(int i = 0; i < 18; i++) {
+        for(int i = 0; i < 15; i++) {
                 msg1->xid = 1000 + i;
                 ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
         }
 
-        ASSERT_EQ(3, cache->_offset);
+        msg1->xid = 5000;
+        ASSERT_EQ(-1, trans_cache_add_message(cache, msg1));
+        msg1->xid = 6000;
+        ASSERT_EQ(-1, trans_cache_add_message(cache, msg1));
+        
+        ASSERT_EQ(1, cache->transactions[0]->num_of_messages);
         ASSERT_EQ(1, cache->transactions[1]->num_of_messages);
         ASSERT_EQ(1, cache->transactions[2]->num_of_messages);
-        ASSERT_EQ(1, cache->transactions[3]->num_of_messages);
-        ASSERT_EQ(1015, cache->transactions[1]->xid);
-        ASSERT_EQ(1016, cache->transactions[2]->xid);
-        ASSERT_EQ(1017, cache->transactions[3]->xid);
+        ASSERT_EQ(1000, cache->transactions[0]->xid);
+        ASSERT_EQ(1001, cache->transactions[1]->xid);
+        ASSERT_EQ(1002, cache->transactions[2]->xid);
         
         trans_cache_destroy(&cache);
         PASS();
@@ -376,7 +384,7 @@ TEST test_cache_purge()
         msg1->type = DHCP_DISCOVER;
         msg1->xid = 1000;
 
-        for(int i = 0; i < 18; i++) {
+        for(int i = 0; i < 15; i++) {
                 msg1->xid = 1000 + i;
                 ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
         }
@@ -388,7 +396,63 @@ TEST test_cache_purge()
                 ASSERT_EQ(0, cache->transactions[i]->xid);
                 ASSERT_EQ(0, cache->transactions[i]->num_of_messages);
                 ASSERT_EQ(0, cache->transactions[i]->transaction_begin);
+                ASSERT_EQ(false, cache->transactions[i]->timer->is_running);
         }
+
+        trans_cache_destroy(&cache);
+        PASS();
+}
+
+TEST test_cache_wait_until_transaction_is_finished()
+{
+#ifndef __RUN_TIMER_TESTS__
+        SKIP();
+#endif
+        
+        transaction_cache_t *cache = trans_cache_new(15);
+        ASSERT_NEQ(NULL, cache);
+        
+        dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
+        ASSERT_NEQ(NULL, msg1);
+        msg1->type = DHCP_DISCOVER;
+        msg1->xid = 0x5555;
+        
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
+        ASSERT_EQ(true, cache->transactions[0]->timer->is_running);
+        ASSERT_EQ(1, cache->transactions[0]->num_of_messages);
+        ASSERT_EQ(0x5555, cache->transactions[0]->xid);
+
+        for (int i = 0; i < TRANSACTION_TIMEOUT_DEFAULT + 5; i++) {
+                trans_update_timer(cache->transactions[0]);
+                sleep(1);
+
+                /* Add another message */
+                if (i == 30) {
+                        msg1->xid = 0x6666;
+                        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
+                        ASSERT_EQ(true, cache->transactions[1]->timer->is_running);
+                        ASSERT_EQ(1, cache->transactions[1]->num_of_messages);
+                        ASSERT_EQ(0x6666, cache->transactions[1]->xid);
+                }
+                if (i >= 30) {
+                        trans_update_timer(cache->transactions[1]);
+                }
+        }
+
+        ASSERT_EQ(false, cache->transactions[0]->timer->is_running);
+        ASSERT_EQ(0, cache->transactions[0]->num_of_messages);
+        ASSERT_EQ(0, cache->transactions[0]->xid);
+        
+        ASSERT_EQ(true, cache->transactions[1]->timer->is_running);
+        ASSERT_EQ(1, cache->transactions[1]->num_of_messages);
+        ASSERT_EQ(0x6666, cache->transactions[1]->xid);
+
+        /* Add third message after first one is expired and second one is not */
+        msg1->xid = 0x7777;
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
+        ASSERT_EQ(true, cache->transactions[0]->timer->is_running);
+        ASSERT_EQ(1, cache->transactions[0]->num_of_messages);
+        ASSERT_EQ(0x7777, cache->transactions[0]->xid);
 
         trans_cache_destroy(&cache);
         PASS();
@@ -412,5 +476,6 @@ SUITE(transaction)
         RUN_TEST(test_cache_retrieve_non_existent_transaction);
         RUN_TEST(test_cache_retrieve_messages_from_transaction);
         RUN_TEST(test_cache_purge);
+        RUN_TEST(test_cache_wait_until_transaction_is_finished);
 }
 

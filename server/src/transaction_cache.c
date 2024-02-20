@@ -32,11 +32,11 @@ static transaction_t* cache_get_next_transaction(transaction_cache_t *cache)
         if (!cache)
                 goto error;
 
-        cache->_offset += 1;
-        if (cache->_offset >= cache->size)
-                cache->_offset = 0;
+        for (int i = 0; i < cache->size; i++) {
+                if (!cache->transactions[i]->timer->is_running)
+                        return cache->transactions[i];
+        }
 
-        return cache->transactions[cache->_offset];
 error:
         return NULL;
 }
@@ -52,7 +52,8 @@ int trans_cache_add_message(transaction_cache_t *cache, dhcp_message_t *message)
         if (!transaction) {
                 // No transaction, get next transaction
                 transaction = cache_get_next_transaction(cache);
-                if_null(transaction, exit);
+                if_null_log(transaction, exit, LOG_WARN, NULL, 
+                        "Out of space in transaction cache! Consider increasing cache space");
                 trans_clear(transaction);
         } 
         
