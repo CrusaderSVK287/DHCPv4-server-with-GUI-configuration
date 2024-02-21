@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
 
         if_failed(init_logging(), exit);
         if_failed(init_dhcp_server(&dhcp_server), exit);
+        if_failed(init_dhcp_server_timers(&dhcp_server), exit);
         if_failed(init_allocator(&dhcp_server), exit);
         if_failed(init_address_pools(&dhcp_server), exit);
         if_failed(init_dhcp_options(&dhcp_server), exit);
