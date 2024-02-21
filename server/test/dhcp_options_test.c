@@ -311,6 +311,26 @@ TEST test_build_options_from_requested_and_mandatory()
         PASS();
 }
 
+TEST test_dhcp_option_copy()
+{
+        uint32_t address = 0x708090A0;
+        dhcp_option_t *original = dhcp_option_new_values(51, 4, &address);
+        ASSERT_NEQ(NULL, original);
+
+        dhcp_option_t *copy = dhcp_option_copy(original);
+
+        ASSERT_NEQ(original, copy);
+        ASSERT_EQ(original->tag, copy->tag);
+        ASSERT_EQ(original->lenght, copy->lenght);
+        ASSERT_EQ(original->type, copy->type);
+        ASSERT_MEM_EQ(original->value.binary_data, copy->value.binary_data, original->lenght);
+
+        dhcp_option_destroy(&original);
+        dhcp_option_destroy(&copy);
+
+        PASS();
+}
+
 SUITE(dhcp_options)
 {
         memset(raw_dhcp_options, 0, sizeof(dhcp_options));
@@ -336,6 +356,7 @@ SUITE(dhcp_options)
         RUN_TEST(test_serialize_options);
         RUN_TEST(test_retrieve_option_by_tag);
         RUN_TEST(test_add_option_to_linked_list);
+        RUN_TEST(test_dhcp_option_copy);
 
         RUN_TEST(test_parsed_option_numeric);
         RUN_TEST(test_parsed_option_ip);

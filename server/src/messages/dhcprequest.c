@@ -79,7 +79,7 @@ static bool validate_client_id_and_requested_params(transaction_cache_t *cache,
         }
 
         if_failed_log(memcmp(request_o55->value.binary_data, discover_o55->value.binary_data, 
-                request_o61->lenght), error, LOG_WARN, NULL, 
+                request_o55->lenght), error, LOG_WARN, NULL, 
                 "Inconsistent parameter request list , transaction will not proceed");
 
         return true;
@@ -101,7 +101,7 @@ static uint32_t retrieve_client_address(dhcp_message_t *request, transaction_cac
                         DHCP_OPTION_REQUESTED_IP_ADDRESS);
 
         /* If client didnt request address, look for previously offered address */
-        if (o50) {
+        if (!o50) {
                 dhcp_message_t *offer = trans_cache_retrieve_message(cache, request->xid, DHCP_OFFER);
                 if_null(offer, error);
                 o50 = dhcp_option_retrieve(offer->dhcp_options, DHCP_OPTION_REQUESTED_IP_ADDRESS);
@@ -239,7 +239,7 @@ int message_dhcprequest_handle(dhcp_server_t *server, dhcp_message_t *request)
         if (o54) {
                 if (dhcp_request_response_to_offer(server, request, o54) < 0) {
                         /* Error, send DHCPNAK to client, lease will be freed when transaction expires */
-                        // TODO: transaction timeout refactoring
+                        // TODO: transaction timeout refactoring to free the allocated address (allocator, not lease)
                         if_failed_n(message_dhcpnak_build(server, request), exit);
                 } else {
                         /* Success, send DHCPACK to client */
@@ -253,8 +253,12 @@ int message_dhcprequest_handle(dhcp_server_t *server, dhcp_message_t *request)
                  * RFC-2131 states that the server SHOULD send dhcpack regardless of 
                  * whether it extended the lease or not
                  */
-                dhcp_request_renew_lease(server, request);
-                if_failed(message_dhcpack_build_lease_renew(server, request), exit);
+                // LOG: maybe because of the first dhcprequest this happens
+                // this may fix, putting those two into if blockl 
+                if (request->ciaddr) {
+                        dhcp_request_renew_lease(server, request);
+                        if_failed(message_dhcpack_build_lease_renew(server, request), exit);
+                }
         }
 
         rv = 0;

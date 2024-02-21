@@ -53,8 +53,8 @@ static int get_requested_dhcp_options(address_allocator_t *allocator,
                         requested_options_list->value.binary_data, 
                         /* required */   (uint8_t[]) {0}, 
                         /* blacklised */ (uint8_t[]) {0},
-                        allocator->default_options, allocator->default_options, DHCP_ACK),
-                        exit, LOG_WARN, NULL, "Failed to build dhcp options for DHCP_ACK message");
+                        allocator->default_options, allocator->default_options, DHCP_NAK),
+                        exit, LOG_WARN, NULL, "Failed to build dhcp options for DHCP_NAK message");
 
         rv = 0;
 exit:

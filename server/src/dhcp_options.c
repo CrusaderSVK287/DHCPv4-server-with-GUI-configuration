@@ -343,12 +343,13 @@ int dhcp_option_build_required_options(llist_t *dest, uint8_t *requested_options
                         option = dhcp_option_retrieve(pool_options, tag);
                         if (!option)
                                 option = dhcp_option_retrieve(global_options, tag);
+
                         if_null_log(option, exit, LOG_WARN, NULL, 
                                 "Cannot set mandatory option %d for %s because it's not configured", tag,
                                 rfc2131_dhcp_message_type_to_str(type));
 
-                        if_failed_log(dhcp_option_add(dest, option), exit, LOG_WARN, NULL, 
-                                "Failed to  add mandatory option %d for %s", tag, 
+                        if_failed_log(dhcp_option_add(dest, dhcp_option_copy(option)), exit, 
+                                LOG_WARN, NULL, "Failed to  add mandatory option %d for %s", tag, 
                                 rfc2131_dhcp_message_type_to_str(type));
                 }
 
@@ -367,10 +368,13 @@ int dhcp_option_build_required_options(llist_t *dest, uint8_t *requested_options
                         option = dhcp_option_retrieve(pool_options, tag);
                         if (!option)
                                 option = dhcp_option_retrieve(global_options, tag);
+
                         if_null_log_ng(option, LOG_INFO, NULL, 
                                 "Cannot set option %d for %s because it's not configured", tag,
                                 rfc2131_dhcp_message_type_to_str(type));
-                        dhcp_option_add(dest, option);
+                        if_failed_log_ng(dhcp_option_add(dest, dhcp_option_copy(option)), 
+                                LOG_INFO, NULL, "Failed to add requested option %d for %s", tag, 
+                                rfc2131_dhcp_message_type_to_str(type));
                 }
                 
                 /* we need to increment the pointer to get the next tag */
@@ -381,5 +385,13 @@ int dhcp_option_build_required_options(llist_t *dest, uint8_t *requested_options
         rv = 0;
 exit:
         return rv;
+}
+
+dhcp_option_t* dhcp_option_copy(dhcp_option_t *original)
+{
+        return original ? dhcp_option_new_values(original->tag, 
+                                                original->lenght, 
+                                                original->value.binary_data) 
+                : NULL;
 }
 

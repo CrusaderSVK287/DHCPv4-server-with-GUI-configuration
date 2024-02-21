@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 /* COMMENT OUT FOR RELEASE BUILD */
-#define LEASES_TEST_BUILD
+// #define LEASES_TEST_BUILD
 
 #ifdef LEASES_TEST_BUILD
 #define LEASE_PATH_PREFIX "./test/test_leases/"

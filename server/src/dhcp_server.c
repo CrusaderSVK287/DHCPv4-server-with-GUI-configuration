@@ -209,12 +209,12 @@ void update_timers(dhcp_server_t *server)
         int released_leases = timer_update(server->timers.lease_expiration_check, server);
         if (released_leases == TIMER_ERROR)
                 cclog(LOG_WARN, NULL, "Failed to update lease expiration check timer");
-        else 
+        else if (released_leases > 0)
                 cclog(LOG_MSG, NULL, "Released %d addresses from lease database", released_leases);
 
         // TODO: Maybe do a configuration to control whether or not to lower cpu load / set the delay
         /* Introduce a slight delay between processes in order to lower cpu load */
-        usleep(50000);
+        // usleep(50000);
 }
 
 int dhcp_server_serve(dhcp_server_t *server)

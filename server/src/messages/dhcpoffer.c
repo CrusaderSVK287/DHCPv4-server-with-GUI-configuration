@@ -1,7 +1,9 @@
 #include "dhcpoffer.h"
 #include <errno.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -12,6 +14,7 @@
 #include "../logging.h"
 #include "../dhcp_packet.h"
 #include "cclog_macros.h"
+#include <unistd.h>
 
 int message_dhcpoffer_send(dhcp_server_t *server, dhcp_message_t *message)
 {
@@ -24,7 +27,13 @@ int message_dhcpoffer_send(dhcp_server_t *server, dhcp_message_t *message)
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_port = htons(68);
+        // TODO: get proper broadcast domain
         addr.sin_addr.s_addr = inet_addr("192.168.1.255");
+
+        int fd = open("./test/offer.bin", O_RDWR | O_TRUNC | O_CREAT, 0666);
+        rv = write(fd, &message->packet, sizeof(dhcp_packet_t));
+        close(fd);
+        if (rv < 0) printf("ERROR writing %s\n", strerror(errno));
 
         cclog(LOG_MSG, NULL, "Sending DHCP offer message offering address %s to client %s",
                         uint32_to_ipv4_address(message->yiaddr), 
@@ -61,11 +70,11 @@ static int get_requested_dhcp_options(address_allocator_t *allocator, dhcp_messa
         address_pool_t *pool = allocator_get_pool_by_address(allocator, offered_address);
         if_null(pool, exit);
 
-        if_failed_log(dhcp_option_build_required_options(dhcp_discover->dhcp_options, requested_options, 
+        if_failed_log(dhcp_option_build_required_options(dhcp_offer->dhcp_options, requested_options, 
                         /* required */   (uint8_t[]) {51, 54, 0}, 
                         /* blacklised */ (uint8_t[]) {50, 55, 61, 57, 0},
-                        allocator->default_options, pool->dhcp_option_override, DHCP_ACK),
-                        exit, LOG_WARN, NULL, "Failed to build dhcp options for DHCP_ACK message");
+                        allocator->default_options, pool->dhcp_option_override, DHCP_OFFER),
+                        exit, LOG_WARN, NULL, "Failed to build dhcp options for DHCP_OFFER message");
 
         dhcp_option_t *o61_client = dhcp_option_retrieve(dhcp_discover->dhcp_options, DHCP_OPTION_CLIENT_IDENTIFIER);
         if (o61_client) {
