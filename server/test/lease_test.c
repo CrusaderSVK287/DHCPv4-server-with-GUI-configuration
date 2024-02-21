@@ -6,12 +6,20 @@
 #include <sys/stat.h>
 /* tests.h include redefinition of LEASE_PATH_PREFIX */
 #include "address_pool.h"
+#include "allocator.h"
 #include "cJSON.h"
+#include "dhcp_server.h"
 #include "tests.h"
 #include "greatest.h"
 #include "utils/llist.h"
 #include "utils/xtoy.h"
 #include <unistd.h>
+
+/*
+ * This function is not exposed by API but defined in dhcp_server.c 
+ * priv is supposed to be dhcp_server_t 
+ */
+extern int check_lease_expirations(uint32_t check_time, void *priv);
 
 static int lease_path_ok = -1;
 TEST test_undef_lease_path_for_testing()
@@ -211,6 +219,39 @@ TEST test_remove_lease()
         PASS();
 }
 
+TEST test_lease_expiration()
+{
+        if (lease_path_ok < 0)
+                SKIP();
+
+        /* This assert is only used to verify the compiler can see the function */
+        ASSERT_EQ(-1, check_lease_expirations(50, NULL));
+
+        /* Since we dont have a dhcp server structure in theese tests, we need to create one */
+        dhcp_server_t server;
+        ASSERT_NEQ(NULL, (server.allocator = address_allocator_new()));
+        ASSERT_EQ(0, allocator_add_pool(server.allocator, address_pool_new_str("test_pool", "192.168.1.1", "192.168.1.254", "255.255.255.0")));
+        /* At this point in tests, we have allocated these addresses */
+        uint32_t adr_buf;
+        ASSERT_EQ(0, allocator_request_this_address_str(server.allocator, "192.168.1.10", &adr_buf));
+        ASSERT_EQ(0, allocator_request_this_address_str(server.allocator, "192.168.1.33", &adr_buf));
+        ASSERT_EQ(0, allocator_request_this_address_str(server.allocator, "192.168.1.186", &adr_buf));
+        ASSERT_EQ(251, ((address_pool_t*)server.allocator->address_pools->first->data)->available_addresses);
+        /* We have rady trimmed down */
+
+        /* 
+         * We expect 2 leases to be removed,
+         * since we have leases with following expirations:
+         * 1000, 60000 and 547784223
+         */
+        ASSERT_EQ(2, check_lease_expirations(100000, &server));
+        ASSERT_EQ(253, ((address_pool_t*)server.allocator->address_pools->first->data)->available_addresses);
+
+        allocator_destroy(&server.allocator);
+
+        PASS();
+}
+
 SUITE(lease)
 {
         RUN_TEST(test_undef_lease_path_for_testing);
@@ -226,6 +267,7 @@ SUITE(lease)
         RUN_TEST(test_retrieve_lease);
         RUN_TEST(test_retrieve_lease_address);
         RUN_TEST(test_retrieve_non_existent);
+        RUN_TEST(test_lease_expiration);
         RUN_TEST(test_remove_lease);
 }
 
