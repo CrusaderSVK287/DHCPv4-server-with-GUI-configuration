@@ -5,13 +5,13 @@
 #include <stdint.h>
 
 /* COMMENT OUT FOR RELEASE BUILD */
-// #define LEASES_TEST_BUILD
+// #define __LEASES_TEST_BUILD
 
-#ifdef LEASES_TEST_BUILD
+#ifdef __LEASES_TEST_BUILD
 #define LEASE_PATH_PREFIX "./test/test_leases/"
 #else
 #define LEASE_PATH_PREFIX "/etc/dhcp/lease/"
-#endif // LEASES_TEST_BUILD
+#endif // __LEASES_TEST_BUILD
 
 enum lease_flags {
     LEASE_FLAG_STATIC_ALLOCATION = (1 << 0),
