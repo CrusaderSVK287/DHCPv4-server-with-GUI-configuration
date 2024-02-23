@@ -17,7 +17,7 @@ endif
 ##### DEFINE YOUR DEPENDENCIES HERE #####
 
 CCLog:
-	$(GIT_CMD) git@github.com:CrusaderSVK287/CCLog.git $(DEPS_DIR)/$@
+	$(GIT_CMD) https://github.com/CrusaderSVK287/CCLog.git $(DEPS_DIR)/$@
 	@cd $(DEPS_DIR)/$@ && git checkout -q v1.2.2
 	$(MAKE_CMD) $(DEPS_DIR)/$@
 	cp $(DEPS_DIR)/$@/bin/libcclog.so $(INC_DIR)/
@@ -25,7 +25,7 @@ CCLog:
 	cp $(DEPS_DIR)/$@/src/cclog_macros.h $(INC_DIR)/
 
 cJSON:
-	$(GIT_CMD) git@github.com:DaveGamble/cJSON.git $(DEPS_DIR)/$@
+	$(GIT_CMD) https://github.com/DaveGamble/cJSON.git $(DEPS_DIR)/$@
 	@mkdir $(DEPS_DIR)/$@/build
 	@cd $(DEPS_DIR)/$@/build && git checkout -q v1.7.17 && cmake ..
 	$(MAKE_CMD) $(DEPS_DIR)/$@
