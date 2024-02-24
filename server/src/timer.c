@@ -1,6 +1,5 @@
 #include "timer.h"
 #include "cclog.h"
-#include "cclog_macros.h"
 #include "logging.h"
 #include <stdint.h>
 #include <stdio.h>

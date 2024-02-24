@@ -5,7 +5,6 @@
 #include "utils/llist.h"
 #include "utils/xtoy.h"
 #include <asm-generic/errno-base.h>
-#include <cclog_macros.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>

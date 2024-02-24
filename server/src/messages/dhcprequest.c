@@ -5,7 +5,6 @@
 #include "../logging.h"
 #include "../lease.h"
 #include "cclog.h"
-#include "cclog_macros.h"
 #include "../allocator.h"
 #include <stdint.h>
 #include <string.h>

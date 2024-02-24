@@ -4,7 +4,6 @@
 #include "../logging.h"
 #include "../lease.h"
 #include "../utils/xtoy.h"
-#include "cclog_macros.h"
 
 int message_dhcprelease_handle(dhcp_server_t *server, dhcp_message_t *message)
 {

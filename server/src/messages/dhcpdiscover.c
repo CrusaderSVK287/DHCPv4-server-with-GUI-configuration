@@ -7,7 +7,6 @@
 #include "../dhcp_options.h"
 #include "../logging.h"
 #include "cclog.h"
-#include "cclog_macros.h"
 #include "../allocator.h"
 #include "../utils/xtoy.h"
 

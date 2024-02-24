@@ -1,5 +1,5 @@
 #include "llist.h"
-#include "cclog_macros.h"
+#include "../logging.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
