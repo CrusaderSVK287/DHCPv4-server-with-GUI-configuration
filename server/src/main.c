@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "cclog_macros.h"
 #include "logging.h"
 #include "dhcp_server.h"
 #include "configuration.h"

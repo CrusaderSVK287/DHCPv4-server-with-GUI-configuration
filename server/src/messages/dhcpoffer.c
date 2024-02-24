@@ -13,7 +13,6 @@
 #include "../utils/llist.h"
 #include "../logging.h"
 #include "../dhcp_packet.h"
-#include "cclog_macros.h"
 #include <unistd.h>
 
 int message_dhcpoffer_send(dhcp_server_t *server, dhcp_message_t *message)

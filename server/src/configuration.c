@@ -2,7 +2,6 @@
 #include "RFC/RFC-2132.h"
 #include "address_pool.h"
 #include "allocator.h"
-#include "cclog_macros.h"
 #include "dhcp_options.h"
 #include "logging.h"
 #include "transaction_cache.h"

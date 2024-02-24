@@ -1,5 +1,4 @@
 #include "transaction.h"
-#include "cclog_macros.h"
 #include "logging.h"
 #include "timer.h"
 #include "utils/llist.h"

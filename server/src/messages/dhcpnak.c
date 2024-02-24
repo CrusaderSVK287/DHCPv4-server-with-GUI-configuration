@@ -7,7 +7,6 @@
 #include <errno.h>
 #include "../logging.h"
 #include "../utils/xtoy.h"
-#include "cclog_macros.h"
 
 int message_nak_send(dhcp_server_t *server, dhcp_message_t *message)
 {

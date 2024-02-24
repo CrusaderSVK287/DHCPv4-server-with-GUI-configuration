@@ -1,6 +1,5 @@
 #include "dhcp_options.h"
 #include "RFC/RFC-2131.h"
-#include "cclog_macros.h"
 #include "logging.h"
 #include "RFC/RFC-2132.h"
 #include "utils/llist.h"

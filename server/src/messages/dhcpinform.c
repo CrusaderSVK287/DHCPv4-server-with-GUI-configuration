@@ -1,6 +1,5 @@
 
 #include "dhcpinform.h"
-#include "cclog_macros.h"
 #include "dhcpack.h"
 
 int message_dhcpinform_handle(dhcp_server_t *server, dhcp_message_t *message)

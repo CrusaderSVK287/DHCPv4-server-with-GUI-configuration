@@ -1,5 +1,4 @@
 #include "transaction_cache.h"
-#include "cclog_macros.h"
 #include "logging.h"
 #include "transaction.h"
 #include <stdint.h>

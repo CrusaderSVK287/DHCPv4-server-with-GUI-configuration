@@ -3,7 +3,6 @@
 #include "../utils/xtoy.h"
 #include "../logging.h"
 #include "../dhcp_options.h"
-#include "cclog_macros.h"
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
