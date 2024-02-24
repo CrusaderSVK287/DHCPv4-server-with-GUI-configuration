@@ -55,6 +55,10 @@ ifeq ($(DEBUG),y)
 	CFLAGS += $(DEBUG_FLAGS)
 endif
 
+ifeq ($(__PIPELINE_BUILD), y)
+	CFLAGS += -D__RUN_TIMER_TESTS__ -D__LEASES_TEST_BUILD
+endif
+
 ECHO_CMD:= @if [ -z "$(findstring s,$(filter-out --%,$(MAKEFLAGS)))" ]; then \
 		   echo -e 
 ECHO_CMD_TAIL:= ;fi
@@ -93,7 +97,7 @@ $(OBJDIR)$(TESTDIR)%.o: $(TESTDIR)%.c
 	$(CC) $(CFLAGS) -I $(SRCDIR) -c $< -o $@
 
 test: -setup $(OBJS) $(TOBJS)
-	$(CC) $(LDLIBS) -I $(SRCDIR) $(TOBJS) -o $(BINDIR)$@
+	$(CC) $(LDLIBS) $(LDFLAGS) -I $(SRCDIR) $(TOBJS) -o $(BINDIR)$@
 	@echo "----- RUNNING TESTS -----"
 	$(BINDIR)$@
 

@@ -59,3 +59,5 @@ gui/bin/*
 compile_commands.json
 server/.cache/*
 gui/.cache/*
+
+*.log

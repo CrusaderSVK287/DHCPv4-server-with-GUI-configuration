@@ -1,6 +1,5 @@
 #include "dhcpdecline.h"
 #include "../logging.h"
-#include "cclog_macros.h"
 #include "../utils/xtoy.h"
 
 int message_dhcpdecline_handle(dhcp_server_t *server, dhcp_message_t *message)
