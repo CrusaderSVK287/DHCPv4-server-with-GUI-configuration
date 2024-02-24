@@ -97,7 +97,7 @@ $(OBJDIR)$(TESTDIR)%.o: $(TESTDIR)%.c
 	$(CC) $(CFLAGS) -I $(SRCDIR) -c $< -o $@
 
 test: -setup $(OBJS) $(TOBJS)
-	$(CC) $(LDLIBS) -I $(SRCDIR) $(TOBJS) -o $(BINDIR)$@
+	$(CC) $(LDLIBS) $(LDFLAGS) -I $(SRCDIR) $(TOBJS) -o $(BINDIR)$@
 	@echo "----- RUNNING TESTS -----"
 	$(BINDIR)$@
 
