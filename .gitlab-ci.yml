@@ -2,7 +2,8 @@ image: gcc
 
 before_script:
   - apt-get update -qy
-  - apt-get install -y cmake
+  - apt-get install -y cmake 
+  - export LD_LIBRARY_PATH=$CI_PROJECT_DIR/include:$LD_LIBRARY_PATH::$LD_LIBRARY_PATH
 
 stages:          # List of stages for jobs, and their order of execution
   - build
@@ -13,7 +14,7 @@ build-dependencies-job:
   script:
     - echo "Building dependencies"
     - make deps 
-    - export LD_LIBRARY_PATH=$CI_PROJECT_DIR/include:$LD_LIBRARY_PATH::$LD_LIBRARY_PATH
+    
 
 build-job:       # This job runs in the build stage, which runs first.
   stage: build
