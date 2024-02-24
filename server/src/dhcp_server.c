@@ -3,7 +3,6 @@
 #include "RFC/RFC-2132.h"
 #include "address_pool.h"
 #include "allocator.h"
-#include "cclog.h"
 #include "dhcp_options.h"
 #include "dhcp_packet.h"
 #include "lease.h"

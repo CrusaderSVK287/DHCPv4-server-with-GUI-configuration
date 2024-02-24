@@ -18,9 +18,10 @@ int message_dhcpdecline_handle(dhcp_server_t *server, dhcp_message_t *message)
         cclog(LOG_WARN, NULL, "Possible misconfiguration: Received DHCPDECLINE on address %s", 
                         uint32_to_ipv4_address(ack->yiaddr));
 
+        uint32_t addrbuff;
         /* Internally mark the address as in use and create a lease with information on it */
         if (allocator_is_address_available(server->allocator, ack->yiaddr)) {
-                allocator_release_address(server->allocator, ack->yiaddr);
+                allocator_request_this_address(server->allocator, ack->yiaddr, &addrbuff);
         }
 
         // TODO: set misconfigured flag on lease (when lease flags are implemented)

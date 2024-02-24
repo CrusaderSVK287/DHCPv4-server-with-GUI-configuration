@@ -29,11 +29,6 @@ int message_dhcpoffer_send(dhcp_server_t *server, dhcp_message_t *message)
         // TODO: get proper broadcast domain
         addr.sin_addr.s_addr = inet_addr("192.168.1.255");
 
-        int fd = open("./test/offer.bin", O_RDWR | O_TRUNC | O_CREAT, 0666);
-        rv = write(fd, &message->packet, sizeof(dhcp_packet_t));
-        close(fd);
-        if (rv < 0) printf("ERROR writing %s\n", strerror(errno));
-
         cclog(LOG_MSG, NULL, "Sending DHCP offer message offering address %s to client %s",
                         uint32_to_ipv4_address(message->yiaddr), 
                         uint8_array_to_mac((uint8_t*)message->chaddr));

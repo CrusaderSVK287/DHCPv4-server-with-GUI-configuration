@@ -4,7 +4,6 @@
 #include "../utils/xtoy.h"
 #include "../logging.h"
 #include "../lease.h"
-#include "cclog.h"
 #include "../allocator.h"
 #include <stdint.h>
 #include <string.h>

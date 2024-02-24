@@ -1,6 +1,6 @@
 #include "lease.h"
 #include "address_pool.h"
-#include "cclog.h"
+#include "dhcp_server.h"
 #include "logging.h"
 #include "utils/llist.h"
 #include "utils/xtoy.h"
@@ -15,6 +15,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <time.h>
 
 /* Allocate space for new lease */
 lease_t *lease_new()
@@ -180,6 +181,7 @@ static int json_to_lease(lease_t *result, cJSON *json, const char *pool_name)
         result->lease_expire = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "lease_expire"));
         result->flags        = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "flags"));
         const char *mac      = cJSON_GetStringValue(cJSON_GetObjectItem(json, "client_mac_address"));
+        result->pool_name = (char *)pool_name;
         
         if_null(mac, error);
 
@@ -350,5 +352,80 @@ int lease_remove_address_pool(uint32_t address, char *pool_name)
         };
 
         return lease_remove(&l);
+}
+
+/* Load existing leases for particular pool */
+static int load_pool_leases(dhcp_server_t *server, address_pool_t *pool)
+{
+        if (!server || !pool)
+                return -1;
+
+        int rv = -1;
+
+        int fd = lease_open_lease_file(pool->name);
+        if_failed_log_n(fd, exit, LOG_ERROR, NULL, "Failed to open lease file for %s. Server will "
+                        "continue, but may come to configuration errors", pool->name);
+
+        char path[FILENAME_MAX];
+        snprintf(path, FILENAME_MAX, LEASE_PATH_PREFIX "%s.lease", pool->name);
+        cJSON *root = lease_load_lease_fila(fd, path);
+        cJSON *leases_array = cJSON_GetObjectItem(root, "leases");
+
+        if_null_log(root, exit, LOG_ERROR, NULL, "Failed to parse %s file, "
+                "server will keep running but is prone to misconfiguraiton", path);
+        if_null_log(leases_array, exit, LOG_ERROR, NULL, "Failed to parse array out of %s file, "
+                "server will keep running but is prone to misconfiguraiton", path);
+
+        uint32_t current_time = time(NULL);
+        lease_t lease = {0};
+
+        cJSON *element;
+        cJSON_ArrayForEach(element, leases_array) {
+                if_failed_log_ng(json_to_lease(&lease, element, pool->name), LOG_ERROR, NULL, 
+                        "Error converting json to lease, "
+                        "server will keep running but is prone to misconfiguraiton");
+
+                /* check if lease expired and remove if did */
+                if (lease.lease_expire <= current_time) {
+                        lease_remove(&lease);
+                        continue;
+                }
+                
+                cclog(LOG_INFO, NULL, "Marking address %s as used", uint32_to_ipv4_address(lease.address));
+                /* Mark the address as in use */
+                if_failed_log_ng(address_pool_set_address_allocation(pool, lease.address), 
+                        LOG_ERROR, NULL, "Error loading existing lease, "
+                        "server will keep running but is prone to misconfiguraiton");
+        }
+
+        close(fd);
+        cJSON_Delete(root);
+
+        rv = 0;
+exit:
+        return rv;
+}
+
+int init_load_persisten_leases(dhcp_server_t *server)
+{
+        int rv = -1;
+
+        if_null(server, exit);
+        if_null_log(server->allocator, exit, LOG_CRITICAL, NULL, 
+                        "Called %s but server->allocator is not yet initialised", __FUNCTION__);
+        if_null_log(server->allocator->default_options, exit, LOG_CRITICAL, NULL, 
+                        "Called %s but server->allocator->default_options is not yet initialised", __FUNCTION__);
+
+        address_pool_t *pool = NULL;
+        llist_foreach(server->allocator->address_pools, {
+                pool = (address_pool_t*)node->data;
+                if_failed_log_ng(load_pool_leases(server, pool), LOG_ERROR, NULL, 
+                        "Failed to load leases from pool %s. "
+                        "Server will keep running but is prone to misconfiguraiton", pool->name);
+        })
+
+        rv = 0;
+exit:
+        return rv;
 }
 

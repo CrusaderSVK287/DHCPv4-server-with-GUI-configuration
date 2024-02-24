@@ -1,5 +1,4 @@
 #include "timer.h"
-#include "cclog.h"
 #include "logging.h"
 #include <stdint.h>
 #include <stdio.h>

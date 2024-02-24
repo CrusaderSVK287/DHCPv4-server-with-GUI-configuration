@@ -1,0 +1,28 @@
+{
+	"leases":	[{
+			"address":	"192.168.2.1",
+			"subnet":	"255.255.255.0",
+			"xid":	845229166,
+			"lease_start":  1000000000,
+			"lease_expire":	4199999999,
+			"flags":	0,
+			"client_mac_address":	"b8:25:eb:b8:84:c7"
+		}, {
+			"address":	"192.168.2.2",
+			"subnet":	"255.255.255.0",
+			"xid":	845229177,
+			"lease_start":	1708786696,
+			"lease_expire":	0,
+			"flags":	0,
+			"client_mac_address":	"b8:26:eb:b8:84:c7"
+        }, {
+			"address":	"192.168.2.3",
+			"subnet":	"255.255.255.0",
+			"xid":	845229188,
+			"lease_start":	1708786696,
+			"lease_expire":	4199999999,
+			"flags":	0,
+			"client_mac_address":	"b8:24:eb:b8:84:c7"
+        }]
+}
+

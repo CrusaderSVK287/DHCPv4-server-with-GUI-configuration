@@ -1,6 +1,7 @@
 #ifndef __LEASE_H__
 #define __LEASE_H__
 
+#include "dhcp_server.h"
 #include "utils/llist.h"
 #include <stdint.h>
 
@@ -83,6 +84,13 @@ int lease_remove(lease_t *lease);
  * itself
  */
 int lease_remove_address_pool(uint32_t address, char *pool_name);
+
+/*
+ * Function loads persistant leases stored in .lease files.
+ * All expired leases are dropped, stil valid leases are marked as in use 
+ * by allocator. Function used as initialisator
+ */
+int init_load_persisten_leases(dhcp_server_t *server);
 
 #endif // !__LEASE_H__
 

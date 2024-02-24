@@ -99,6 +99,8 @@ $(OBJDIR)$(TESTDIR)%.o: $(TESTDIR)%.c
 test: -setup $(OBJS) $(TOBJS)
 	$(CC) $(LDLIBS) $(LDFLAGS) -I $(SRCDIR) $(TOBJS) -o $(BINDIR)$@
 	@echo "----- RUNNING TESTS -----"
+	cp $(TESTDIR)/test_leases/persist1.lease.backup $(TESTDIR)/test_leases/persist1.lease
+	cp $(TESTDIR)/test_leases/persist2.lease.backup $(TESTDIR)/test_leases/persist2.lease
 	$(BINDIR)$@
 
 ### SET UP ###

@@ -183,6 +183,7 @@ TEST test_retrieve_lease_address()
         ASSERT_EQ(l.lease_start, 454148657);
         ASSERT_EQ(l.lease_expire, 547784223);
         ASSERT_EQ(l.flags, 0);
+        ASSERT_STR_EQ(l.pool_name, "test_pool");
 
         llist_destroy(&pools);
         address_pool_destroy(&p);
@@ -252,14 +253,66 @@ TEST test_lease_expiration()
         PASS();
 }
 
+TEST test_load_leases_from_persistant_database_one_pool()
+{
+        if (lease_path_ok < 0)
+                SKIP();
+        
+        /* Since we dont have a dhcp server structure in theese tests, we need to create one */
+        dhcp_server_t server;
+        ASSERT_NEQ(NULL, (server.allocator = address_allocator_new()));
+        ASSERT_EQ(0, allocator_add_pool(server.allocator, address_pool_new_str("persist1", "192.168.1.1", "192.168.1.254", "255.255.255.0")));
+        /* At this point in tests, we have allocated these addresses */
+
+        ASSERT_EQ(0, init_load_persisten_leases(&server));
+        ASSERT_EQ(false, allocator_is_address_available_str(server.allocator, "192.168.1.1"));
+        ASSERT_EQ(true, allocator_is_address_available_str(server.allocator, "192.168.1.2"));
+
+        lease_t lease_buff = {0};
+        ASSERT_EQ(0, lease_retrieve_address(&lease_buff, ipv4_address_to_uint32("192.168.1.1"), server.allocator->address_pools));
+        ASSERT_EQ(1708786696, lease_buff.lease_start);
+        ASSERT_EQ(845229166, lease_buff.xid);
+        ASSERT_EQ(LEASE_DOESNT_EXITS, lease_retrieve_address(&lease_buff, ipv4_address_to_uint32("192.168.1.2"), server.allocator->address_pools));
+        
+        allocator_destroy(&server.allocator);
+
+        PASS();
+}
+
+TEST test_load_leases_from_persistant_database_multiple_pools()
+{
+        if (lease_path_ok < 0)
+                SKIP();
+        
+        /* Since we dont have a dhcp server structure in theese tests, we need to create one */
+        dhcp_server_t server;
+        ASSERT_NEQ(NULL, (server.allocator = address_allocator_new()));
+        ASSERT_EQ(0, allocator_add_pool(server.allocator, address_pool_new_str("persist1", "192.168.1.1", "192.168.1.254", "255.255.255.0")));
+        ASSERT_EQ(0, allocator_add_pool(server.allocator, address_pool_new_str("persist2", "192.168.2.1", "192.168.2.254", "255.255.255.0")));
+        /* At this point in tests, we have allocated these addresses */
+
+        ASSERT_EQ(0, init_load_persisten_leases(&server));
+        ASSERT_EQ(false, allocator_is_address_available_str(server.allocator, "192.168.2.1"));
+        ASSERT_EQ(true, allocator_is_address_available_str(server.allocator, "192.168.2.2"));
+        ASSERT_EQ(false, allocator_is_address_available_str(server.allocator, "192.168.2.3"));
+
+        lease_t lease_buff = {0};
+        ASSERT_EQ(0, lease_retrieve_address(&lease_buff, ipv4_address_to_uint32("192.168.2.3"), server.allocator->address_pools));
+        ASSERT_EQ(1708786696, lease_buff.lease_start);
+        ASSERT_EQ(845229188, lease_buff.xid);
+        ASSERT_EQ(0, lease_retrieve_address(&lease_buff, ipv4_address_to_uint32("192.168.2.1"), server.allocator->address_pools));
+        ASSERT_EQ(1000000000, lease_buff.lease_start);
+        ASSERT_EQ(845229166, lease_buff.xid);
+        ASSERT_EQ(LEASE_DOESNT_EXITS, lease_retrieve_address(&lease_buff, ipv4_address_to_uint32("192.168.1.2"), server.allocator->address_pools));
+
+        allocator_destroy(&server.allocator);
+
+        PASS();
+}
+
 SUITE(lease)
 {
         RUN_TEST(test_undef_lease_path_for_testing);
-        // if (lease_path_ok < 0) {
-        //         printf("LEASE_PATH_PREFIX does not equal ./test/test_leases, skipping lease tests\n"
-        //                         "Uncomment line 8 (#define LEASES_TEST_BUILD)"
-        //                         "of file lease.h to enabled lease tests\n");
-        // }
 
         RUN_TEST(test_lease_file_init);
         RUN_TEST(test_add_leases);
@@ -269,5 +322,7 @@ SUITE(lease)
         RUN_TEST(test_retrieve_non_existent);
         RUN_TEST(test_lease_expiration);
         RUN_TEST(test_remove_lease);
+        RUN_TEST(test_load_leases_from_persistant_database_one_pool);
+        RUN_TEST(test_load_leases_from_persistant_database_multiple_pools);
 }
 

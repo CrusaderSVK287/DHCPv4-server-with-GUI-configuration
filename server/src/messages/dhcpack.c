@@ -27,11 +27,6 @@ int message_dhcpack_send(dhcp_server_t *server, dhcp_message_t *message, const c
         // TODO: Replace inet_addr with inet_aton etc. also retrieve proper broadcast address if applicable
         addr.sin_addr.s_addr = (message->ciaddr) ? htonl(message->ciaddr) : inet_addr("192.168.1.255");
 
-        int fd = open("./test/ack.bin", O_RDWR | O_TRUNC | O_CREAT, 0666);
-        rv = write(fd, &message->packet, sizeof(dhcp_packet_t));
-        close(fd);
-        if (rv < 0) printf("ERROR writing %s\n", strerror(errno));
-        
         cclog(LOG_MSG, NULL, "Sending dhcp ack message %s address %s to %s",
                         reason, uint32_to_ipv4_address(message->yiaddr), uint32_to_ipv4_address(addr.sin_addr.s_addr));
         if_failed_log_n(sendto(server->sock_fd, &message->packet, sizeof(dhcp_packet_t), 0,
@@ -216,7 +211,7 @@ int message_dhcpack_build_inform_response(dhcp_server_t *server, dhcp_message_t 
         int rv = -1;
 
         /* If client didnt provide its IP address, dhcpinform is invalid */
-        if_false(inform->ciaddr, exit);
+        if_false_log(inform->ciaddr, exit, LOG_WARN, NULL, "Received DHCPINFORM has no ciaddr");
 
         dhcp_message_t *ack = dhcp_message_new();
 

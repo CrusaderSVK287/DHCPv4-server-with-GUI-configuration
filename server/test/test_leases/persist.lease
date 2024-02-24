@@ -1,0 +1,20 @@
+{
+	"leases":	[{
+			"address":	"192.168.1.1",
+			"subnet":	"255.255.255.0",
+			"xid":	845229166,
+			"lease_start":	1708786696,
+			"lease_expire":	4294900000,
+			"flags":	0,
+			"client_mac_address":	"b8:27:eb:b8:84:c7"
+		}, {
+			"address":	"192.168.1.2",
+			"subnet":	"255.255.255.0",
+			"xid":	845229177,
+			"lease_start":	1708786696,
+			"lease_expire":	0,
+			"flags":	0,
+			"client_mac_address":	"b8:27:eb:b8:84:c7"
+        }]
+}
+
