@@ -19,6 +19,7 @@ build-dependencies-job:
 build-job:       # This job runs in the build stage, which runs first.
   stage: build
   script:
+    - export LD_LIBRARY_PATH=$CI_PROJECT_DIR/include:$LD_LIBRARY_PATH::$LD_LIBRARY_PATH
     - echo "Compiling projects..."
     - make __PIPELINE_BUILD=y
   needs:
@@ -27,6 +28,7 @@ build-job:       # This job runs in the build stage, which runs first.
 unit-test-job:   # This job runs in the test stage.
   stage: test    # It only starts when the job in the build stage completes successfully.
   script:
+    - export LD_LIBRARY_PATH=$CI_PROJECT_DIR/include:$LD_LIBRARY_PATH::$LD_LIBRARY_PATH
     - echo "Running unit tests..."
     - make test __PIPELINE_BUILD=y
 
