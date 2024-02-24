@@ -14,6 +14,11 @@ build-dependencies-job:
   script:
     - echo "Building dependencies"
     - make deps 
+  artifacts:
+    paths:
+      - include/
+    expire_in: 1 hour  # Adjust as needed
+
     
 
 build-job:       # This job runs in the build stage, which runs first.
