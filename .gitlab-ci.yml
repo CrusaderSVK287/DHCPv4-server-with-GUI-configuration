@@ -17,6 +17,7 @@ build-dependencies-job:
   artifacts:
     paths:
       - include/
+      - server/obj/
     expire_in: 1 hour  # Adjust as needed
 
     
@@ -26,7 +27,12 @@ build-job:       # This job runs in the build stage, which runs first.
   script:
     - export LD_LIBRARY_PATH=$CI_PROJECT_DIR/include:$LD_LIBRARY_PATH::$LD_LIBRARY_PATH
     - echo "Compiling projects..."
-    - make __PIPELINE_BUILD=y
+    - make projects __PIPELINE_BUILD=y
+  artifacts:
+    paths:
+      - include/
+      - server/obj/
+    expire_in: 1 hour  # Adjust as needed
   needs:
     - build-dependencies-job
 
