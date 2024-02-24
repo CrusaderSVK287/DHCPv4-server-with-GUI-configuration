@@ -1,8 +1,4 @@
-image: ubuntu:latest
-
-  #before_script:
-  #  - apt update
-  #- apt install make gcc git
+image: gcc
 
 stages:          # List of stages for jobs, and their order of execution
   - build
