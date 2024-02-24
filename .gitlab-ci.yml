@@ -1,5 +1,9 @@
 image: gcc
 
+before_script:
+  - apt-get update -qy
+  - apt-get install -y cmake
+
 stages:          # List of stages for jobs, and their order of execution
   - build
   - test
