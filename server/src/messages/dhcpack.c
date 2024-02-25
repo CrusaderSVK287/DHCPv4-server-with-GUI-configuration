@@ -228,6 +228,7 @@ int message_dhcpack_build_inform_response(dhcp_server_t *server, dhcp_message_t 
         ack->flags  = inform->flags;
         ack->giaddr = inform->giaddr;
         ack->cookie = inform->cookie;
+        ack->type   = DHCP_ACK;
         memcpy(ack->chaddr, inform->chaddr, CHADDR_LEN);
         if_failed(get_requested_dhcp_options_inform_response(server->allocator, inform, ack),
                         exit);

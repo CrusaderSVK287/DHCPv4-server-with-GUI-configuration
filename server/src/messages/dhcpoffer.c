@@ -108,6 +108,7 @@ int message_dhcpoffer_build(dhcp_server_t *server, dhcp_message_t *dhcp_discover
         offer->flags  = dhcp_discover->flags;
         offer->giaddr = dhcp_discover->giaddr;
         offer->cookie = dhcp_discover->cookie;
+        offer->type   = DHCP_OFFER;
         memcpy(offer->chaddr, dhcp_discover->chaddr, CHADDR_LEN);
         if_failed(get_requested_dhcp_options(server->allocator, dhcp_discover, 
                                 offered_lease_duration, offered_address, offer), 

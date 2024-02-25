@@ -229,7 +229,7 @@ int message_dhcprequest_handle(dhcp_server_t *server, dhcp_message_t *request)
         int rv = -1;
 
         dhcp_option_t *o54 = dhcp_option_retrieve(request->dhcp_options, DHCP_OPTION_SERVER_IDENTIFIER);
-        
+
         /* 
          * According to RFC-2131, if client sends option 54 in dhcprequest, it is requesting new 
          * address. If not, its eighter rebinding or renewing
@@ -237,7 +237,6 @@ int message_dhcprequest_handle(dhcp_server_t *server, dhcp_message_t *request)
         if (o54) {
                 if (dhcp_request_response_to_offer(server, request, o54) < 0) {
                         /* Error, send DHCPNAK to client, lease will be freed when transaction expires */
-                        // TODO: transaction timeout refactoring to free the allocated address (allocator, not lease)
                         if_failed_n(message_dhcpnak_build(server, request), exit);
                 } else {
                         /* Success, send DHCPACK to client */
@@ -251,8 +250,6 @@ int message_dhcprequest_handle(dhcp_server_t *server, dhcp_message_t *request)
                  * RFC-2131 states that the server SHOULD send dhcpack regardless of 
                  * whether it extended the lease or not
                  */
-                // LOG: maybe because of the first dhcprequest this happens
-                // this may fix, putting those two into if blockl 
                 if (request->ciaddr) {
                         dhcp_request_renew_lease(server, request);
                         if_failed(message_dhcpack_build_lease_renew(server, request), exit);

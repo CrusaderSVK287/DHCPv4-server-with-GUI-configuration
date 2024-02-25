@@ -81,6 +81,7 @@ int message_dhcpnak_build(dhcp_server_t *server, dhcp_message_t *request)
         nak->siaddr = 0;
         nak->flags = request->flags;
         nak->giaddr = request->giaddr;
+        nak->type   = DHCP_NAK;
         memcpy(nak->chaddr, request->chaddr, CHADDR_LEN);
         nak->cookie = request->cookie;
         if_failed(get_requested_dhcp_options(server->allocator, nak), exit);
