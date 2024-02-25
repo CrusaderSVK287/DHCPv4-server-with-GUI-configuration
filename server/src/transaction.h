@@ -43,7 +43,11 @@ dhcp_message_t *trans_search_for(transaction_t *transaction, enum dhcp_message_t
 /* Returns last DHCP message that matches the type */
 dhcp_message_t *trans_search_for_last(transaction_t *transaction, enum dhcp_message_type type);
 
-int trans_update_timer(transaction_t *transaction);
+/*
+ * The pointer MUST point to trans_update_args_t. Reason for void* is infringement 
+ * of C syntax rules and recursive includes 
+ */
+int trans_update_timer(void *transaction);
 
 #endif // !__TRANSACTION_H__
 

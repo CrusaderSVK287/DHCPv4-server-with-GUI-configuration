@@ -3,7 +3,7 @@
 
 #include "greatest.h"
 
-// #define __RUN_TIMER_TESTS__
+#define __RUN_TIMER_TESTS__
 
 SUITE(linked_list);
 SUITE(dhcp_options);

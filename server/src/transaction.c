@@ -1,15 +1,42 @@
 #include "transaction.h"
+#include "RFC/RFC-2131.h"
+#include "allocator.h"
 #include "logging.h"
 #include "timer.h"
+#include "timer_args.h"
+#include "transaction_cache.h"
 #include "utils/llist.h"
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
+/*
+ * On timeout, function clears transaction. 
+ * In case a dhcpoffer message was sent during the transaction, but no requests,
+ * e.g. clients didnt take the offer, returns the offered address back to 
+ * address pool
+ */
 static int trans_timer_cb_clear(uint32_t time, void *priv)
 {
-        trans_clear((transaction_t*)priv);
-        return 0;
+        int rv = -1;
+
+        if_null(priv, exit);
+        trans_update_args_t *args = (trans_update_args_t*)priv;
+        if_null(args, exit);
+        transaction_t *trans = args->server->trans_cache->transactions[args->index];
+        if_null(args, exit);
+
+        dhcp_message_t *offer = trans_search_for(trans, DHCP_OFFER);
+        /* Check if transaction has offer that wasnt accepted (acknowledged) */
+        if (offer && !trans_search_for(trans, DHCP_ACK)) {
+                allocator_release_address(args->server->allocator, offer->yiaddr);
+        }
+
+        trans_clear(trans);
+
+        rv = 0;
+exit:
+        return rv;
 }
 
 transaction_t *trans_new()
@@ -147,8 +174,15 @@ error:
         return NULL;
 }
 
-int trans_update_timer(transaction_t *transaction)
+int trans_update_timer(void *a)
 {
-        return timer_update(transaction->timer, transaction);
+        if (!a)
+                return -1;
+
+        trans_update_args_t *args = (trans_update_args_t*)a;
+
+        transaction_t *t = args->server->trans_cache->transactions[args->index];
+
+        return timer_update(t->timer, args);
 }
 

@@ -9,6 +9,7 @@
 #include "logging.h"
 #include "messages/dhcp_messages.h"
 #include "timer.h"
+#include "timer_args.h"
 #include "transaction.h"
 #include "utils/llist.h"
 #include "utils/xtoy.h"
@@ -198,10 +199,15 @@ exit:
 
 void update_timers(dhcp_server_t *server)
 {
+        trans_update_args_t trans_args = {
+                .server = server,
+                .index  = 0
+        };
         /* Update timers on transaction cache entries. */
         for (int i = 0; i < server->trans_cache->size; i++) {
+                trans_args.index = i;
                 if (server->trans_cache->transactions[i]->timer->is_running)
-                        trans_update_timer(server->trans_cache->transactions[i]);
+                        trans_update_timer(&trans_args);
         }
 
         int released_leases = timer_update(server->timers.lease_expiration_check, server);

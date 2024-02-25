@@ -1,8 +1,14 @@
 #include "RFC/RFC-2131.h"
+#include "address_pool.h"
+#include "allocator.h"
 #include "dhcp_packet.h"
+#include "dhcp_server.h"
 #include "greatest.h"
 #include "tests.h"
+#include "timer_args.h"
 #include "transaction.h"
+#include "utils/xtoy.h"
+#include <stdint.h>
 #include <transaction_cache.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -409,7 +415,12 @@ TEST test_cache_wait_until_transaction_is_finished()
         SKIP();
 #endif
         
-        transaction_cache_t *cache = trans_cache_new(15);
+        dhcp_server_t server = {0};
+        trans_update_args_t args = {0};
+        args.server = &server;
+        
+        server.trans_cache = trans_cache_new(15);
+        transaction_cache_t *cache = server.trans_cache;
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -423,7 +434,8 @@ TEST test_cache_wait_until_transaction_is_finished()
         ASSERT_EQ(0x5555, cache->transactions[0]->xid);
 
         for (int i = 0; i < TRANSACTION_TIMEOUT_DEFAULT + 5; i++) {
-                trans_update_timer(cache->transactions[0]);
+                args.index = 0;
+                trans_update_timer(&args);
                 sleep(1);
 
                 /* Add another message */
@@ -435,13 +447,89 @@ TEST test_cache_wait_until_transaction_is_finished()
                         ASSERT_EQ(0x6666, cache->transactions[1]->xid);
                 }
                 if (i >= 30) {
-                        trans_update_timer(cache->transactions[1]);
+                        args.index = 1;
+                        trans_update_timer(&args);
                 }
         }
 
         ASSERT_EQ(false, cache->transactions[0]->timer->is_running);
         ASSERT_EQ(0, cache->transactions[0]->num_of_messages);
         ASSERT_EQ(0, cache->transactions[0]->xid);
+        
+        ASSERT_EQ(true, cache->transactions[1]->timer->is_running);
+        ASSERT_EQ(1, cache->transactions[1]->num_of_messages);
+        ASSERT_EQ(0x6666, cache->transactions[1]->xid);
+
+        /* Add third message after first one is expired and second one is not */
+        msg1->xid = 0x7777;
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
+        ASSERT_EQ(true, cache->transactions[0]->timer->is_running);
+        ASSERT_EQ(1, cache->transactions[0]->num_of_messages);
+        ASSERT_EQ(0x7777, cache->transactions[0]->xid);
+
+        trans_cache_destroy(&cache);
+        PASS();
+}
+
+TEST test_cache_wait_until_transaction_is_finished_return_address_to_pool()
+{
+#ifndef __RUN_TIMER_TESTS__
+        SKIP();
+#endif
+        dhcp_server_t server = {0};
+        server.allocator = address_allocator_new();
+        ASSERT_NEQ(NULL, server.allocator);
+        ASSERT_EQ(ALLOCATOR_OK, allocator_add_pool(server.allocator, address_pool_new_str("pool", "192.168.1.1", "192.168.1.253", "255.255.255.0")));
+        uint32_t addr_buff;
+        ASSERT_EQ(ALLOCATOR_OK, allocator_request_this_address_str(server.allocator, "192.168.1.10", &addr_buff));
+        ASSERT_EQ(false, allocator_is_address_available_str(server.allocator, "192.168.1.10"));
+        trans_update_args_t args = {0};
+        args.server = &server;
+
+        server.trans_cache = trans_cache_new(15);
+        transaction_cache_t *cache = server.trans_cache;
+        ASSERT_NEQ(NULL, cache);
+        
+        dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
+        ASSERT_NEQ(NULL, msg1);
+        msg1->type = DHCP_DISCOVER;
+        msg1->xid = 0x5555;
+        dhcp_message_t *msg2 = calloc(1, sizeof(dhcp_message_t));
+        ASSERT_NEQ(NULL, msg1);
+        msg2->type = DHCP_OFFER;
+        msg2->xid = 0x5555;
+        msg2->yiaddr = ipv4_address_to_uint32("192.168.1.10");
+        
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
+        ASSERT_EQ(0, trans_cache_add_message(cache, msg2));
+        ASSERT_EQ(true, cache->transactions[0]->timer->is_running);
+        ASSERT_EQ(2, cache->transactions[0]->num_of_messages);
+        ASSERT_EQ(0x5555, cache->transactions[0]->xid);
+
+        for (int i = 0; i < TRANSACTION_TIMEOUT_DEFAULT + 5; i++) {
+                args.index = 0;
+                trans_update_timer(&args);
+                sleep(1);
+
+                /* Add another message */
+                if (i == 30) {
+                        msg1->xid = 0x6666;
+                        ASSERT_EQ(0, trans_cache_add_message(cache, msg1));
+                        ASSERT_EQ(true, cache->transactions[1]->timer->is_running);
+                        ASSERT_EQ(1, cache->transactions[1]->num_of_messages);
+                        ASSERT_EQ(0x6666, cache->transactions[1]->xid);
+                }
+                if (i >= 30) {
+                        args.index = 1;
+                        trans_update_timer(&args);
+                }
+        }
+
+        ASSERT_EQ(false, cache->transactions[0]->timer->is_running);
+        ASSERT_EQ(0, cache->transactions[0]->num_of_messages);
+        ASSERT_EQ(0, cache->transactions[0]->xid);
+        /* Address should be available again */
+        ASSERT_EQ(true, allocator_is_address_available_str(server.allocator, "192.168.1.10"));
         
         ASSERT_EQ(true, cache->transactions[1]->timer->is_running);
         ASSERT_EQ(1, cache->transactions[1]->num_of_messages);
@@ -477,5 +565,6 @@ SUITE(transaction)
         RUN_TEST(test_cache_retrieve_messages_from_transaction);
         RUN_TEST(test_cache_purge);
         RUN_TEST(test_cache_wait_until_transaction_is_finished);
+        RUN_TEST(test_cache_wait_until_transaction_is_finished_return_address_to_pool);
 }
 
