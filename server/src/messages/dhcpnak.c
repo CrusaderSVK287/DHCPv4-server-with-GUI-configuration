@@ -50,7 +50,7 @@ static int get_requested_dhcp_options(address_allocator_t *allocator,
 
         if_failed_log(dhcp_option_build_required_options(dhcp_nak->dhcp_options, 
                         requested_options_list->value.binary_data, 
-                        /* required */   (uint8_t[]) {0}, 
+                        /* required */   (uint8_t[]) {54, 0}, 
                         /* blacklised */ (uint8_t[]) {0},
                         allocator->default_options, allocator->default_options, DHCP_NAK),
                         exit, LOG_WARN, NULL, "Failed to build dhcp options for DHCP_NAK message");
@@ -83,7 +83,7 @@ int message_dhcpnak_build(dhcp_server_t *server, dhcp_message_t *request)
         nak->giaddr = request->giaddr;
         memcpy(nak->chaddr, request->chaddr, CHADDR_LEN);
         nak->cookie = request->cookie;
-        if_failed(get_requested_dhcp_options(server->allocator, request), exit);
+        if_failed(get_requested_dhcp_options(server->allocator, nak), exit);
 
         if_failed(dhcp_packet_build(nak), exit);
         if_failed(message_nak_send(server, nak), exit);
