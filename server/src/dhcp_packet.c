@@ -6,7 +6,6 @@
 #include "utils/llist.h"
 #include "utils/xtoy.h"
 
-#include <cclog_macros.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,6 +84,16 @@ int dhcp_packet_parse(dhcp_message_t *m)
                 goto exit;
         }
 
+        /* 
+         * This is to to avoid collision when adding parsed dhcp options, 
+         * since dhcp options cannot be duplicate. Otherwise, big parsing errors 
+         * could occur when using dhcp_message_t as a buffer for 
+         * receiving/sending dhcp messages 
+         */
+        if (m->dhcp_options) {
+                dhcp_option_destroy_list(&m->dhcp_options);
+                m->dhcp_options = llist_new();
+        }
         if_null(m->dhcp_options, exit);
         if_failed_log(dhcp_option_parse(m->dhcp_options, m->packet.options), exit, LOG_WARN,
                         NULL, "Failed to parse dhcp options");

@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
         cclogger_add_log_level(false, false, CCLOG_TTY_CLR_GRN, NULL, NULL, 100);
         cclogger_add_log_level(false, false, CCLOG_TTY_CLR_GRN, NULL, NULL, 100);
         cclogger_add_log_level(false, false, CCLOG_TTY_CLR_GRN, NULL, NULL, 100);
-        cclogger_set_verbosity_level(-1);
+        cclogger_set_verbosity_level(-1000);
 
         RUN_SUITE(linked_list);
         RUN_SUITE(dhcp_options);
@@ -26,7 +26,11 @@ int main(int argc, char *argv[])
         RUN_SUITE(allocator);
         RUN_SUITE(packet_parser_builder);
         RUN_SUITE(lease);
-
+        RUN_SUITE(dhcp_message_handlers);
+        RUN_SUITE(transaction);
+#ifdef  __RUN_TIMER_TESTS__
+        RUN_SUITE(timer); // this suite takes some time to run, no need to run it always
+#endif
         cclogger_uninit();
 
         GREATEST_MAIN_END();

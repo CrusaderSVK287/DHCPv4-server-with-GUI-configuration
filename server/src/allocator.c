@@ -5,7 +5,6 @@
 #include "utils/xtoy.h"
 #include "logging.h"
 #include <cclog.h>
-#include <cclog_macros.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>

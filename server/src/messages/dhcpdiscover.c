@@ -3,10 +3,9 @@
 #include <locale.h>
 #include <netdb.h>
 #include <stdint.h>
+#include <stdio.h>
 #include "../dhcp_options.h"
 #include "../logging.h"
-#include "cclog.h"
-#include "cclog_macros.h"
 #include "../allocator.h"
 #include "../utils/xtoy.h"
 
@@ -82,9 +81,7 @@ int message_dhcpdiscover_handle(dhcp_server_t *server, dhcp_message_t *message)
         uint32_t new_address = 0;
         uint32_t lease_time = 0;
 
-        if (message->ciaddr != 0) {
-                // renew lease allocation (ip address and lease duration)
-        } else if (dhcp_option_retrieve(message->dhcp_options, 
+        if (dhcp_option_retrieve(message->dhcp_options, 
                                         DHCP_OPTION_REQUESTED_IP_ADDRESS)) {
                 new_address = allocate_particular_address(server, message);
         }

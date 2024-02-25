@@ -1,6 +1,5 @@
 
 #include "logging.h"
-#include "cclog_macros.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>

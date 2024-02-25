@@ -5,7 +5,6 @@
 #include "utils/xtoy.h"
 #include "dhcp_options.h"
 #include <cclog.h>
-#include <cclog_macros.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

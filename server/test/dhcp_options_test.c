@@ -1,3 +1,4 @@
+#include "RFC/RFC-2131.h"
 #include "greatest.h"
 #include "tests.h"
 #include "utils/llist.h"
@@ -267,6 +268,69 @@ TEST test_duplicite_option()
         PASS();
 }
 
+TEST test_build_options_from_requested_and_mandatory()
+{
+        if (!parsed_raw_options)
+                SKIP();
+
+        llist_t *dest = llist_new();
+        llist_t *pool_options = llist_new();
+        ASSERT_NEQ(NULL, dest);
+        ASSERT_NEQ(NULL, pool_options);
+
+        uint32_t lease_time = 5000;
+        ASSERT_EQ(0, dhcp_option_add(pool_options, dhcp_option_new_values(51, 4, &lease_time)));
+        
+        uint8_t requested[] = {0x03, 0x01, 0x0c, 0x32, 0}; // 0x01 is required anyway and 0x32 is blacklisted
+        uint8_t required[]  = {0x01, 51, 0};
+        uint8_t blacklist[] = {0x32, 0xfa, 0};
+        ASSERT_EQ(0, dhcp_option_build_required_options(dest, requested, required, blacklist, 
+                                parsed_raw_options, pool_options, DHCP_ACK));
+
+        dhcp_option_t *o = dhcp_option_retrieve(dest, 0x03);
+        ASSERT_NEQ(NULL, o);
+        ASSERT_EQ(0x00005040, o->value.ip);
+        o = dhcp_option_retrieve(dest, 0x01);
+        ASSERT_NEQ(NULL, o);
+        ASSERT_EQ(0x70000000, o->value.ip);
+        o = dhcp_option_retrieve(dest, 0x0c);
+        ASSERT_NEQ(NULL, o);
+        ASSERT_STR_EQ("MyDevice", o->value.string);
+        o = dhcp_option_retrieve(dest, 51);
+        ASSERT_NEQ(NULL, o);
+        ASSERT_EQ(5000, o->value.number);
+
+        o = dhcp_option_retrieve(dest, 0x32);
+        ASSERT_EQ(NULL, o);
+
+        o = dhcp_option_retrieve(dest, DHCP_OPTION_DHCP_MESSAGE_TYPE);
+        ASSERT_NEQ(NULL, o);
+        ASSERT_EQ(DHCP_ACK, o->value.number);
+        
+        dhcp_option_destroy_list(&pool_options);
+        PASS();
+}
+
+TEST test_dhcp_option_copy()
+{
+        uint32_t address = 0x708090A0;
+        dhcp_option_t *original = dhcp_option_new_values(51, 4, &address);
+        ASSERT_NEQ(NULL, original);
+
+        dhcp_option_t *copy = dhcp_option_copy(original);
+
+        ASSERT_NEQ(original, copy);
+        ASSERT_EQ(original->tag, copy->tag);
+        ASSERT_EQ(original->lenght, copy->lenght);
+        ASSERT_EQ(original->type, copy->type);
+        ASSERT_MEM_EQ(original->value.binary_data, copy->value.binary_data, original->lenght);
+
+        dhcp_option_destroy(&original);
+        dhcp_option_destroy(&copy);
+
+        PASS();
+}
+
 SUITE(dhcp_options)
 {
         memset(raw_dhcp_options, 0, sizeof(dhcp_options));
@@ -288,9 +352,11 @@ SUITE(dhcp_options)
         RUN_TEST(test_new_and_destroy);
         RUN_TEST(test_new_with_parameters);
         RUN_TEST(test_parse_options);
+        RUN_TEST(test_build_options_from_requested_and_mandatory);
         RUN_TEST(test_serialize_options);
         RUN_TEST(test_retrieve_option_by_tag);
         RUN_TEST(test_add_option_to_linked_list);
+        RUN_TEST(test_dhcp_option_copy);
 
         RUN_TEST(test_parsed_option_numeric);
         RUN_TEST(test_parsed_option_ip);

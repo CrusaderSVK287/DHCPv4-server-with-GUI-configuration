@@ -73,10 +73,34 @@ TEST test_llist_foreach() {
 	PASS();
 }
 
+TEST test_llist_clear() {
+	llist_t *list = llist_new();
+
+	int data1 = 10;
+	int data2 = 20;
+        int *dataptr = malloc(sizeof(int));
+        *dataptr = 30;
+
+	llist_append(list, &data1, false);
+	llist_append(list, &data2, false);
+        llist_append(list, dataptr, true);
+
+	llist_clear(list);
+        ASSERT_NEQ(NULL, list);
+        ASSERT_EQ(NULL, list->first);
+        ASSERT_EQ(NULL, list->last);
+
+
+        llist_destroy(&list);
+	ASSERT_EQ(list, NULL);
+	PASS();
+}
+
 SUITE(linked_list) {
         RUN_TEST(test_llist_append);
         RUN_TEST(test_llist_get_index);
         RUN_TEST(test_llist_destroy);
 	RUN_TEST(test_llist_foreach);
+        RUN_TEST(test_llist_clear);
 }
 

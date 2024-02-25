@@ -59,7 +59,7 @@ PROJECTS := $(shell ls -d */ | grep -v -e $(DEPS_DIR_RELATIVE) -e $(INC_DIR_RELA
 
 all: -setup deps projects
 
-projects:
+projects: -setup
 	@for dir in $(PROJECTS); do \
         echo -e "$(COLOUR_GREEN)[project] $${dir}build$(COLOUR_RESET)"; \
         $(MAKE) $(MAKE_FLAGS) INC_DIR=$(INC_DIR) -C $$dir $(MAKE_CMD_TAIL) || { echo -e "$(COLOUR_RED)[project] $$dir FAILED!$(COLOUR_RESET)"; exit 1; }; \
@@ -72,7 +72,7 @@ ifeq (,$(findstring $(INC_DIR),$(LD_LIBRARY_PATH)))
 endif
 
 
-test:
+test: -setup
 	@for dir in $(PROJECTS); do \
         $(MAKE) $(MAKE_FLAGS) INC_DIR=$(INC_DIR) -C $$dir test; \
     done
@@ -88,7 +88,7 @@ purge: clean
 	@rm -rf $(DEPS_DIR)
 	@rm -rf $(INC_DIR)
 
-deps:
+deps: -setup
 	@for dep in $(DEPENDENCIES); do \
         if [ -d "$(DEPS_DIR)/$$dep" ]; then \
             echo "Directory $(DEPS_DIR)/$$dep exists. Skipping."; \

@@ -4,13 +4,16 @@
 #include "../logging.h"
 #include "../dhcp_options.h"
 #include <errno.h>
+#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <stdlib.h>
+#include <fcntl.h>
 
-int message_dhcpack_send(dhcp_server_t *server, dhcp_message_t *message)
+int message_dhcpack_send(dhcp_server_t *server, dhcp_message_t *message, const char *reason)
 {
         if (!server || !message)
                 return -1;
@@ -21,11 +24,11 @@ int message_dhcpack_send(dhcp_server_t *server, dhcp_message_t *message)
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_port = htons(68);
-        addr.sin_addr.s_addr = inet_addr("192.168.1.255");
+        // TODO: Replace inet_addr with inet_aton etc. also retrieve proper broadcast address if applicable
+        addr.sin_addr.s_addr = (message->ciaddr) ? htonl(message->ciaddr) : inet_addr("192.168.1.255");
 
-        cclog(LOG_MSG, NULL, "Sending dhcp ack message acknownledging address %s",
-                        uint32_to_ipv4_address(message->yiaddr));
-        // TODO: make proper unicast messaging if applicable
+        cclog(LOG_MSG, NULL, "Sending dhcp ack message %s address %s to %s",
+                        reason, uint32_to_ipv4_address(message->yiaddr), uint32_to_ipv4_address(addr.sin_addr.s_addr));
         if_failed_log_n(sendto(server->sock_fd, &message->packet, sizeof(dhcp_packet_t), 0,
                         (struct sockaddr*)&addr, sizeof(addr)), 
                         exit, LOG_ERROR, NULL, "Failed to send dhcp ACK message: %s", 
@@ -37,66 +40,97 @@ exit:
 }
 
 static int get_requested_dhcp_options(address_allocator_t *allocator, dhcp_message_t *dhcp_request,
-                uint32_t acked_lease_duration, dhcp_message_t *dhcp_ack)
+                uint32_t leased_address, dhcp_message_t *dhcp_ack)
 {
         if (!allocator || !dhcp_request)
                 return -1;
 
         int rv = -1;
 
-        uint8_t val = DHCP_ACK;
-        dhcp_option_t *o53 = dhcp_option_new_values(DHCP_OPTION_DHCP_MESSAGE_TYPE, 1, &val);
-        if_failed_log(dhcp_option_add(dhcp_ack->dhcp_options, o53), exit, LOG_ERROR, NULL,
-                        "Failed to add dhcp option 53 during dhcp ack building");
-        
-        dhcp_option_t *o51 = dhcp_option_new_values(DHCP_OPTION_IP_ADDRESS_LEASE_TIME, 4, 
-                                                        &acked_lease_duration);
-        if_failed_log(dhcp_option_add(dhcp_ack->dhcp_options, o51), exit, LOG_ERROR, NULL,
-                        "Failed to add dhcp option 51 during dhcp ack building");
-
-        // TODO: get proper IP address
-        val = ipv4_address_to_uint32("192.168.1.250");
-        dhcp_option_t *o54 = dhcp_option_new_values(DHCP_OPTION_SERVER_IDENTIFIER, 4, &val);
-        if_failed_log(dhcp_option_add(dhcp_ack->dhcp_options, o54), exit, LOG_ERROR, NULL,
-                        "Failed to add dhcp option 54 during dhcp ack building");
-        
-        dhcp_option_t *o61_client = dhcp_option_retrieve(dhcp_request->dhcp_options, DHCP_OPTION_CLIENT_IDENTIFIER);
-        if (o61_client) {
-                dhcp_option_t *o61 = dhcp_option_new_values(DHCP_OPTION_CLIENT_IDENTIFIER, 
-                                o61_client->lenght, o61_client->value.binary_data);
-                if_failed_log(dhcp_option_add(dhcp_request->dhcp_options, o61), exit, LOG_ERROR, NULL,
-                        "Failed to add dhcp option 61 during dhcp offer building");
-        }
-
-        dhcp_option_t *requested_options = dhcp_option_retrieve(dhcp_request->dhcp_options, 
+        /* We get requested options */
+        dhcp_option_t *requested_options_list = dhcp_option_retrieve(dhcp_request->dhcp_options, 
                                                         DHCP_OPTION_PARAMETER_REQUEST_LIST);
-        
-        uint32_t tag = 0;
-        dhcp_option_t *option;
-        for (int i = 0; i < requested_options->lenght; i++) {
-                tag = requested_options->value.binary_data[i];
+        uint8_t requested_options[256];
+        memset(requested_options, 0, 256);
+        memcpy(requested_options, requested_options_list->value.binary_data, 
+                        requested_options_list->lenght);
 
-                /* RFC-2131 specifies theese options MUST NOT be used in ack */
-                if (    tag == DHCP_OPTION_REQUESTED_IP_ADDRESS     ||
-                        tag == DHCP_OPTION_PARAMETER_REQUEST_LIST   ||
-                        tag == DHCP_OPTION_CLIENT_IDENTIFIER        ||
-                        tag == DHCP_OPTION_MAX_DHCP_MESSAGE_SIZE)
-                        continue;
+        /* Get the pool options of the address */
+        address_pool_t *pool = allocator_get_pool_by_address(allocator, leased_address);
+        if_null(pool, exit);
 
-                option = dhcp_option_retrieve(allocator->default_options, tag);
-
-                if (!option)
-                        continue;
-
-                if_failed_log_ng(dhcp_option_add(dhcp_ack->dhcp_options, option), LOG_ERROR, NULL,
-                        "Failed to add dhcp option %d during dhcp ack building", tag);
-        }
+        if_failed_log(dhcp_option_build_required_options(dhcp_ack->dhcp_options, requested_options, 
+                        /* required */   (uint8_t[]) {51, 54, 0}, 
+                        /* blacklised */ (uint8_t[]) {50, 55, 61, 57, 0},
+                        allocator->default_options, pool->dhcp_option_override, DHCP_ACK),
+                        exit, LOG_WARN, NULL, "Failed to build dhcp options for DHCP_ACK message");
 
         rv = 0;
 exit:
         return rv;
 }
 
+// static int get_requested_dhcp_options_lease_renewal(address_allocator_t *allocator,
+//                 dhcp_message_t *dhcp_ack)
+// {
+//         if (!allocator)
+//                 return -1;
+//
+//         int rv = -1;
+//
+//         /*
+//          * Since we are acknownledging already existing lease with configured client, 
+//          * we make a dummy parameter request list 
+//          */
+//         dhcp_option_t *requested_options_list = dhcp_option_new_values(DHCP_OPTION_PARAMETER_REQUEST_LIST,
+//                                                                         1, (uint8_t[]) {0});
+//
+//         /* Get the pool options of the address */
+//         address_pool_t *pool = allocator_get_pool_by_address(allocator, dhcp_ack->ciaddr);
+//         if_null(pool, exit);
+//
+//         if_failed_log(dhcp_option_build_required_options(dhcp_ack->dhcp_options, 
+//                         requested_options_list->value.binary_data, 
+//                         /* required */   (uint8_t[]) {DHCP_OPTION_IP_ADDRESS_LEASE_TIME, 0}, 
+//                         /* blacklised */ (uint8_t[]) {0},
+//                         allocator->default_options, pool->dhcp_option_override, DHCP_ACK),
+//                         exit, LOG_WARN, NULL, "Failed to build dhcp options for DHCP_ACK message");
+//
+//         rv = 0;
+// exit:
+//         return rv;
+// }
+
+static int get_requested_dhcp_options_inform_response(address_allocator_t *allocator, 
+                dhcp_message_t *dhcp_inform, dhcp_message_t *dhcp_ack)
+{
+        if (!allocator || !dhcp_inform)
+                return -1;
+
+        int rv = -1;
+
+        /* We get requested options */
+        dhcp_option_t *requested_options_list = dhcp_option_retrieve(dhcp_inform->dhcp_options, 
+                                                        DHCP_OPTION_PARAMETER_REQUEST_LIST);
+        uint8_t requested_options[256];
+        memset(requested_options, 0, 256);
+        memcpy(requested_options, requested_options_list->value.binary_data, 
+                        requested_options_list->lenght);
+
+        /* Get the pool options of the address */
+        address_pool_t *pool = allocator_get_pool_by_address(allocator, dhcp_inform->ciaddr);
+        if_null(pool, exit);
+
+        if_failed_log(dhcp_option_build_required_options(dhcp_ack->dhcp_options, requested_options, 
+                        /* required */   (uint8_t[]) {54, 0}, 
+                        /* blacklised */ (uint8_t[]) {50, 51, 55, 61, 57, 0},
+                        allocator->default_options, pool->dhcp_option_override, DHCP_ACK),
+                        exit, LOG_WARN, NULL, "Failed to build dhcp options for DHCP_ACK message");
+
+        rv = 0;
+exit:
+        return rv;
+}
 int message_dhcpack_build(dhcp_server_t *server, dhcp_message_t *dhcp_request, 
         uint32_t acked_lease_duration, uint32_t leased_address)
 {
@@ -123,14 +157,87 @@ int message_dhcpack_build(dhcp_server_t *server, dhcp_message_t *dhcp_request,
         ack->cookie = dhcp_request->cookie;
         memcpy(ack->chaddr, dhcp_request->chaddr, CHADDR_LEN);
         if_failed(get_requested_dhcp_options(server->allocator, dhcp_request, 
-                                acked_lease_duration, ack), 
+                                 leased_address, ack), 
                         exit);
 
-        if_failed_log(dhcp_packet_build(ack), exit, LOG_ERROR, NULL, 
-                        "Failed to build DHCPACK message");
+        if_failed(dhcp_packet_build(ack), exit);
+        if_failed(message_dhcpack_send(server, ack, "acknownledging new lease of"), exit);
+        if_failed(trans_cache_add_message(server->trans_cache, ack), exit);
 
-        if_failed(message_dhcpack_send(server,ack), exit);
-        dhcp_message_destroy(&ack);
+        rv = 0;
+exit:
+        return rv;
+}
+
+int message_dhcpack_build_lease_renew(dhcp_server_t *server, dhcp_message_t *request)
+{
+        if (!server || !request)
+                return -1;
+
+        int rv = -1;
+
+        dhcp_message_t *ack = dhcp_message_new();
+
+        ack->opcode = BOOTREPLY;
+        ack->htype  = request->htype;
+        ack->hlen   = request->hlen;
+        ack->hops   = 0;
+        ack->xid    = request->xid;
+        ack->secs   = 0;
+        ack->ciaddr = request->ciaddr;
+        ack->yiaddr = request->ciaddr;
+        // TODO: Make a proper way to get server IP address
+        ack->siaddr = ipv4_address_to_uint32("192.168.1.250");
+        ack->flags  = request->flags;
+        ack->giaddr = 0;
+        ack->cookie = request->cookie;
+        memcpy(ack->chaddr, request->chaddr, CHADDR_LEN);
+        if_failed(get_requested_dhcp_options(server->allocator, request, ack->ciaddr, ack), exit);
+
+        if_failed(dhcp_packet_build(ack), exit);
+        if_failed(message_dhcpack_send(server,ack, "renewing lease of"), exit);
+        if_failed(trans_cache_add_message(server->trans_cache, ack), exit);
+
+        rv = 0;
+exit:
+        return rv;
+}
+
+int message_dhcpack_build_inform_response(dhcp_server_t *server, dhcp_message_t *inform)
+{
+        if (!server || !inform)
+                return -1;
+
+        int rv = -1;
+
+        /* If client didnt provide its IP address, dhcpinform is invalid */
+        if_false_log(inform->ciaddr, exit, LOG_WARN, NULL, "Received DHCPINFORM has no ciaddr");
+
+        dhcp_message_t *ack = dhcp_message_new();
+
+        ack->opcode = BOOTREPLY;
+        ack->htype  = inform->htype;
+        ack->hlen   = inform->hlen;
+        ack->hops   = 0;
+        ack->xid    = inform->xid;
+        ack->secs   = 0;
+        ack->ciaddr = inform->ciaddr;
+        ack->yiaddr = 0;
+        // TODO: Make a proper way to get server IP address
+        ack->siaddr = ipv4_address_to_uint32("192.168.1.250");
+        ack->flags  = inform->flags;
+        ack->giaddr = inform->giaddr;
+        ack->cookie = inform->cookie;
+        ack->type   = DHCP_ACK;
+        memcpy(ack->chaddr, inform->chaddr, CHADDR_LEN);
+        if_failed(get_requested_dhcp_options_inform_response(server->allocator, inform, ack),
+                        exit);
+
+        if_failed(dhcp_packet_build(ack), exit);
+        if_failed(message_dhcpack_send(server,ack, "informing client on"), exit);
+        if_failed(trans_cache_add_message(server->trans_cache, ack), exit);
+
+        rv = 0;
 exit:
         return rv;
 }

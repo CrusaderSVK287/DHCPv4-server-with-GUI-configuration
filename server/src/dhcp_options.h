@@ -1,6 +1,7 @@
 #ifndef __DHCP_OPTIONS_H__
 #define __DHCP_OPTIONS_H__
 
+#include "RFC/RFC-2131.h"
 #include "utils/llist.h"
 #include "RFC/RFC-2132.h"
 
@@ -70,6 +71,33 @@ dhcp_option_t* dhcp_option_retrieve(llist_t *options, uint8_t tag);
  */
 int dhcp_option_add(llist_t *dest, dhcp_option_t *option);
 
+/* Allocates new dhcp option with values from the original */
+dhcp_option_t* dhcp_option_copy(dhcp_option_t *option);
+
 void dhcp_options_dump(llist_t *o);
+
+/*
+ * This function is meant to be a unified API for dhcp message handlers 
+ * to build requested dhcp options from clients. 
+ * Arguments:
+ * llist_t *dest - destination linked list with parsed options 
+ * uint8_t *requested_options - dhcp options requested by client 
+ * uint8_t *required_options  - dhcp options that must be present regardless if 
+ *                              client requested them or not
+ * uint8_t *blacklisted_options - dhcp options that MUST NOT be present 
+ *                              regardless whether client requested them or not
+ * llist_t *global_options - globally configured dhcp options (from allocator)
+ * llist_t *pool_options   - pool specific dhcp options. If a requested/required 
+ *                           option is present in this list, it will be used,
+ *                           if not, option from global_options will be used.
+ * Note: requested_options, requested_options and blacklisted_options are arrays 
+ *       and MUST BE 0 TERMINATED!!! Example: {53, 12, 1, 0}
+ *
+ * Returns 0 on success, -1 on failure. Log is made stating error occured.
+ */
+int dhcp_option_build_required_options(llist_t *dest, uint8_t *requested_options, 
+        uint8_t *required_options, uint8_t *blacklisted_options, 
+        llist_t *global_options, llist_t *pool_options,
+        enum dhcp_message_type type);
 
 #endif // !__DHCP_OPTIONS_H__

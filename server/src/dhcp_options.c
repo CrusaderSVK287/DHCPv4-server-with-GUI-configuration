@@ -1,5 +1,5 @@
 #include "dhcp_options.h"
-#include "cclog_macros.h"
+#include "RFC/RFC-2131.h"
 #include "logging.h"
 #include "RFC/RFC-2132.h"
 #include "utils/llist.h"
@@ -299,3 +299,98 @@ void dhcp_options_dump(llist_t *l)
 exit:
         return;
 }
+
+static bool is_option_blacklisted(uint8_t tag, uint8_t *blacklist)
+{
+        if (!blacklist)
+                return true;
+
+        while (*blacklist != 0) {
+                if (*blacklist == tag)
+                        return true;
+
+                blacklist++;
+        }
+
+        return false;
+}
+
+int dhcp_option_build_required_options(llist_t *dest, uint8_t *requested_options, 
+        uint8_t *required_options, uint8_t *blacklisted_options, 
+        llist_t *global_options, llist_t *pool_options, enum dhcp_message_type type) 
+{
+        if (!dest || !requested_options || !required_options || 
+                !blacklisted_options || !global_options || !pool_options)
+                return -1;
+
+        int rv = -1;
+
+        /* Add message type, this is required always so there is no need to skip it */
+        uint8_t msg_type = type;
+        dhcp_option_t *o53 = dhcp_option_new_values(DHCP_OPTION_DHCP_MESSAGE_TYPE, 1, &msg_type);
+        if_failed_log(dhcp_option_add(dest, o53), exit, LOG_ERROR, NULL,
+                        "Failed to add dhcp option 53 during %s building", 
+                        rfc2131_dhcp_message_type_to_str(type));
+
+        /* Add mandatory dhcp options */
+        dhcp_option_t *option = NULL;
+        uint8_t tag = *required_options;
+        int i = 0;
+
+        while (tag != 0) {
+                if (!is_option_blacklisted(tag, blacklisted_options)) {
+                        option = dhcp_option_retrieve(pool_options, tag);
+                        if (!option)
+                                option = dhcp_option_retrieve(global_options, tag);
+
+                        if_null_log(option, exit, LOG_WARN, NULL, 
+                                "Cannot set mandatory option %d for %s because it's not configured", tag,
+                                rfc2131_dhcp_message_type_to_str(type));
+
+                        if_failed_log(dhcp_option_add(dest, dhcp_option_copy(option)), exit, 
+                                LOG_WARN, NULL, "Failed to  add mandatory option %d for %s", tag, 
+                                rfc2131_dhcp_message_type_to_str(type));
+                }
+
+                /* we need to increment the pointer to get the next tag */
+                i++;
+                tag = *(required_options + i);
+        }
+
+        /* Add requested dhcp options */
+        option = NULL;
+        tag = *requested_options;
+        i = 0;
+
+        while (tag != 0) {
+                if (!is_option_blacklisted(tag, blacklisted_options)) {
+                        option = dhcp_option_retrieve(pool_options, tag);
+                        if (!option)
+                                option = dhcp_option_retrieve(global_options, tag);
+
+                        if_null_log_ng(option, LOG_INFO, NULL, 
+                                "Cannot set option %d for %s because it's not configured", tag,
+                                rfc2131_dhcp_message_type_to_str(type));
+                        if_failed_log_ng(dhcp_option_add(dest, dhcp_option_copy(option)), 
+                                LOG_INFO, NULL, "Failed to add requested option %d for %s", tag, 
+                                rfc2131_dhcp_message_type_to_str(type));
+                }
+                
+                /* we need to increment the pointer to get the next tag */
+                i++;
+                tag = *(requested_options + i);
+        }
+
+        rv = 0;
+exit:
+        return rv;
+}
+
+dhcp_option_t* dhcp_option_copy(dhcp_option_t *original)
+{
+        return original ? dhcp_option_new_values(original->tag, 
+                                                original->lenght, 
+                                                original->value.binary_data) 
+                : NULL;
+}
+

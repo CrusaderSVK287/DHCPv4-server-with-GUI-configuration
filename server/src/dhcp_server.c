@@ -1,15 +1,19 @@
 #include "dhcp_server.h"
 #include "RFC/RFC-2131.h"
 #include "RFC/RFC-2132.h"
+#include "address_pool.h"
 #include "allocator.h"
-#include "cclog.h"
-#include "cclog_macros.h"
 #include "dhcp_options.h"
 #include "dhcp_packet.h"
+#include "lease.h"
 #include "logging.h"
 #include "messages/dhcp_messages.h"
+#include "timer.h"
+#include "timer_args.h"
+#include "transaction.h"
 #include "utils/llist.h"
 #include "utils/xtoy.h"
+#include "transaction_cache.h"
 
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
@@ -78,12 +82,101 @@ int init_dhcp_server(dhcp_server_t *server)
 	}
 	cclog(LOG_MSG, NULL, "Signal handler set successfully");
 
-        server->allocator = address_allocator_new();
-        if_null_log(server->allocator, exit, LOG_CRITICAL, NULL, "Failed to initialise server allocator");
-
 	rv = 0;
 exit:
 	return rv;
+}
+
+/* Check leases in particular pool, returns number of successfully removed leases */
+static int check_lease(uint32_t current_time, address_pool_t *pool, dhcp_server_t *server)
+{
+        lease_t lease;
+        int released_leases = 0;
+
+        /*
+         * We will not skip to the end of function in case of error, because we want to loop 
+         * through every address 
+         */
+        for (uint32_t a = pool->start_address; a < pool->end_address; a++) {
+                if (allocator_is_address_available(server->allocator, a))
+                        continue;
+                
+                if (lease_retrieve(&lease, a, pool->name) < 0) {
+                        cclog(LOG_WARN, NULL, 
+                                "Failed to retrieve lease of address %s, possible missconfiguration",
+                                uint32_to_ipv4_address(a));
+                        continue;
+                }
+
+                if (lease.lease_expire > current_time)
+                        continue;
+
+                /*
+                 * These releases are not vital to working of server, so a warning on failure 
+                 * is sufficient. Furthermore, we should NOT release address to pool in case 
+                 * the lease fails to be removed 
+                 */
+                if (lease_remove(&lease) < 0) {
+                        cclog(LOG_WARN, NULL, 
+                                "Failed to remove lease of address %s", uint32_to_ipv4_address(a));
+                        continue;
+                }
+
+                if (allocator_release_address(server->allocator, a) < 0) {
+                        cclog(LOG_WARN, NULL, "Failed to release address %s to pool", 
+                                        uint32_to_ipv4_address(a));
+                }
+
+                cclog(LOG_INFO, NULL, "Released lease of address %s from pool %s", 
+                                uint32_to_ipv4_address(a), pool->name);
+                released_leases++;
+        }
+
+        return released_leases;
+}
+
+int check_lease_expirations(uint32_t check_time, void *priv)
+{
+        if (!priv)
+                return -1;
+
+        int rv = -1;
+        int released_leases = 0;
+        dhcp_server_t *server = (dhcp_server_t*)priv;
+        if_null(server, exit);
+
+        address_pool_t *pool = NULL;
+        llist_foreach(server->allocator->address_pools, 
+                pool = (address_pool_t*)node->data;
+                if (!pool)
+                        continue;
+
+                released_leases += check_lease(check_time, pool, server);
+        )
+
+        rv = released_leases;
+exit:
+        return rv;
+}
+
+int init_dhcp_server_timers(dhcp_server_t *server)
+{
+        if (!server)
+                return -1;
+
+        int rv = -1;
+
+        // TODO: config, lease expiration check 
+        server->timers.lease_expiration_check = timer_new(TIMER_REPEAT, 60, 
+                                                true, check_lease_expirations);
+
+        if_null_log(server->timers.lease_expiration_check, exit, LOG_CRITICAL, NULL, 
+                        "Failed to initialise lease expiration check timer");
+
+        cclog(LOG_MSG, NULL, "Initialised dhcp server timers");
+        rv = 0;
+exit:
+        return rv;
 }
 
 int uninit_dhcp_server(dhcp_server_t *server)
@@ -94,11 +187,38 @@ int uninit_dhcp_server(dhcp_server_t *server)
 
 	if_failed_log(close(server->sock_fd), exit, LOG_ERROR, NULL, "Failed to close socket");
         allocator_destroy(&server->allocator);
+        trans_cache_destroy(&server->trans_cache);
+
+        timer_destroy(&server->timers.lease_expiration_check);
 
 	cclog(LOG_MSG, NULL, "Server stoped successfully");
 	rv = 0;
 exit:
 	return rv;
+}
+
+void update_timers(dhcp_server_t *server)
+{
+        trans_update_args_t trans_args = {
+                .server = server,
+                .index  = 0
+        };
+        /* Update timers on transaction cache entries. */
+        for (int i = 0; i < server->trans_cache->size; i++) {
+                trans_args.index = i;
+                if (server->trans_cache->transactions[i]->timer->is_running)
+                        trans_update_timer(&trans_args);
+        }
+
+        int released_leases = timer_update(server->timers.lease_expiration_check, server);
+        if (released_leases == TIMER_ERROR)
+                cclog(LOG_WARN, NULL, "Failed to update lease expiration check timer");
+        else if (released_leases > 0)
+                cclog(LOG_MSG, NULL, "Released %d addresses from lease database", released_leases);
+
+        // TODO: Maybe do a configuration to control whether or not to lower cpu load / set the delay
+        /* Introduce a slight delay between processes in order to lower cpu load */
+        // usleep(50000);
 }
 
 int dhcp_server_serve(dhcp_server_t *server)
@@ -112,11 +232,8 @@ int dhcp_server_serve(dhcp_server_t *server)
 
 	do
 	{
-                if (rv >= 0) {
-                        memset(&dhcp_msg->packet, 0, sizeof(dhcp_packet_t));
-                        dhcp_option_destroy_list(&dhcp_msg->dhcp_options);
-                        dhcp_msg->dhcp_options = llist_new();
-                }
+                /* Update various timers used by server (e.g. transaction cache timers )*/
+                update_timers(server);        
 
 		rv = recv(server->sock_fd, &dhcp_msg->packet, sizeof(dhcp_packet_t), 0);
 		if (rv < 0 && errno == EAGAIN) {
@@ -136,10 +253,18 @@ int dhcp_server_serve(dhcp_server_t *server)
                         dhcp_msg->type == DHCP_NAK)
                         continue;
 
+                /* Store the received message in cache for future use */
                 cclog(LOG_MSG, NULL, "Received message of type %s from %s", 
                                 rfc2131_dhcp_message_type_to_str(dhcp_msg->type),
                                 uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr));
 
+                /*
+                 * Store message in cache for future reference, drop communication if the message 
+                 * cannot be stored, for example due to full cache (log should be made)
+                 */
+                if (trans_cache_add_message(server->trans_cache, dhcp_msg) < 0)
+                        continue;
+                
                 switch (dhcp_msg->type) {
                         case DHCP_DISCOVER: 
                                 if_failed_log_n_ng((rv = message_dhcpdiscover_handle(server, dhcp_msg)), 
