@@ -18,7 +18,7 @@ This roadmap may change in future
     - IP allocator configuration for IP address pools
     - Extend IP allocator API
     - Configuration option for dhcp options.
-* DHCP messages communication
+* DHCP messages communication [Done - PR 19aad58c0ccd2e6543bdf4cadea8acd0f49fc583]
     - Implement rest of DHCP message types handling [Done - commit c3148ac2c67409cd6d37b3a7c3900e879a13ddfb]
     - Implement cache for transactions to store for parameter checks [Done - commit 15843add110a872005f8c4722abd142f3fd32118]
     - Implement automatic lease releasing mechanism [Done - commit 87a6cd2e7db8f6db5566a0e72186a110bd8b1dbc]

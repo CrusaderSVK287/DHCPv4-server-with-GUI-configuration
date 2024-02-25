@@ -3,6 +3,12 @@ Implementation of DHCP server in C with focus on configuration accessibility
 
 # Restrictions
 * Server assumes ALL dhcp messages received/send contain option 53 - DHCP message type. All messages not containing this option are DROPPED.
+* Because of the Implementation, if client refuses assigned address for whatever reason, this address will be returned back 
+  to the pool of available addresses. However, this takes some time (depending on configuration).
+  There is a high chance of log message appearing, satating `Failed to retrieve lease of address <ip address>, possible missconfiguration`. 
+  If in previous logs there is a dhcpdecline on this address or dhcpoffer offering this address but no dhcprequest, 
+  it is likely that this case occured and the message can be ignored. Logging of this message does not alter 
+  the servers flow.
 
 # Deviations from RFC-2131 standard
 * While address allocation process in chapter 4.3.1 is respected and followed, the following step in allocation process is skipped for the time being.
