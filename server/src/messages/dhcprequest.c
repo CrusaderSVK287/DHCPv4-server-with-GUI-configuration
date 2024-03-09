@@ -235,6 +235,7 @@ int message_dhcprequest_handle(dhcp_server_t *server, dhcp_message_t *request)
          * address. If not, its eighter rebinding or renewing
          */
         if (o54) {
+                // TODO: OPRAVIT - AK BUDE INY SERVER IDENTIFIER NEPOSIELAT ANI NAK ANI ACK
                 if (dhcp_request_response_to_offer(server, request, o54) < 0) {
                         /* Error, send DHCPNAK to client, lease will be freed when transaction expires */
                         if_failed_n(message_dhcpnak_build(server, request), exit);

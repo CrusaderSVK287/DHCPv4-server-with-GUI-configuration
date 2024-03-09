@@ -3,6 +3,7 @@
 #include "RFC/RFC-2132.h"
 #include "address_pool.h"
 #include "allocator.h"
+#include "cclog.h"
 #include "dhcp_options.h"
 #include "dhcp_packet.h"
 #include "lease.h"
@@ -217,7 +218,7 @@ void update_timers(dhcp_server_t *server)
                 cclog(LOG_MSG, NULL, "Released %d addresses from lease database", released_leases);
 
         // TODO: Maybe do a configuration to control whether or not to lower cpu load / set the delay
-        /* Introduce a slight delay between processes in order to lower cpu load */
+        /* Introduce a slight delay between loop cycles in order to lower cpu load */
         // usleep(50000);
 }
 
@@ -247,6 +248,8 @@ int dhcp_server_serve(dhcp_server_t *server)
                 if (dhcp_packet_parse(dhcp_msg) < 0)
                         continue;
 
+                // TODO: put ACL_can_client_be_served() here when implemented
+
                 /* If we capture a message sent by a server, drop it */
                 if (dhcp_msg->type == DHCP_OFFER || 
                         dhcp_msg->type == DHCP_ACK || 
@@ -267,21 +270,30 @@ int dhcp_server_serve(dhcp_server_t *server)
                 
                 switch (dhcp_msg->type) {
                         case DHCP_DISCOVER: 
-                                if_failed_log_n_ng((rv = message_dhcpdiscover_handle(server, dhcp_msg)), 
-                                        LOG_ERROR, NULL, 
-                                        "Failed to handle DHCPDISCOVER message from %s ret %d",
-                                        uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr), rv); 
+                                rv = message_dhcpdiscover_handle(server, dhcp_msg); 
                                 break;
-                        case DHCP_REQUEST:  message_dhcprequest_handle(server, dhcp_msg);  break;
-                        case DHCP_DECLINE:  message_dhcpdecline_handle(server, dhcp_msg);  break;
-                        case DHCP_INFORM:   message_dhcpinform_handle(server, dhcp_msg);   break;
-                        case DHCP_RELEASE:  message_dhcprelease_handle(server, dhcp_msg);  break;
-
+                        case DHCP_REQUEST: 
+                                rv = message_dhcprequest_handle(server, dhcp_msg);
+                                break;
+                        case DHCP_DECLINE:
+                                rv = message_dhcpdecline_handle(server, dhcp_msg);
+                                break;
+                        case DHCP_INFORM:
+                                rv = message_dhcpinform_handle(server, dhcp_msg);
+                                break;
+                        case DHCP_RELEASE:
+                                rv = message_dhcprelease_handle(server, dhcp_msg);
+                                break;
                         default:
                                 cclog(LOG_WARN, NULL, "Invalid DHCP message type received (%d), "
                                                 "dropping message", dhcp_msg->type);
+                                rv = 0;
                                 break;
                 }
+
+                if_failed_log_n_ng(rv, LOG_ERROR, NULL, "Failed to handle %s from %s", 
+                                rfc2131_dhcp_message_type_to_str(dhcp_msg->type),
+                                uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr));
 
 	} while (server_keep_running);
 

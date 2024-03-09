@@ -31,8 +31,9 @@ int init_dhcp_server_timers(dhcp_server_t *server);
  */
 int uninit_dhcp_server(dhcp_server_t *server);
 
-/**
- * Start DHCP server with structure initialised with dhcp_server_init()
+/*
+ * Start DHCP server with structure initialised with dhcp_server_init().
+ * Server keeps being active until it receives interupt signal
  */
 int dhcp_server_serve(dhcp_server_t *server);
 
