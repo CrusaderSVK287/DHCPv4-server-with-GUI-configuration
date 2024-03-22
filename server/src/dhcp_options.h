@@ -100,4 +100,7 @@ int dhcp_option_build_required_options(llist_t *dest, uint8_t *requested_options
         llist_t *global_options, llist_t *pool_options,
         enum dhcp_message_type type);
 
+/* Utility function to convert dhcp tag to type of the option */
+enum dhcp_option_type dhcp_option_tag_to_type(int tag);
+
 #endif // !__DHCP_OPTIONS_H__

@@ -1,4 +1,4 @@
-#include "configuration.h"
+#include "init.h"
 #include "RFC/RFC-2132.h"
 #include "address_pool.h"
 #include "allocator.h"
@@ -46,13 +46,7 @@ int init_dhcp_options(dhcp_server_t *server)
         if_null(server, error);
         if_null(server->allocator, error);
  
-        uint32_t ip = ipv4_address_to_uint32("192.168.1.250");
-        if_failed(dhcp_option_add(server->allocator->default_options, dhcp_option_new_values(
-                                        DHCP_OPTION_SERVER_IDENTIFIER, 4, &ip)), error);
-
-        uint32_t subnet = ipv4_address_to_uint32("255.255.255.0");
-        if_failed(dhcp_option_add(server->allocator->default_options, dhcp_option_new_values(
-                                        DHCP_OPTION_SUBNET_MASK, 4, &subnet)), error);
+        // TODO: server identifier and subnet mask removed
         
         uint32_t lease_time = 60;
         if_failed(dhcp_option_add(server->allocator->default_options, dhcp_option_new_values(
@@ -68,6 +62,7 @@ int init_cache(dhcp_server_t *server)
 {
         if_null(server, error);
         
+        // TODO: check after config
         server->trans_cache = trans_cache_new(TRANSACTION_CACHE_DEFAULT_SIZE);
         if_null(server->trans_cache, error);
 

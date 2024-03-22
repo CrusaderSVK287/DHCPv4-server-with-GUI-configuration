@@ -15,9 +15,10 @@ This roadmap may change in future
     - UNIX server for ipc communication with gui
     - Command usage API (Maybe command execution could be made on separate thread if doesnt require server cooperation, e.g. changing config file without applying changes)
 * DHCP configuration
-    - IP allocator configuration for IP address pools
-    - Extend IP allocator API
-    - Configuration option for dhcp options.
+    - Basic configuration from arguments
+    - Config file parsing
+    - Log verbosity configuration
+    - Other general system configuration
 * DHCP messages communication [Done - PR 19aad58c0ccd2e6543bdf4cadea8acd0f49fc583]
     - Implement rest of DHCP message types handling [Done - commit c3148ac2c67409cd6d37b3a7c3900e879a13ddfb]
     - Implement cache for transactions to store for parameter checks [Done - commit 15843add110a872005f8c4722abd142f3fd32118]
@@ -25,13 +26,10 @@ This roadmap may change in future
 * Transaction database
     - Transaction database structure
     - Database API to store, retrieve data etc.
-* Other configuration
-    - ACL configuration
-    - Log verbosity configuration
-    - Other general system configuration
 * Security
     - ACL feature
-    - DHCP starvation prevention
+    - ACL configuration
+    - DHCP starvation prevention (maybe done using transactions cache)
     - Active DHCP probing (Scanning network for rogue DHCP servers)
 
 ## GUI:

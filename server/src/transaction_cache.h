@@ -17,7 +17,6 @@
  * transactions will be stored after the newest one in case it is needed.
  * When _offset reaches size, it will overflow back to 0
  */
-// TODO: implement a timeout for transactions so the transaction entry is not overwritten until the time is reached
 typedef struct transaction_cache {
     transaction_t **transactions;
     uint32_t size;
