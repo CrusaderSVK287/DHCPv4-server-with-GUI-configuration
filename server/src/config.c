@@ -131,9 +131,6 @@ static int config_load_server_config(dhcp_server_t *server, cJSON *server_config
                 }
         }
 
-        if (!server_config)
-                return 0;
-
         if (server->config.tick_delay) {
                 object = cJSON_GetObjectItem(server_config, "tick_delay");
                 server->config.tick_delay = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_TICK_DELAY;
