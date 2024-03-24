@@ -29,11 +29,11 @@ int init_address_pools(dhcp_server_t *server)
         if_null(server, error);
         if_null(server->allocator, error);
 
-        address_pool_t *p = address_pool_new_str("LAN", "192.168.1.1",
-                                                        "192.168.1.254",
-                                                        "255.255.255.0");
-        if_null(p, error);
-        if_failed(allocator_add_pool(server->allocator, p), error);
+        // address_pool_t *p = address_pool_new_str("LAN", "192.168.1.1",
+                                                        // "192.168.1.254",
+                                                        // "255.255.255.0");
+        // if_null(p, error);
+        // if_failed(allocator_add_pool(server->allocator, p), error);
         
         return 0;
 error:

@@ -81,8 +81,10 @@ int config_get_interface_info(dhcp_server_t *server)
 static cJSON *config_load_json_file(const char *path)
 {
         struct stat st = {0};
-        if_failed_log_n(stat(path, &st), error, LOG_ERROR, NULL,
-                        "Cannot stat file %s", path);
+        if (stat(path, &st) < 0) {
+                fprintf(stderr, "Cannot stat file %s", path);
+                goto error;
+        }
 
         int fd = open(path, O_RDONLY);
         if (fd < 0) {
@@ -91,7 +93,6 @@ static cJSON *config_load_json_file(const char *path)
         }
 
         char *config = calloc(1, st.st_size + 32);
-        memset(config, 0, st.st_size + 32);
         
         /* Get entire json from the file */
         if (read(fd, config, st.st_size + 32) < 0) {
@@ -104,7 +105,7 @@ static cJSON *config_load_json_file(const char *path)
         free(config);
         return result;
 error:
-        return NULL;;
+        return NULL;
 }
 
 static int config_load_server_config(dhcp_server_t *server, cJSON *server_config)
@@ -131,27 +132,27 @@ static int config_load_server_config(dhcp_server_t *server, cJSON *server_config
                 }
         }
 
-        if (server->config.tick_delay) {
+        if (!server->config.tick_delay) {
                 object = cJSON_GetObjectItem(server_config, "tick_delay");
                 server->config.tick_delay = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_TICK_DELAY;
         }
 
-        if (server->config.cache_size) {
+        if (!server->config.cache_size) {
                 object = cJSON_GetObjectItem(server_config, "cache_size");
                 server->config.cache_size = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_CACHE_SIZE;
         }
 
-        if (server->config.trans_duration) {
+        if (!server->config.trans_duration) {
                 object = cJSON_GetObjectItem(server_config, "trans_duration");
                 server->config.trans_duration = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_TRANS_DURATION;
         }
         
-        if (server->config.lease_expiration_check) {
+        if (!server->config.lease_expiration_check) {
                 object = cJSON_GetObjectItem(server_config, "lease_expiration_check");
                 server->config.lease_expiration_check = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_LEASE_EXPIRATION_CHECK;
         }
 
-        if (server->config.log_verbosity) {
+        if (!server->config.log_verbosity) {
                 object = cJSON_GetObjectItem(server_config, "log_verbosity");
                 server->config.log_verbosity = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_LOG_VERBOSITY;
         }
@@ -186,8 +187,13 @@ static int config_load_dhcp_options(llist_t *dest, cJSON *options)
                 value = cJSON_GetObjectItem(opt, "value");
 
                 /* Configuration format error */
-                if (!tag || !len || !value)
-                        goto exit;
+                if (!tag || !len || !value) {
+                        fprintf(stderr, "Configuration error: Missing %s%s%s\n", 
+                                        (tag) ? "" : "tag ", 
+                                        (len) ? "" : "lenght ",
+                                        (value) ? "" : "value ");
+                        continue;
+                }
 
                 switch (dhcp_option_tag_to_type(tag)) {
                 case DHCP_OPTION_IP:
@@ -260,24 +266,36 @@ static int config_load_pools_config(dhcp_server_t *server, cJSON *pools_config)
         cJSON *pool = NULL;
         cJSON_ArrayForEach(pool, pools_config) {
                 object = cJSON_GetObjectItem(pool, "name");
-                if_false(cJSON_IsString(object), exit);
-                pool_name = cJSON_GetStringValue(object);
-                if_null(pool_name, exit);
+                if (object)
+                        pool_name = cJSON_GetStringValue(object);
+                if (!pool_name) {
+                        fprintf(stderr, "Error creating pool. Missing attribute: name\n");
+                        continue;
+                }
 
                 object = cJSON_GetObjectItem(pool, "start");
-                if_false(cJSON_IsString(object), exit);
-                pool_start = ipv4_address_to_uint32(cJSON_GetStringValue(object));
-                if_false(pool_start, exit);
+                if (object)
+                        pool_start = ipv4_address_to_uint32(cJSON_GetStringValue(object));
+                if (!pool_start) {
+                        fprintf(stderr, "Error creating pool %s. Missing attribute: start\n", pool_name);
+                        continue;
+                }
 
                 object = cJSON_GetObjectItem(pool, "end");
-                if_false(cJSON_IsString(object), exit);
-                pool_end = ipv4_address_to_uint32(cJSON_GetStringValue(object));
-                if_false(pool_start, exit);
+                if (object)
+                        pool_end = ipv4_address_to_uint32(cJSON_GetStringValue(object));
+                if (!pool_end) {
+                        fprintf(stderr, "Error creating pool %s. Missing attribute: end\n", pool_name);
+                        continue;
+                }
 
                 object = cJSON_GetObjectItem(pool, "subnet");
-                if_false(cJSON_IsString(object), exit);
-                pool_mask = ipv4_address_to_uint32(cJSON_GetStringValue(object));
-                if_false(pool_start, exit);
+                if (object)
+                        pool_mask = ipv4_address_to_uint32(cJSON_GetStringValue(object));
+                if (!pool_mask) {
+                        fprintf(stderr, "Error creating pool %s. Missing attribute: subnet\n", pool_name);
+                        continue;
+                }
 
                 /* If pool creation fails, continue server running but alert user */
                 new_pool = address_pool_new(pool_name, pool_start, pool_end, pool_mask);
@@ -291,22 +309,25 @@ static int config_load_pools_config(dhcp_server_t *server, cJSON *pools_config)
                 object = cJSON_GetObjectItem(pool, "options");
                 if (object && config_load_dhcp_options(new_pool->dhcp_option_override, object) < 0) {
                         fprintf(stderr, "Error configuring dhcp options for pool %s\n", pool_name);
-                        goto exit;
+                        continue;
+                }
+
+                rv = allocator_add_pool(server->allocator, new_pool);
+                if (rv == ALLOCATOR_POOL_DUPLICITE) {
+                        fprintf(stderr, "Misconfiguration: Pool named %s already exists, "
+                                        "check your configuration file", pool_name);
+                } else if (rv != ALLOCATOR_OK) {
+                        fprintf(stderr, "Error adding pool %s to allocator: %s\n", 
+                                        pool_name, allocator_strerror(rv));
                 }
         }
 
-goto exit;
         rv = 0;
-exit:
+// exit:
         return rv;
 }
 int config_load_configuration(dhcp_server_t *server)
 {
-        // loadnem config zo suboru ale iba na veci ktore neboli už nacitane.
-        // co sa tyka poolov a dhcp moznosti duplicitne su ok pretoze moznosti 
-        // sa nepridaju a pool bude duplicitny. overovat chybu POOL_DUPLICITE a 
-        // OPTION_DUPLICITE, nezabudnut pridat moznost server identificator 
-        // a subnet mask do pool creationing
         if (!server)
                 return -1;
 
@@ -314,7 +335,13 @@ int config_load_configuration(dhcp_server_t *server)
 
         cJSON *config = config_load_json_file((strlen(server->config.config_path)) ? 
                                                 server->config.config_path : CONFIG_DEFAULT_PATH);
-        
+
+        if (!config && !strlen(server->config.interface)) {
+                fprintf(stderr, "Erorr. Failed to retrieve configuration from file and "
+                                "no interface provided, please provide interface\n");
+                goto exit;
+        }
+
         if (config_load_server_config(server, cJSON_GetObjectItem(config, "server")) < 0) {
                 fprintf(stderr, "Error configuring server. Check configuration "
                                 "file for syntax errors or asses the manual\n");
@@ -396,14 +423,14 @@ static int config_add_dhcp_option(dhcp_server_t *server)
                 goto exit;
         }
 
-        if (sscanf(optarg, "%hhu:%[^\n]", &o->tag, value) != 2) {
-                fprintf(stderr, "Format error with --option. Usage: --option tag:value\n");
+        if (sscanf(optarg, "%hhu:%hhu:%[^\n]", &o->tag, &o->lenght, value) != 3) {
+                fprintf(stderr, "Format error with --option. Usage: --option tag:lenght:value\n");
                 goto exit;
         }
 
         o->type = dhcp_option_tag_to_type(o->tag);
 
-        switch (dhcp_option_tag_to_type(o->type)) {
+        switch (dhcp_option_tag_to_type(o->tag)) {
                 case DHCP_OPTION_NUMERIC:
                         if (sscanf(value, "%u", &o->value.number) != 1) {
                                 fprintf(stderr, "Bad format for option %d, exiting\n", o->tag);
@@ -453,7 +480,7 @@ static int config_add_pool(dhcp_server_t *server)
         if (!server || !optarg || !strlen(optarg))
                return -1;
 
-        int rv = 0;
+        int rv = -1;
 
         char start[16], end[16], mask[16];
         if (sscanf(optarg, "%15[^:]:%15[^:]:%15s", start, end, mask) != 3) {
@@ -482,7 +509,7 @@ exit:
 int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
 {
         int rv = -1;
-        
+
         if (!server) {
                 fprintf(stderr, "Server is not initialised, cannot proceed");
                 goto exit;
@@ -558,7 +585,7 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
                         rv = config_add_dhcp_option(server);
                         break;
                 case 1:
-                        if (argc != 2) {
+                        if (argc != 3) {
                                 fprintf(stderr, "Flag --default-configuration is not compatible with any other flags, please use it by itself\n");
                                 rv = -1;
                                 goto exit;
@@ -566,6 +593,7 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
 
 
                         config_load_defaults(server);
+                        break;
                 default:
                         if (optopt == 0) {
                                 fprintf(stderr, "Unknown option '%s' use --help for usage\n", argv[optind - 1]);

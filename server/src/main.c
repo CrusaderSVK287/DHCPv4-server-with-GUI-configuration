@@ -14,11 +14,11 @@ int main(int argc, char *argv[])
         dhcp_server_t dhcp_server = {0};
 
         if_failed(init_logging(), exit);
+        if_failed(init_allocator(&dhcp_server), exit);
         if_failed(config_parse_arguments(&dhcp_server, argc, argv), exit);
         if_failed(config_load_configuration(&dhcp_server), exit);
         if_failed(init_dhcp_server(&dhcp_server), exit);
         if_failed(init_dhcp_server_timers(&dhcp_server), exit);
-        if_failed(init_allocator(&dhcp_server), exit);
         if_failed(init_address_pools(&dhcp_server), exit);
         if_failed(init_dhcp_options(&dhcp_server), exit);
         /* We need to have address pools and allocator initialised before loading leases */

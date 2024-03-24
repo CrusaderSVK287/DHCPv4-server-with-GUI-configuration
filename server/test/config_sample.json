@@ -1,6 +1,6 @@
 {
     "server": {
-        "interface": "eno1",
+        "interface": "wlp3s0",
         "tick_delay": 1000,
         "cache_size": 25,
         "transaction_duration": 60,
@@ -22,7 +22,7 @@
             ]
         }
     ],
-    "options": {
+    "options": [
         {
             "tag": 51,
             "lenght": 4,
@@ -33,5 +33,6 @@
             "lenght": 4,
             "value": "192.168.0.1"
         }
-    }
+    ]
 }
+
