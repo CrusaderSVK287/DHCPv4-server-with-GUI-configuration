@@ -5,6 +5,7 @@
 #include "transaction_cache.h"
 #include "timer.h"
 #include <linux/limits.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef struct dhcp_server {
@@ -28,6 +29,9 @@ typedef struct dhcp_server {
         uint32_t    lease_expiration_check; // period in seconds after which server checks lease database for expired leases and removes them.
         uint32_t    lease_time;
         uint8_t     log_verbosity;          // verbosity of logger messages
+        
+        uint8_t     acl_enable;             // enable ACL security feature (default true)
+        uint8_t     acl_blacklist;          // is ACL a blacklist? (default true)
     } config;
 } dhcp_server_t;
 

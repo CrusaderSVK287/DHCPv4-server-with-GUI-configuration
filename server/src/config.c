@@ -108,6 +108,30 @@ error:
         return NULL;
 }
 
+static int config_load_security_config(dhcp_server_t *server, cJSON *security_config)
+{
+        if (!server)
+                return -1;
+
+        int rv = -1;
+
+        cJSON *object = NULL;
+
+        if (server->config.acl_enable == CONFIG_UNTOUCHED) {
+                object = cJSON_GetObjectItem(security_config, "acl_enable");
+                server->config.acl_enable = (object) ? cJSON_IsTrue(object) : CONFIG_DEFAULT_ACL_ENABLE;
+        }
+        
+        if (server->config.acl_blacklist == CONFIG_UNTOUCHED) {
+                object = cJSON_GetObjectItem(security_config, "acl_blacklist");
+                server->config.acl_enable = (object) ? cJSON_IsTrue(object) : CONFIG_DEFAULT_ACL_ENABLE;
+        }
+
+        rv = 0;
+
+        return rv;
+}
+
 static int config_load_server_config(dhcp_server_t *server, cJSON *server_config)
 {
         if (!server)
@@ -160,6 +184,11 @@ static int config_load_server_config(dhcp_server_t *server, cJSON *server_config
         if (!server->config.lease_time) {
                 object = cJSON_GetObjectItem(server_config, "lease_time");
                 server->config.lease_time = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_LEASE_TIME;
+        }
+
+        if (server->config.acl_enable == CONFIG_UNTOUCHED) {
+                object = cJSON_GetObjectItem(server_config, "lease_time");
+                server->config.lease_time = (object) ? cJSON_IsTrue(object) : CONFIG_DEFAULT_LEASE_TIME;
         }
 
         rv = 0;
@@ -365,6 +394,12 @@ int config_load_configuration(dhcp_server_t *server)
                 goto exit;
         }
 
+        if (config_load_security_config(server, cJSON_GetObjectItem(config, "security")) < 0) {
+                fprintf(stderr, "Error configuring security options. Check configuration "
+                                "file for syntax errors or asses the manual\n");
+                goto exit;
+        }
+
         rv = 0;
 exit:
         return rv;
@@ -385,6 +420,10 @@ static int config_load_defaults(dhcp_server_t *server)
         server->config.lease_expiration_check = CONFIG_DEFAULT_LEASE_EXPIRATION_CHECK;
         server->config.log_verbosity = CONFIG_DEFAULT_LOG_VERBOSITY;
         server->config.lease_time = CONFIG_DEFAULT_LEASE_TIME;
+        
+        /* Default config doesnt have acl at all */
+        server->config.acl_enable = CONFIG_BOOL_FALSE;
+        server->config.acl_blacklist = CONFIG_BOOL_FALSE;
         
         uint32_t lease_time_value = CONFIG_DEFAULT_LEASE_TIME;
         if (dhcp_option_add(server->allocator->default_options, dhcp_option_new_values(
@@ -540,6 +579,9 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
                 {"lease-time",              required_argument, 0, 'l'},
                 {"log",                     required_argument, 0,  2 },
 
+                {"acl-disable",             no_argument,       0,  3 },
+                {"acl-whitelist-mode",      no_argument,       0,  4 },
+
                 {"pool",    required_argument, 0, 'p'},
                 {"option",  required_argument, 0, 'o'},
                 {0, 0, 0, 0}
@@ -604,6 +646,12 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
                 case 2: 
                         if (sscanf(optarg, "%hhu", &server->config.log_verbosity) != 1)
                                 rv = -1;
+                        break;
+                case 3:
+                        server->config.acl_enable = CONFIG_BOOL_FALSE;
+                        break;
+                case 4: 
+                        server->config.acl_blacklist = CONFIG_BOOL_FALSE;
                         break;
                 default:
                         if (optopt == 0) {

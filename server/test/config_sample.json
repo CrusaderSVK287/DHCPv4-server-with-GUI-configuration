@@ -34,6 +34,10 @@
             "lenght": 4,
             "value": "192.168.0.1"
         }
-    ]
+    ],
+    "security": {
+        "acl_enable": true,
+        "acl_blacklist": true
+    }
 }
 
