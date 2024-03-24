@@ -15,10 +15,10 @@ This roadmap may change in future
     - UNIX server for ipc communication with gui
     - Command usage API (Maybe command execution could be made on separate thread if doesnt require server cooperation, e.g. changing config file without applying changes)
 * DHCP configuration
-    - Basic configuration from arguments
-    - Config file parsing
-    - Log verbosity configuration
-    - Other general system configuration
+    - Basic configuration from arguments [Done - Commit b18362538327f1918212b79ee5dd981279058530]
+    - Config file parsing [Done - Commit b18362538327f1918212b79ee5dd981279058530]
+    - Log verbosity configuration [Done - Commit b18362538327f1918212b79ee5dd981279058530]
+    - Other general system configuration [Done - Commit b18362538327f1918212b79ee5dd981279058530]
 * DHCP messages communication [Done - PR 19aad58c0ccd2e6543bdf4cadea8acd0f49fc583]
     - Implement rest of DHCP message types handling [Done - commit c3148ac2c67409cd6d37b3a7c3900e879a13ddfb]
     - Implement cache for transactions to store for parameter checks [Done - commit 15843add110a872005f8c4722abd142f3fd32118]
