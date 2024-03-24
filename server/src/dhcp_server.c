@@ -66,9 +66,8 @@ int init_dhcp_server(dhcp_server_t *server)
 
 	struct sockaddr_in addr = {0};
 	addr.sin_family = AF_INET;
-	/* TODO: Make it possible to specify by user eighter address or interface which to use */
-	//addr.sin_addr.s_addr = inet_addr("192.168.1.100");
-	addr.sin_addr.s_addr = INADDR_ANY;
+	addr.sin_addr.s_addr = server->config.bound_ip;
+	// addr.sin_addr.s_addr = INADDR_ANY;
 	addr.sin_port = htons(67);
 
 	if_failed_log(bind(server->sock_fd, (struct sockaddr*)&addr, sizeof(struct sockaddr_in)),
@@ -167,8 +166,8 @@ int init_dhcp_server_timers(dhcp_server_t *server)
 
         int rv = -1;
 
-        // TODO: config, lease expiration check 
-        server->timers.lease_expiration_check = timer_new(TIMER_REPEAT, 60, 
+        server->timers.lease_expiration_check = timer_new(TIMER_REPEAT, 
+                                                server->config.lease_expiration_check, 
                                                 true, check_lease_expirations);
 
         if_null_log(server->timers.lease_expiration_check, exit, LOG_CRITICAL, NULL, 
@@ -217,9 +216,8 @@ void update_timers(dhcp_server_t *server)
         else if (released_leases > 0)
                 cclog(LOG_MSG, NULL, "Released %d addresses from lease database", released_leases);
 
-        // TODO: Maybe do a configuration to control whether or not to lower cpu load / set the delay
         /* Introduce a slight delay between loop cycles in order to lower cpu load */
-        // usleep(50000);
+        usleep(server->config.tick_delay);
 }
 
 int dhcp_server_serve(dhcp_server_t *server)

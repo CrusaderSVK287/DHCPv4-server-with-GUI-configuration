@@ -15,7 +15,7 @@
 
 static transaction_t *setup_transaction() 
 {
-        transaction_t *t = trans_new();
+        transaction_t *t = trans_new(60);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
         dhcp_message_t *msg2 = calloc(1, sizeof(dhcp_message_t));
@@ -40,7 +40,7 @@ static transaction_t *setup_transaction()
 
 TEST test_trans_new_and_destroy()
 {
-        transaction_t *t = trans_new();
+        transaction_t *t = trans_new(60);
         ASSERT_NEQ(NULL, t);
         ASSERT_NEQ(NULL, t->messages_ll);
 
@@ -50,7 +50,7 @@ TEST test_trans_new_and_destroy()
 }
 
 TEST test_transaction_add() {
-        transaction_t *t = trans_new();
+        transaction_t *t = trans_new(60);
         ASSERT_NEQ(NULL, t);
         ASSERT_NEQ(NULL, t->messages_ll);
         
@@ -74,7 +74,7 @@ TEST test_transaction_add() {
 }
 
 TEST test_transaction_add_mismatched_xid() {
-        transaction_t *t = trans_new();
+        transaction_t *t = trans_new(60);
         ASSERT_NEQ(NULL, t);
         ASSERT_NEQ(NULL, t->messages_ll);
         
@@ -171,7 +171,7 @@ TEST test_tramsaction_search_for_last()
 
 TEST test_cache_init_and_destroy() 
 {
-        transaction_cache_t *cache = trans_cache_new(15);
+        transaction_cache_t *cache = trans_cache_new(15, 60);
         ASSERT_NEQ(NULL, cache);
         for (int i = 0; i < 15; i++)
                 ASSERT_EQ(false, cache->transactions[i]->timer->is_running);
@@ -184,7 +184,7 @@ TEST test_cache_init_and_destroy()
 
 TEST test_cache_add_message() 
 {
-        transaction_cache_t *cache = trans_cache_new(15);
+        transaction_cache_t *cache = trans_cache_new(15, 60);
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -203,7 +203,7 @@ TEST test_cache_add_message()
 
 TEST test_cache_add_multiple_messages_to_same_transaction()
 {
-        transaction_cache_t *cache = trans_cache_new(15);
+        transaction_cache_t *cache = trans_cache_new(15, 60);
         ASSERT_NEQ(NULL, cache);
        
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -227,7 +227,7 @@ TEST test_cache_add_multiple_messages_to_same_transaction()
 
 TEST test_cache_add_multiple_messages_to_different_transactions()
 {
-        transaction_cache_t *cache = trans_cache_new(15);
+        transaction_cache_t *cache = trans_cache_new(15, 60);
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -268,7 +268,7 @@ TEST test_cache_add_multiple_messages_to_different_transactions()
 
 TEST test_cache_overflow_cache_size()
 {
-        transaction_cache_t *cache = trans_cache_new(15);
+        transaction_cache_t *cache = trans_cache_new(15, 60);
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -299,7 +299,7 @@ TEST test_cache_overflow_cache_size()
 
 TEST test_cache_retrieve_transaction()
 {
-        transaction_cache_t *cache = trans_cache_new(15);
+        transaction_cache_t *cache = trans_cache_new(15, 60);
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -319,7 +319,7 @@ TEST test_cache_retrieve_transaction()
 
 TEST test_cache_retrieve_non_existent_transaction()
 {
-        transaction_cache_t *cache = trans_cache_new(15);
+        transaction_cache_t *cache = trans_cache_new(15, 60);
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -337,7 +337,7 @@ TEST test_cache_retrieve_non_existent_transaction()
 
 TEST test_cache_retrieve_messages_from_transaction()
 {
-        transaction_cache_t *cache = trans_cache_new(15);
+        transaction_cache_t *cache = trans_cache_new(15, 60);
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -382,7 +382,7 @@ TEST test_cache_retrieve_messages_from_transaction()
 
 TEST test_cache_purge()
 {
-        transaction_cache_t *cache = trans_cache_new(15);
+        transaction_cache_t *cache = trans_cache_new(15, 60);
         ASSERT_NEQ(NULL, cache);
         
         dhcp_message_t *msg1 = calloc(1, sizeof(dhcp_message_t));
@@ -419,7 +419,7 @@ TEST test_cache_wait_until_transaction_is_finished()
         trans_update_args_t args = {0};
         args.server = &server;
         
-        server.trans_cache = trans_cache_new(15);
+        server.trans_cache = trans_cache_new(15, 60);
         transaction_cache_t *cache = server.trans_cache;
         ASSERT_NEQ(NULL, cache);
         
@@ -433,7 +433,7 @@ TEST test_cache_wait_until_transaction_is_finished()
         ASSERT_EQ(1, cache->transactions[0]->num_of_messages);
         ASSERT_EQ(0x5555, cache->transactions[0]->xid);
 
-        for (int i = 0; i < TRANSACTION_TIMEOUT_DEFAULT + 5; i++) {
+        for (int i = 0; i < 65; i++) {
                 args.index = 0;
                 trans_update_timer(&args);
                 sleep(1);
@@ -486,7 +486,7 @@ TEST test_cache_wait_until_transaction_is_finished_return_address_to_pool()
         trans_update_args_t args = {0};
         args.server = &server;
 
-        server.trans_cache = trans_cache_new(15);
+        server.trans_cache = trans_cache_new(15, 60);
         transaction_cache_t *cache = server.trans_cache;
         ASSERT_NEQ(NULL, cache);
         
@@ -506,7 +506,7 @@ TEST test_cache_wait_until_transaction_is_finished_return_address_to_pool()
         ASSERT_EQ(2, cache->transactions[0]->num_of_messages);
         ASSERT_EQ(0x5555, cache->transactions[0]->xid);
 
-        for (int i = 0; i < TRANSACTION_TIMEOUT_DEFAULT + 5; i++) {
+        for (int i = 0; i < 65; i++) {
                 args.index = 0;
                 trans_update_timer(&args);
                 sleep(1);

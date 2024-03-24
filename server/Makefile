@@ -56,7 +56,7 @@ ifeq ($(DEBUG),y)
 endif
 
 ifeq ($(__PIPELINE_BUILD), y)
-	CFLAGS += -D__RUN_TIMER_TESTS__ -D__LEASES_TEST_BUILD
+	CFLAGS += -D__RUN_TIMER_TESTS__ -D__LEASES_TEST_BUILD -D__PIPELINE_BUILD
 endif
 
 ECHO_CMD:= @if [ -z "$(findstring s,$(filter-out --%,$(MAKEFLAGS)))" ]; then \

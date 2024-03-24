@@ -17,7 +17,6 @@
  * transactions will be stored after the newest one in case it is needed.
  * When _offset reaches size, it will overflow back to 0
  */
-// TODO: implement a timeout for transactions so the transaction entry is not overwritten until the time is reached
 typedef struct transaction_cache {
     transaction_t **transactions;
     uint32_t size;
@@ -27,7 +26,7 @@ typedef struct transaction_cache {
  * Initialise a transaction_cache. The cache pointer MUST be NULL 
  * Returns 0 on success and -1 on failure
  */
-transaction_cache_t *trans_cache_new(int size);
+transaction_cache_t *trans_cache_new(int size, uint32_t time);
 
 int trans_cache_add_message(transaction_cache_t *cache, dhcp_message_t *message);
 

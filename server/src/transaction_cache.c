@@ -3,18 +3,17 @@
 #include "transaction.h"
 #include <stdint.h>
 
-transaction_cache_t *trans_cache_new(int size)
+transaction_cache_t *trans_cache_new(int size, uint32_t time)
 {
         transaction_cache_t *cache = calloc(1, sizeof(transaction_cache_t));
         if_null_log(cache, error, LOG_ERROR, NULL, "Failed to allocate transaction cache");
 
-        // TODO: Configuration transaction cache size 
         cache->size = size;
         cache->transactions = malloc(sizeof(transaction_t*) * cache->size);
         if_null_log(cache->transactions, error, LOG_ERROR, NULL, "Failed to allocate transaction cache");
 
         for (uint32_t i = 0; i < cache->size; i++) {
-                cache->transactions[i] = trans_new();
+                cache->transactions[i] = trans_new(time);
                 if_null_log(cache->transactions[i], error, LOG_ERROR, NULL, 
                         "Failed to allocate transaction %u/%u in cache", i, cache->size);
         }

@@ -17,6 +17,8 @@ TEST test_timer_new_and_destroy()
 
 TEST test_timer_update()
 {
+        SKIP_TIMER_TESTS;
+
         struct timer *t = timer_new(TIMER_ONCE, 10, true, NULL);
         ASSERT_NEQ(NULL, t);
         
@@ -36,6 +38,7 @@ TEST test_timer_update()
 
 TEST test_timer_start()
 {
+        SKIP_TIMER_TESTS;
         struct timer *t = timer_new(TIMER_ONCE, 10, false, NULL);
         ASSERT_NEQ(NULL, t);
         
@@ -58,6 +61,7 @@ TEST test_timer_start()
 
 TEST test_timer_stop() 
 {
+        SKIP_TIMER_TESTS;
         struct timer *t = timer_new(TIMER_ONCE, 10, false, NULL);
         ASSERT_NEQ(NULL, t);
         
@@ -84,6 +88,7 @@ TEST test_timer_stop()
 
 TEST test_timer_reset() 
 {
+        SKIP_TIMER_TESTS;
         struct timer *t = timer_new(TIMER_ONCE, 10, false, NULL);
         ASSERT_NEQ(NULL, t);
         
@@ -116,6 +121,7 @@ static int callback(uint32_t time, void *data)
 
 TEST test_timer_expire_call_cb_once()
 {
+        SKIP_TIMER_TESTS;
         struct timer *t = timer_new(TIMER_ONCE, 5, true, callback);
         ASSERT_NEQ(NULL, t);
         
@@ -140,6 +146,7 @@ TEST test_timer_expire_call_cb_once()
 
 TEST test_timer_expire_call_cb_repeat()
 {
+        SKIP_TIMER_TESTS;
         struct timer *t = timer_new(TIMER_REPEAT, 2, true, callback);
         ASSERT_NEQ(NULL, t);
         
@@ -159,6 +166,7 @@ TEST test_timer_expire_call_cb_repeat()
 
 TEST test_timer_expire_call_cb_null()
 {
+        SKIP_TIMER_TESTS;
         struct timer *t = timer_new(TIMER_ONCE, 5, true, NULL);
         ASSERT_NEQ(NULL, t);
         

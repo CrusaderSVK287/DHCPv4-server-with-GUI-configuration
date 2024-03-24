@@ -28,9 +28,9 @@ int main(int argc, char *argv[])
         RUN_SUITE(lease);
         RUN_SUITE(dhcp_message_handlers);
         RUN_SUITE(transaction);
-#ifdef  __RUN_TIMER_TESTS__
         RUN_SUITE(timer); // this suite takes some time to run, no need to run it always
-#endif
+        RUN_SUITE(config);
+
         cclogger_uninit();
 
         GREATEST_MAIN_END();

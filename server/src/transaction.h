@@ -7,9 +7,6 @@
 #include "timer.h"
 #include <stdint.h>
 
-// TODO: implement config 
-#define TRANSACTION_TIMEOUT_DEFAULT 60
-
 typedef struct transaction {
     uint32_t transaction_begin;
     uint32_t xid;
@@ -19,7 +16,7 @@ typedef struct transaction {
 } transaction_t;
 
 /* Allocate space for a new transaction */
-transaction_t *trans_new();
+transaction_t *trans_new(uint32_t time);
 
 /* Free transaction from memory */
 void trans_destroy(transaction_t **transaction);

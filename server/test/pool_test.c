@@ -1,3 +1,5 @@
+#include "RFC/RFC-2132.h"
+#include "dhcp_options.h"
 #include "tests.h"
 #include "greatest.h"
 #include <address_pool.h>
@@ -28,6 +30,22 @@ TEST test_create_pool_valid_range_edge()
 {
         address_pool_t *pool = address_pool_new_str("test", "192.168.1.1", "192.168.1.254", "255.255.255.0");
         ASSERT_STR_EQ("test", pool->name);
+
+        address_pool_destroy(&pool);
+        ASSERT_EQ(pool, NULL);
+
+        PASS();
+}
+
+TEST test_create_pool_valid_range_dhcp_option_present()
+{
+        address_pool_t *pool = address_pool_new_str("test", "192.168.1.1", "192.168.1.254", "255.255.255.0");
+        ASSERT_STR_EQ("test", pool->name);
+
+        dhcp_option_t *option = dhcp_option_retrieve(pool->dhcp_option_override, DHCP_OPTION_SUBNET_MASK);
+        ASSERT_NEQ(NULL, option);
+        ASSERT_EQ(DHCP_OPTION_SUBNET_MASK, option->tag);
+        ASSERT_EQ(ipv4_address_to_uint32("255.255.255.0"), option->value.ip);
 
         address_pool_destroy(&pool);
         ASSERT_EQ(pool, NULL);
@@ -111,5 +129,6 @@ SUITE(pool)
         RUN_TEST(test_pool_allocate_address);
         RUN_TEST(test_pool_allocate_address_edge_cases);
         RUN_TEST(test_create_pool_switched_addresses);
+        RUN_TEST(test_create_pool_valid_range_dhcp_option_present);
 }
 

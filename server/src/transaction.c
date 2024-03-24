@@ -6,6 +6,7 @@
 #include "timer_args.h"
 #include "transaction_cache.h"
 #include "utils/llist.h"
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -39,14 +40,14 @@ exit:
         return rv;
 }
 
-transaction_t *trans_new()
+transaction_t *trans_new(uint32_t time)
 {
         transaction_t *t = calloc(1, sizeof(transaction_t));
         if_null(t, error);
         
         t->messages_ll = llist_new();
         if_null(t, error);
-        t->timer = timer_new(TIMER_ONCE, TRANSACTION_TIMEOUT_DEFAULT, false, trans_timer_cb_clear);
+        t->timer = timer_new(TIMER_ONCE, time, false, trans_timer_cb_clear);
         if_null(t->timer, error);
 
         trans_clear(t);

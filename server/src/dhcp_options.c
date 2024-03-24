@@ -12,7 +12,7 @@
 #include <sys/types.h>
 
 // TODO: Finish the switch, only example / common are here now
-static enum dhcp_option_type option_tag_to_type(int tag) {
+enum dhcp_option_type dhcp_option_tag_to_type(int tag) {
         switch(tag) {
         case DHCP_OPTION_IP_FORWARDING_ENABLE_DISABLE:
         case DHCP_OPTION_NON_LOCAL_SOURCE_ROUTING_ENABLE_DISABLE:
@@ -146,7 +146,7 @@ int dhcp_option_parse(llist_t *dest, uint8_t raw_options[])
 
                 option = dhcp_option_new();
                 option->tag = raw_options[i++];
-                option->type = option_tag_to_type(option->tag);
+                option->type = dhcp_option_tag_to_type(option->tag);
                 option->lenght = raw_options[i++];
 
                 memset(value_buf, 0, DHCP_OPTION_MAX_LENGHT);
@@ -245,7 +245,7 @@ dhcp_option_t* dhcp_option_new_values(int tag, int lenght, void* value)
         o->tag = tag;
         o->lenght = lenght;
         memcpy(o->value.binary_data, value, lenght);
-        o->type = option_tag_to_type(tag);
+        o->type = dhcp_option_tag_to_type(tag);
 
         return o;
 error:

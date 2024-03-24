@@ -1,0 +1,23 @@
+{
+    "server": {
+        "interface": "eno1",
+        "tick_delay": 555,
+        "lease_expiration_check": 444
+    },
+    "pools": [
+        {
+            "name": "LAN",
+            "start": "192.168.0.2",
+            "end": "192.168.0.100",
+            "subnet": "255.255.255.0",
+            "options": [
+                {
+                    "tag": 51,
+                    "lenght": 4,
+                    "value": 600
+                }
+            ]
+        }
+    ]
+}
+

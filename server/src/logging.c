@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 
 #define FORMAT_FATAL "[${DATE} ${TIME}] ${FILE}:${LINE}: *** FATAL ERROR *** ${MSG}"
-#define FORMAT_ERROR "[${DATE} ${TIME}] ${FILE}: ERROR !!! ${MSG}"
+#define FORMAT_ERROR "[${DATE} ${TIME}] ${FILE}:${LINE}: ERROR !!! ${MSG}"
 #define FORMAT_WARNING "[${DATE} ${TIME}] ${FILE}: WARNING ! ${MSG}"
 
 #ifdef DEBUG
@@ -17,11 +17,12 @@ int init_logging()
 {
         int rv = 1;
 
+        mkdir("/var/log", 0777);
         mkdir("/var/log/dhcps", 0777);
         if_failed(cclogger_init(LOGGING_MULTIPLE_FILES, "/var/log/dhcps/dhcp-log", "dhcps"), exit);
         if_failed(cclogger_set_default_message_format("[${DATE} ${TIME}] ${FILE}: ${MSG}"), exit);
         
-        cclogger_set_verbosity_level(10);
+        cclogger_set_verbosity_level(4);
         cclogger_reset_log_levels();
         
         /* Critical error */
@@ -31,9 +32,9 @@ int init_logging()
         /* Warning */
         if_failed(cclogger_add_log_level(true, true, CCLOG_TTY_CLR_YEL, NULL, FORMAT_WARNING, 3), exit);
         /* Log */
-        if_failed(cclogger_add_log_level(true, false, CCLOG_TTY_CLR_DEF, NULL, NULL, 10), exit);
+        if_failed(cclogger_add_log_level(true, false, CCLOG_TTY_CLR_DEF, NULL, NULL, 4), exit);
         /* Info - generaly not needed, hence high verbosity level required */
-        if_failed(cclogger_add_log_level(true, false, CCLOG_TTY_CLR_DEF, NULL, NULL, 15), exit);
+        if_failed(cclogger_add_log_level(true, false, CCLOG_TTY_CLR_DEF, NULL, NULL, 5), exit);
         
 #ifdef DEBUG
         /* Trace */

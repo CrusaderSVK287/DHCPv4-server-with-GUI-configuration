@@ -15,5 +15,19 @@ SUITE(lease);
 SUITE(dhcp_message_handlers);
 SUITE(transaction);
 SUITE(timer);
+SUITE(config);
+#ifdef __PIPELINE_BUILD
+#define SKIP_IF_PIPELINE_BUILD SKIP();
+#else 
+#define SKIP_IF_PIPELINE_BUILD
+#endif
+
+#ifndef  __RUN_TIMER_TESTS__
+#define SKIP_TIMER_TESTS SKIP()
+#else 
+#define SKIP_TIMER_TESTS
+#endif
+
+#define INTERFACE "wlp3s0"
 
 #endif // !SERVER_TESTS

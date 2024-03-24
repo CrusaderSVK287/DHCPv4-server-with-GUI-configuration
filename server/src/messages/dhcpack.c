@@ -4,6 +4,7 @@
 #include "../logging.h"
 #include "../dhcp_options.h"
 #include <errno.h>
+#include <netinet/in.h>
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
@@ -24,8 +25,7 @@ int message_dhcpack_send(dhcp_server_t *server, dhcp_message_t *message, const c
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_port = htons(68);
-        // TODO: Replace inet_addr with inet_aton etc. also retrieve proper broadcast address if applicable
-        addr.sin_addr.s_addr = (message->ciaddr) ? htonl(message->ciaddr) : inet_addr("192.168.1.255");
+        addr.sin_addr.s_addr = (message->ciaddr) ? htonl(message->ciaddr) : server->config.broadcast_addr;
 
         cclog(LOG_MSG, NULL, "Sending dhcp ack message %s address %s to %s",
                         reason, uint32_to_ipv4_address(message->yiaddr), uint32_to_ipv4_address(addr.sin_addr.s_addr));
@@ -150,8 +150,7 @@ int message_dhcpack_build(dhcp_server_t *server, dhcp_message_t *dhcp_request,
         ack->secs   = 0;
         ack->ciaddr = dhcp_request->ciaddr;
         ack->yiaddr = leased_address;
-        // TODO: Make a proper way to get server IP address
-        ack->siaddr = ipv4_address_to_uint32("192.168.1.250");
+        ack->siaddr = ntohl(server->config.bound_ip);
         ack->flags  = dhcp_request->flags;
         ack->giaddr = dhcp_request->giaddr;
         ack->cookie = dhcp_request->cookie;
@@ -186,8 +185,7 @@ int message_dhcpack_build_lease_renew(dhcp_server_t *server, dhcp_message_t *req
         ack->secs   = 0;
         ack->ciaddr = request->ciaddr;
         ack->yiaddr = request->ciaddr;
-        // TODO: Make a proper way to get server IP address
-        ack->siaddr = ipv4_address_to_uint32("192.168.1.250");
+        ack->siaddr = ntohl(server->config.bound_ip);
         ack->flags  = request->flags;
         ack->giaddr = 0;
         ack->cookie = request->cookie;
@@ -223,8 +221,7 @@ int message_dhcpack_build_inform_response(dhcp_server_t *server, dhcp_message_t 
         ack->secs   = 0;
         ack->ciaddr = inform->ciaddr;
         ack->yiaddr = 0;
-        // TODO: Make a proper way to get server IP address
-        ack->siaddr = ipv4_address_to_uint32("192.168.1.250");
+        ack->siaddr = ntohl(server->config.bound_ip);
         ack->flags  = inform->flags;
         ack->giaddr = inform->giaddr;
         ack->cookie = inform->cookie;

@@ -1,0 +1,27 @@
+{
+    "server": {
+        "interface": "eno1",
+        "tick_delay": 1000,
+        "cache_size": 25,
+        "transaction_duration": 60,
+        "lease_expiration_check": 60,
+        "log_verbosity": 4
+    },
+    "pools": [
+        {
+            "name": "LAN",
+            "subnet": "255.255.255.0"
+        }
+    ],
+    "options": [
+        {
+            "tag": 51,
+            "value": 86400
+        },
+        {
+            "tag": 3,
+            "lenght": 4
+        }
+    ]
+}
+
