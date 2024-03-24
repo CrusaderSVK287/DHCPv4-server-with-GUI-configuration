@@ -157,6 +157,11 @@ static int config_load_server_config(dhcp_server_t *server, cJSON *server_config
                 server->config.log_verbosity = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_LOG_VERBOSITY;
         }
 
+        if (!server->config.lease_time) {
+                object = cJSON_GetObjectItem(server_config, "lease_time");
+                server->config.lease_time = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_LEASE_TIME;
+        }
+
         rv = 0;
 exit:
         return rv;
@@ -379,6 +384,7 @@ static int config_load_defaults(dhcp_server_t *server)
         server->config.trans_duration = CONFIG_DEFAULT_TRANS_DURATION;
         server->config.lease_expiration_check = CONFIG_DEFAULT_LEASE_EXPIRATION_CHECK;
         server->config.log_verbosity = CONFIG_DEFAULT_LOG_VERBOSITY;
+        server->config.lease_time = CONFIG_DEFAULT_LEASE_TIME;
         
         uint32_t lease_time_value = CONFIG_DEFAULT_LEASE_TIME;
         if (dhcp_option_add(server->allocator->default_options, dhcp_option_new_values(
@@ -524,14 +530,15 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
                 {"version",                 no_argument,        0, 'v'},
                 {"help",                    no_argument,        0, 'h'},
                 {"config",                  required_argument,  0, 'c'},
-                {"default-configuration",   required_argument,        0,  1 },
+                {"default-configuration",   required_argument,  0,  1 },
 
                 {"interface",               required_argument, 0, 'i'},
                 {"tick-delay",              required_argument, 0, 'd'},
                 {"cache-size",              required_argument, 0, 's'},
                 {"transaction-duration",    required_argument, 0, 't'},
                 {"lease-expiration-check",  required_argument, 0, 'e'},
-                {"log",                     required_argument, 0, 'l'},
+                {"lease-time",              required_argument, 0, 'l'},
+                {"log",                     required_argument, 0,  2 },
 
                 {"pool",    required_argument, 0, 'p'},
                 {"option",  required_argument, 0, 'o'},
@@ -575,7 +582,7 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
                                 rv = -1;
                         break;
                 case 'l':
-                        if (sscanf(optarg, "%hhu", &server->config.log_verbosity) != 1)
+                        if (sscanf(optarg, "%u", &server->config.lease_time) != 1)
                                 rv = -1;
                         break;
                 case 'p':
@@ -593,6 +600,10 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
 
 
                         config_load_defaults(server);
+                        break;
+                case 2: 
+                        if (sscanf(optarg, "%hhu", &server->config.log_verbosity) != 1)
+                                rv = -1;
                         break;
                 default:
                         if (optopt == 0) {

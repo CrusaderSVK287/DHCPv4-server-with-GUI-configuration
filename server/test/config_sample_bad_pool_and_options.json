@@ -1,6 +1,6 @@
 {
     "server": {
-        "interface": "wlp3s0",
+        "interface": "eno1",
         "tick_delay": 1000,
         "cache_size": 25,
         "transaction_duration": 60,

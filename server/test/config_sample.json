@@ -1,11 +1,12 @@
 {
     "server": {
-        "interface": "wlp3s0",
+        "interface": "eno1",
         "tick_delay": 1000,
         "cache_size": 25,
         "transaction_duration": 60,
         "lease_expiration_check": 60,
-        "log_verbosity": 4
+        "log_verbosity": 4,
+        "lease_time": 43200
     },
     "pools": [
         {

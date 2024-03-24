@@ -26,6 +26,7 @@ typedef struct dhcp_server {
         uint32_t    cache_size;             // number of max transactions held in a cache 
         uint32_t    trans_duration;         // duration in seconds for which the transactions are stored in cache
         uint32_t    lease_expiration_check; // period in seconds after which server checks lease database for expired leases and removes them.
+        uint32_t    lease_time;
         uint8_t     log_verbosity;          // verbosity of logger messages
     } config;
 } dhcp_server_t;

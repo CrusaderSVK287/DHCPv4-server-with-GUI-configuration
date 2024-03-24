@@ -1,6 +1,6 @@
 {
     "server": {
-        "interface": "wlp3s0",
+        "interface": "eno1",
         "tick_delay": 555,
         "lease_expiration_check": 444
     },

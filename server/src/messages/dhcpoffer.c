@@ -26,8 +26,7 @@ int message_dhcpoffer_send(dhcp_server_t *server, dhcp_message_t *message)
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_port = htons(68);
-        // TODO: get proper broadcast domain
-        addr.sin_addr.s_addr = inet_addr("192.168.1.255");
+        addr.sin_addr.s_addr = server->config.broadcast_addr;
 
         cclog(LOG_MSG, NULL, "Sending DHCP offer message offering address %s to client %s",
                         uint32_to_ipv4_address(message->yiaddr), 
@@ -103,8 +102,7 @@ int message_dhcpoffer_build(dhcp_server_t *server, dhcp_message_t *dhcp_discover
         offer->secs   = 0;
         offer->ciaddr = 0;
         offer->yiaddr = offered_address;
-        // TODO: Make a proper way to get server IP address
-        offer->siaddr = ipv4_address_to_uint32("192.168.1.250");
+        offer->siaddr = ntohl(server->config.bound_ip);
         offer->flags  = dhcp_discover->flags;
         offer->giaddr = dhcp_discover->giaddr;
         offer->cookie = dhcp_discover->cookie;

@@ -19,8 +19,7 @@ int message_nak_send(dhcp_server_t *server, dhcp_message_t *message)
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_port = htons(68);
-        // TODO: make getting proper broadcast address
-        addr.sin_addr.s_addr = (message->ciaddr) ? message->ciaddr : inet_addr("192.168.1.255");
+        addr.sin_addr.s_addr = (message->ciaddr) ? message->ciaddr : server->config.broadcast_addr;
 
         cclog(LOG_MSG, NULL, "Sending DHCP NAK message");
         if_failed_log_n(sendto(server->sock_fd, &message->packet, sizeof(dhcp_packet_t), 0,

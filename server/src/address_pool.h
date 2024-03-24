@@ -30,7 +30,6 @@ typedef struct pool {
     llist_t *dhcp_option_override;
 } address_pool_t;
 
-// TODO: Add something to autmatically create subnet mask
 address_pool_t* address_pool_new(const char *name, uint32_t start_address,
         uint32_t end_address, uint32_t subnet_mask);
 

@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include <arpa/inet.h>
 
 static int dhcp_requst_commit_lease(dhcp_server_t *server, dhcp_message_t *request, 
                 uint32_t lease_time, uint32_t leased_address)
@@ -146,8 +147,7 @@ static int dhcp_request_response_to_offer(dhcp_server_t *server, dhcp_message_t 
         int rv = DHCP_REQUEST_ERROR;
         
         /* Check server identifier option */
-        // TODO: make proper identifier check when configuration implemented
-        if (o54->value.ip != ipv4_address_to_uint32("192.168.1.250")) {
+        if (o54->value.ip != ntohl(server->config.bound_ip)) {
                 cclog(LOG_INFO, NULL, "Received request, but with different server identifier");
                 rv = DHCP_REQUEST_DIFFERENT_SERVER_IDENTIFICATOR;
                 goto exit;

@@ -122,6 +122,7 @@ TEST test_parse_valid_config_file()
         ASSERT_EQ(60, server.config.trans_duration);
         ASSERT_EQ(60, server.config.lease_expiration_check);
         ASSERT_EQ(4,  server.config.log_verbosity);
+        ASSERT_EQ(43200,  server.config.lease_time);
         address_pool_t *pool = allocator_get_pool_by_name(server.allocator, "LAN");
         ASSERT_NEQ(NULL, pool);
         ASSERT_EQ(ipv4_address_to_uint32("192.168.0.2"), pool->start_address);
