@@ -5,6 +5,8 @@
 #include "logging.h"
 #include "transaction_cache.h"
 #include <stdint.h>
+#include "config.h"
+#include "security/acl.h"
 
 /**
  * Temporary solution until proper configuration API is made
@@ -50,3 +52,31 @@ error:
         cclog(LOG_CRITICAL, NULL, "Failed to initialise transaction cache");
         return -1;
 }
+
+int ACL_init(dhcp_server_t *server)
+{
+        if (!server)
+                return -1;
+
+        if (server->config.acl_enable == CONFIG_UNTOUCHED || 
+            server->config.acl_blacklist == CONFIG_UNTOUCHED) {
+                cclog(LOG_CRITICAL, NULL, "ACL config not set, please contact the developer");
+                goto error;
+        }
+        
+        server->acl = ACL_new();
+        if_null(server->acl, error);
+
+        server->acl->enabled = server->config.acl_enable;
+        server->acl->is_blacklist = server->config.acl_blacklist;
+
+        if (ACL_load_acl_entries(server->acl, server->config.config_path) < 0) {
+                goto error;
+        }
+
+        return 0;
+error:
+        cclog(LOG_CRITICAL, NULL, "Failed to initialise acl");
+        return -1;
+}
+

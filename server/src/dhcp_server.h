@@ -4,6 +4,8 @@
 #include "allocator.h"
 #include "transaction_cache.h"
 #include "timer.h"
+#include "utils/llist.h"
+#include "security/acl.h"
 #include <linux/limits.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -33,6 +35,8 @@ typedef struct dhcp_server {
         uint8_t     acl_enable;             // enable ACL security feature (default true)
         uint8_t     acl_blacklist;          // is ACL a blacklist? (default true)
     } config;
+
+    ACL_t *acl;
 } dhcp_server_t;
 
 /**
