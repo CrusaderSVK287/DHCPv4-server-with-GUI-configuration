@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
         RUN_SUITE(transaction);
         RUN_SUITE(timer); // this suite takes some time to run, no need to run it always
         RUN_SUITE(config);
+        RUN_SUITE(security);
 
         cclogger_uninit();
 

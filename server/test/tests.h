@@ -16,6 +16,8 @@ SUITE(dhcp_message_handlers);
 SUITE(transaction);
 SUITE(timer);
 SUITE(config);
+SUITE(security);
+
 #ifdef __PIPELINE_BUILD
 #define SKIP_IF_PIPELINE_BUILD SKIP();
 #else 
@@ -28,6 +30,6 @@ SUITE(config);
 #define SKIP_TIMER_TESTS
 #endif
 
-#define INTERFACE "wlp3s0"
+#define INTERFACE "eno1"
 
 #endif // !SERVER_TESTS

@@ -18,7 +18,14 @@
 ACL_t* ACL_new()
 {
         ACL_t *acl = calloc(1, sizeof(ACL_t));
+        if_null(acl, error);
+        acl->entries = llist_new();
+        if_null(acl->entries, error);
+
         return acl;
+error:
+        cclog(LOG_ERROR, NULL, "Failed to allocate memory for ACL");
+        return NULL;
 }
 
 static cJSON *load_config_file(const char *path)
@@ -75,7 +82,7 @@ int ACL_load_acl_entries(ACL_t *acl, const char *path)
         if_null(config, exit);
         cJSON *config_security = cJSON_GetObjectItem(config, "security");
         if_null(config_security, exit_config);
-        cJSON *config_acl_entries = cJSON_GetObjectItem(config, "acl_entries");
+        cJSON *config_acl_entries = cJSON_GetObjectItem(config_security, "acl_entries");
         if_null(config_acl_entries, exit_config);
 
         llist_clear(acl->entries);
@@ -150,6 +157,6 @@ void ACL_destroy(ACL_t **acl)
 
         llist_destroy(&pACL->entries);
         free(pACL);
-        pACL = NULL;
+        *acl = NULL;
 }
 

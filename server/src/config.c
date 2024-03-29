@@ -186,11 +186,6 @@ static int config_load_server_config(dhcp_server_t *server, cJSON *server_config
                 server->config.lease_time = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_LEASE_TIME;
         }
 
-        if (server->config.acl_enable == CONFIG_UNTOUCHED) {
-                object = cJSON_GetObjectItem(server_config, "lease_time");
-                server->config.lease_time = (object) ? cJSON_IsTrue(object) : CONFIG_DEFAULT_LEASE_TIME;
-        }
-
         rv = 0;
 exit:
         return rv;
@@ -291,9 +286,9 @@ static int config_load_pools_config(dhcp_server_t *server, cJSON *pools_config)
         int rv = -1;
 
         char *pool_name = NULL;
-        uint32_t pool_start;
-        uint32_t pool_end;
-        uint32_t pool_mask;
+        uint32_t pool_start = 0;
+        uint32_t pool_end   = 0;
+        uint32_t pool_mask  = 0;
         cJSON *object = NULL;
 
         address_pool_t *new_pool = NULL;
