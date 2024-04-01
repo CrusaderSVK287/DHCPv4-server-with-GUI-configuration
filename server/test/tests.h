@@ -18,6 +18,8 @@ SUITE(timer);
 SUITE(config);
 SUITE(security);
 
+void test_dhcp_snooper();
+
 #ifdef __PIPELINE_BUILD
 #define SKIP_IF_PIPELINE_BUILD SKIP();
 #else 
