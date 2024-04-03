@@ -24,11 +24,9 @@ This roadmap may change in future
     - Implement cache for transactions to store for parameter checks [Done - commit 15843add110a872005f8c4722abd142f3fd32118]
     - Implement automatic lease releasing mechanism [Done - commit 87a6cd2e7db8f6db5566a0e72186a110bd8b1dbc]
 * Security
-    - ACL feature
-    - ACL configuration
-    - DHCP starvation prevention (maybe done using transactions cache)
-    - Timeout period for clients that send x number of messages in y seconds
-    - Active DHCP probing (Scanning network for rogue DHCP servers)
+    - ACL feature [commit 37c636301c31510ac5a924ebdf2602b9a4978671]
+    - ACL configuration [Done commit dc5845084af148be2b6676e7991d89c39c911750]
+    - Active DHCP probing [commit 9c3a92ba014be7b615c3f4d342de88559e922800]
 * Other
     - Persistant Transaction database structure
 
