@@ -15,6 +15,7 @@
 #include "utils/llist.h"
 #include "utils/xtoy.h"
 #include "transaction_cache.h"
+#include "security/acl.h"
 
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
@@ -246,7 +247,11 @@ int dhcp_server_serve(dhcp_server_t *server)
                 if (dhcp_packet_parse(dhcp_msg) < 0)
                         continue;
 
-                // TODO: put ACL_can_client_be_served() here when implemented
+                /* Check ACL database to determine if the client is allowed to be served */
+                if (ACL_check_client(server->acl, (uint8_t*)dhcp_msg->chaddr) != ACL_ALLOW) {
+                        cclog(LOG_INFO, NULL, "ACL denied client %s.", uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr));
+                        continue;
+                }
 
                 /* If we capture a message sent by a server, drop it */
                 if (dhcp_msg->type == DHCP_OFFER || 

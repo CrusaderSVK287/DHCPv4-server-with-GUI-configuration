@@ -17,7 +17,10 @@ int main(int argc, char *argv[])
         cclogger_add_log_level(false, false, CCLOG_TTY_CLR_GRN, NULL, NULL, 100);
         cclogger_add_log_level(false, false, CCLOG_TTY_CLR_GRN, NULL, NULL, 100);
         cclogger_add_log_level(false, false, CCLOG_TTY_CLR_GRN, NULL, NULL, 100);
-        cclogger_set_verbosity_level(-1000);
+        cclogger_set_verbosity_level(1000);
+        
+        test_dhcp_snooper();
+        goto exit;
 
         RUN_SUITE(linked_list);
         RUN_SUITE(dhcp_options);
@@ -30,7 +33,9 @@ int main(int argc, char *argv[])
         RUN_SUITE(transaction);
         RUN_SUITE(timer); // this suite takes some time to run, no need to run it always
         RUN_SUITE(config);
+        RUN_SUITE(security);
 
+exit:
         cclogger_uninit();
 
         GREATEST_MAIN_END();

@@ -34,6 +34,14 @@
             "lenght": 4,
             "value": "192.168.0.1"
         }
-    ]
+    ],
+    "security": {
+        "acl_enable": true,
+        "acl_blacklist": true,
+        "acl_entries": [
+            "aa:bb:cc:dd:ee:ff",
+            "11:22:33:44:55:66"
+        ]
+    }
 }
 
