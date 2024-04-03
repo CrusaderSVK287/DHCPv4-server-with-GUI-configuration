@@ -12,19 +12,17 @@
 #endif
 
 enum dhcp_snooper_status {
-#ifdef CONFIG_SECURITY_ENABLE_DHCP_SNOOPING
+    DHCP_SNOOP_DISABLED = INT_MIN,
+
     DHCP_SNOOP_ERROR = -1,
     DHCP_SNOOP_NO_THREAT = 0,
     DHCP_SNOOP_POTENTIAL_ROGUE = 1,
-#else 
-    DHCP_SNOOP_DISABLED = INT_MIN 
-#endif
 };
 
 enum dhcp_snooper_status dhcp_snooper_perform_scan(dhcp_server_t *server, 
                                                    const char *spoofed_mac,
                                                    llist_t *server_whitelist,
-                                                   char *status_msg);
+                                                   char **status_msg);
 
 #endif // !__DHCP_SNOOP_H__
 
