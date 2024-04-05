@@ -61,13 +61,15 @@ typedef struct dhcp_message {
     uint32_t siaddr;
     uint32_t giaddr;
     
-    char chaddr[CHADDR_LEN];
+    uint8_t chaddr[CHADDR_LEN];
     char sname[64];
     char filename[128];
     uint32_t cookie;
    
     /* Linked list containing parsed dhcp options */
     llist_t *dhcp_options;
+    /* UNIX time indicating when was the message sent/received */
+    uint32_t time;
 } dhcp_message_t;
 
 /* dumps dhcp message header to stdout */

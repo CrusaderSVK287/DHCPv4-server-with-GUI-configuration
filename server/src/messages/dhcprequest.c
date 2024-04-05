@@ -5,7 +5,9 @@
 #include "../logging.h"
 #include "../lease.h"
 #include "../allocator.h"
+#include <netinet/in.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <arpa/inet.h>
@@ -147,7 +149,7 @@ static int dhcp_request_response_to_offer(dhcp_server_t *server, dhcp_message_t 
         int rv = DHCP_REQUEST_ERROR;
         
         /* Check server identifier option */
-        if (o54->value.ip != ntohl(server->config.bound_ip)) {
+        if (o54->value.ip != server->config.bound_ip) {
                 cclog(LOG_INFO, NULL, "Received request, but with different server identifier");
                 rv = DHCP_REQUEST_DIFFERENT_SERVER_IDENTIFICATOR;
                 goto exit;

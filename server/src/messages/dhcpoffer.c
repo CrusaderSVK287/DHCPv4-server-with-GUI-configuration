@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include "../RFC/RFC-2131.h"
+#include "../database.h"
 #include "../utils/xtoy.h"
 #include "../allocator.h"
 #include "../utils/llist.h"
@@ -115,6 +116,7 @@ int message_dhcpoffer_build(dhcp_server_t *server, dhcp_message_t *dhcp_discover
         if_failed(dhcp_packet_build(offer), exit);
         if_failed(message_dhcpoffer_send(server,offer), exit);
         if_failed(trans_cache_add_message(server->trans_cache, offer), exit);
+        database_store_message(offer);
 
         rv = 0;
 exit:

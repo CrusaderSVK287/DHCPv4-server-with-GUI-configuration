@@ -29,10 +29,10 @@ int init_dhcp_options(dhcp_server_t *server)
         if_null(server, error);
         if_null(server->allocator, error);
  
-        uint32_t lease_time = server->config.lease_time;
         if_failed(dhcp_option_add(server->allocator->default_options, dhcp_option_new_values(
-                                        DHCP_OPTION_IP_ADDRESS_LEASE_TIME, 4, &lease_time)), error);
- 
+                        DHCP_OPTION_IP_ADDRESS_LEASE_TIME, 4, &server->config.lease_time)), error);
+        if_failed(dhcp_option_add(server->allocator->default_options, dhcp_option_new_values(
+                        DHCP_OPTION_SERVER_IDENTIFIER, 4, &server->config.bound_ip)), error);
         return 0;
 error:
         cclog(LOG_CRITICAL, NULL, "Failed to initialise dhcp options");
@@ -53,7 +53,7 @@ error:
         return -1;
 }
 
-int ACL_init(dhcp_server_t *server)
+int init_ACL(dhcp_server_t *server)
 {
         if (!server)
                 return -1;
@@ -67,8 +67,8 @@ int ACL_init(dhcp_server_t *server)
         server->acl = ACL_new();
         if_null(server->acl, error);
 
-        server->acl->enabled = server->config.acl_enable;
-        server->acl->is_blacklist = server->config.acl_blacklist;
+        server->acl->enabled = server->config.acl_enable - 1;
+        server->acl->is_blacklist = server->config.acl_blacklist -1;
 
         if (ACL_load_acl_entries(server->acl, server->config.config_path) < 0) {
                 goto error;

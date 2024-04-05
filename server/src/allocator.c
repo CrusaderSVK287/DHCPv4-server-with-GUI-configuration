@@ -189,7 +189,7 @@ int allocator_request_this_address(address_allocator_t *allocator,
 
         address_pool_t *p = allocator_get_pool_by_address(allocator, requested_addres);
         if(!p) {
-                cclog(LOG_WARN, NULL, "Pool containing address %s was not "
+                cclog(LOG_MSG, NULL, "Pool containing address %s was not "
                         "found, make sure it exists", uint32_to_ipv4_address(requested_addres));
                 rv = ALLOCATOR_CANNOT_CREATE_LEASE;
                 goto exit;
@@ -224,7 +224,7 @@ int allocator_release_address(address_allocator_t *allocator, uint32_t address)
 
         address_pool_t *p = allocator_get_pool_by_address(allocator, address);
         if_null_log(p, exit, LOG_WARN, NULL, 
-                        "Pool containing address %s was not found, make sure it exists",
+                        "Pool containing address %s was not found, cannot release",
                         uint32_to_ipv4_address(address));
 
         if (address_pool_get_address_allocation(p, address) == 0) {

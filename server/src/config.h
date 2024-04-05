@@ -23,8 +23,8 @@
 #define CONFIG_DEFAULT_POOL_END "192.168.1.100"
 #define CONFIG_DEFAULT_POOL_MASK "255.255.255.0"
 
-#define CONFIG_DEFAULT_ACL_ENABLE true
-#define CONFIG_DEFAULT_ACL_BLACKLIST true
+#define CONFIG_DEFAULT_ACL_ENABLE CONFIG_BOOL_TRUE
+#define CONFIG_DEFAULT_ACL_BLACKLIST CONFIG_BOOL_TRUE
 
 int config_parse_arguments(dhcp_server_t *server, int argc, char **argv);
 

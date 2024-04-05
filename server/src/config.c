@@ -54,12 +54,12 @@ int config_get_interface_info(dhcp_server_t *server)
 
                 if (ifa->ifa_addr->sa_family == AF_INET) {
                         struct sockaddr_in *addr = (struct sockaddr_in *)ifa->ifa_addr;
-                        server->config.bound_ip = ntohl(addr->sin_addr.s_addr);
+                        server->config.bound_ip = addr->sin_addr.s_addr;
                 }
 
                 if (ifa->ifa_broadaddr != NULL && ifa->ifa_addr->sa_family == AF_INET) {
                         struct sockaddr_in *broadcast = (struct sockaddr_in *)ifa->ifa_broadaddr;
-                        server->config.broadcast_addr = ntohl(broadcast->sin_addr.s_addr);
+                        server->config.broadcast_addr = broadcast->sin_addr.s_addr;
                 }
 
                 /* If we have both interface ip and broadcast addresses, we can exit the loop */
@@ -124,7 +124,7 @@ static int config_load_security_config(dhcp_server_t *server, cJSON *security_co
         
         if (server->config.acl_blacklist == CONFIG_UNTOUCHED) {
                 object = cJSON_GetObjectItem(security_config, "acl_blacklist");
-                server->config.acl_enable = (object) ? cJSON_IsTrue(object) : CONFIG_DEFAULT_ACL_ENABLE;
+                server->config.acl_blacklist = (object) ? cJSON_IsTrue(object) : CONFIG_DEFAULT_ACL_BLACKLIST;
         }
 
         rv = 0;

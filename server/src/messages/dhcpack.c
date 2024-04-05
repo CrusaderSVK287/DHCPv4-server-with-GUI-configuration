@@ -3,6 +3,7 @@
 #include "../utils/xtoy.h"
 #include "../logging.h"
 #include "../dhcp_options.h"
+#include "../database.h"
 #include <errno.h>
 #include <netinet/in.h>
 #include <stdint.h>
@@ -70,37 +71,6 @@ exit:
         return rv;
 }
 
-// static int get_requested_dhcp_options_lease_renewal(address_allocator_t *allocator,
-//                 dhcp_message_t *dhcp_ack)
-// {
-//         if (!allocator)
-//                 return -1;
-//
-//         int rv = -1;
-//
-//         /*
-//          * Since we are acknownledging already existing lease with configured client, 
-//          * we make a dummy parameter request list 
-//          */
-//         dhcp_option_t *requested_options_list = dhcp_option_new_values(DHCP_OPTION_PARAMETER_REQUEST_LIST,
-//                                                                         1, (uint8_t[]) {0});
-//
-//         /* Get the pool options of the address */
-//         address_pool_t *pool = allocator_get_pool_by_address(allocator, dhcp_ack->ciaddr);
-//         if_null(pool, exit);
-//
-//         if_failed_log(dhcp_option_build_required_options(dhcp_ack->dhcp_options, 
-//                         requested_options_list->value.binary_data, 
-//                         /* required */   (uint8_t[]) {DHCP_OPTION_IP_ADDRESS_LEASE_TIME, 0}, 
-//                         /* blacklised */ (uint8_t[]) {0},
-//                         allocator->default_options, pool->dhcp_option_override, DHCP_ACK),
-//                         exit, LOG_WARN, NULL, "Failed to build dhcp options for DHCP_ACK message");
-//
-//         rv = 0;
-// exit:
-//         return rv;
-// }
-
 static int get_requested_dhcp_options_inform_response(address_allocator_t *allocator, 
                 dhcp_message_t *dhcp_inform, dhcp_message_t *dhcp_ack)
 {
@@ -162,6 +132,7 @@ int message_dhcpack_build(dhcp_server_t *server, dhcp_message_t *dhcp_request,
         if_failed(dhcp_packet_build(ack), exit);
         if_failed(message_dhcpack_send(server, ack, "acknownledging new lease of"), exit);
         if_failed(trans_cache_add_message(server->trans_cache, ack), exit);
+        database_store_message(ack);
 
         rv = 0;
 exit:
@@ -195,6 +166,7 @@ int message_dhcpack_build_lease_renew(dhcp_server_t *server, dhcp_message_t *req
         if_failed(dhcp_packet_build(ack), exit);
         if_failed(message_dhcpack_send(server,ack, "renewing lease of"), exit);
         if_failed(trans_cache_add_message(server->trans_cache, ack), exit);
+        database_store_message(ack);
 
         rv = 0;
 exit:
@@ -233,6 +205,7 @@ int message_dhcpack_build_inform_response(dhcp_server_t *server, dhcp_message_t 
         if_failed(dhcp_packet_build(ack), exit);
         if_failed(message_dhcpack_send(server,ack, "informing client on"), exit);
         if_failed(trans_cache_add_message(server->trans_cache, ack), exit);
+        database_store_message(ack);
 
         rv = 0;
 exit:

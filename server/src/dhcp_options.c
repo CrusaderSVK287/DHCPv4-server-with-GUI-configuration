@@ -264,14 +264,15 @@ void dhcp_option_destroy(dhcp_option_t **option)
 
 void dhcp_option_destroy_list(llist_t **ll)
 {
-        if (!ll)
+        if (!ll || !*ll)
                 return;
 
         dhcp_option_t *o;
 
         llist_foreach(*ll, {
                 o = (dhcp_option_t*)node->data;
-                dhcp_option_destroy(&o);
+                if (o)
+                        dhcp_option_destroy(&o);
         })
 
         llist_destroy(ll);

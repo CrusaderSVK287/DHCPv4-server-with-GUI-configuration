@@ -2,6 +2,7 @@
 #include "logging.h"
 #include "transaction.h"
 #include <stdint.h>
+#include <time.h>
 
 transaction_cache_t *trans_cache_new(int size, uint32_t time)
 {
@@ -45,7 +46,8 @@ int trans_cache_add_message(transaction_cache_t *cache, dhcp_message_t *message)
                 return -1;
 
         int rv = -1;
-
+        
+        message->time = time(NULL);
         transaction_t *transaction = trans_cache_retrieve_transaction(cache, message->xid);
         if (!transaction) {
                 // No transaction, get next transaction

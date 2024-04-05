@@ -16,9 +16,11 @@
 #include "utils/xtoy.h"
 #include "transaction_cache.h"
 #include "security/acl.h"
+#include "database.h"
 
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
+#include <cclog_macros.h>
 #include <stdint.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -67,8 +69,7 @@ int init_dhcp_server(dhcp_server_t *server)
 
 	struct sockaddr_in addr = {0};
 	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = server->config.bound_ip;
-	// addr.sin_addr.s_addr = INADDR_ANY;
+        addr.sin_addr.s_addr = INADDR_ANY;
 	addr.sin_port = htons(67);
 
 	if_failed_log(bind(server->sock_fd, (struct sockaddr*)&addr, sizeof(struct sockaddr_in)),
@@ -218,7 +219,7 @@ void update_timers(dhcp_server_t *server)
                 cclog(LOG_MSG, NULL, "Released %d addresses from lease database", released_leases);
 
         /* Introduce a slight delay between loop cycles in order to lower cpu load */
-        usleep(server->config.tick_delay);
+        // usleep(server->config.tick_delay);
 }
 
 int dhcp_server_serve(dhcp_server_t *server)
@@ -232,7 +233,7 @@ int dhcp_server_serve(dhcp_server_t *server)
 
 	do
 	{
-                /* Update various timers used by server (e.g. transaction cache timers )*/
+                /* Update various timers used by server (e.g. transaction cache timers) */
                 update_timers(server);        
 
 		rv = recv(server->sock_fd, &dhcp_msg->packet, sizeof(dhcp_packet_t), 0);
@@ -247,9 +248,10 @@ int dhcp_server_serve(dhcp_server_t *server)
                 if (dhcp_packet_parse(dhcp_msg) < 0)
                         continue;
 
+
                 /* Check ACL database to determine if the client is allowed to be served */
-                if (ACL_check_client(server->acl, (uint8_t*)dhcp_msg->chaddr) != ACL_ALLOW) {
-                        cclog(LOG_INFO, NULL, "ACL denied client %s.", uint8_array_to_mac((uint8_t*)dhcp_msg->chaddr));
+                if (ACL_check_client(server->acl, dhcp_msg->chaddr) != ACL_ALLOW) {
+                        cclog(LOG_INFO, NULL, "ACL denied client %s.", uint8_array_to_mac(dhcp_msg->chaddr));
                         continue;
                 }
 
@@ -270,6 +272,11 @@ int dhcp_server_serve(dhcp_server_t *server)
                  */
                 if (trans_cache_add_message(server->trans_cache, dhcp_msg) < 0)
                         continue;
+                /* 
+                 * This database is only used for debugging purposes, we dont need to raise 
+                 * and error if it fails
+                 */
+                database_store_message(dhcp_msg);
                 
                 switch (dhcp_msg->type) {
                         case DHCP_DISCOVER: 

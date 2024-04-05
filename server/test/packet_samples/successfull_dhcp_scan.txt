@@ -1,0 +1,42 @@
+tcpdump: listening on eno1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+19:36:08.400409 IP (tos 0x0, ttl 64, id 33824, offset 0, flags [DF], proto UDP (17), length 604)
+    Lukas.bootps > 255.255.255.255.bootpc: [udp sum ok] BOOTP/DHCP, Request from a8:a5:fb:b8:61:3d (oui Unknown), length 576, xid 0x7ef995c4, Flags [none] (0x0000)
+	  Client-Ethernet-Address a8:a5:fb:b8:61:3d (oui Unknown)
+	  Vendor-rfc1048 Extensions
+	    Magic Cookie 0x63825363
+	    DHCP-Message (53), length 1: Discover
+	    Hostname (12), length 11: "xyasvewvews"
+	    Client-ID (61), length 7: ether a8:a5:fb:b8:61:3d
+	    Parameter-Request (55), length 7:
+	      Subnet-Mask (1), Default-Gateway (3), Domain-Name-Server (6), Hostname (12)
+	      Domain-Name (15), Lease-Time (51), Server-ID (54)
+	    END (255), length 0
+	    PAD (0), length 0, occurs 301
+19:38:32.259196 IP (tos 0x0, ttl 64, id 5087, offset 0, flags [DF], proto UDP (17), length 576)
+    Lukas.bootpc > 255.255.255.255.bootps: [udp sum ok] BOOTP/DHCP, Request from c8:7f:54:aa:ef:b0 (oui Unknown), length 548, xid 0x150e17fa, secs 65280, Flags [Broadcast] (0x8000)
+	  Client-Ethernet-Address c8:7f:54:aa:ef:b0 (oui Unknown)
+	  Vendor-rfc1048 Extensions
+	    Magic Cookie 0x63825363
+	    DHCP-Message (53), length 1: Discover
+	    PAD (0), length 0, occurs 305
+19:38:33.312265 IP (tos 0x10, ttl 128, id 0, offset 0, flags [none], proto UDP (17), length 378)
+    _gateway.bootps > 255.255.255.255.bootpc: [udp sum ok] BOOTP/DHCP, Reply, length 350, xid 0x150e17fa, secs 65280, Flags [Broadcast] (0x8000)
+	  Your-IP C8:7F:54:AA:EF:B0
+	  Client-Ethernet-Address c8:7f:54:aa:ef:b0 (oui Unknown)
+	  Vendor-rfc1048 Extensions
+	    Magic Cookie 0x63825363
+	    DHCP-Message (53), length 1: Offer
+	    Server-ID (54), length 4: _gateway
+	    Lease-Time (51), length 4: 86400
+	    Subnet-Mask (1), length 4: 255.255.255.0
+	    Default-Gateway (3), length 4: _gateway
+	    Domain-Name-Server (6), length 4: _gateway
+	    Hostname (12), length 10: "telekom.ip"
+	    RN (58), length 4: 43200
+	    RB (59), length 4: 75600
+	    BR (28), length 4: 192.168.0.255
+	    Unknown (125), length 38: 0,3561,8452,1584,14387,17717,17413,4149,13108,17460,12853,13104,12340,13122,14133,16902,1350,13622,14128
+	    Domain-Name (15), length 4: "home"
+	    END (255), length 0
+
+
