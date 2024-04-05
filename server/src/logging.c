@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-#define FORMAT_FATAL "[${DATE} ${TIME}] ${FILE}:${LINE}: *** FATAL ERROR *** ${MSG}"
+#define FORMAT_FATAL "[${DATE} ${TIME}] ${FILE}:${LINE}: *** FATAL ERROR *** ${MSG} (${ERMSG})"
 #define FORMAT_ERROR "[${DATE} ${TIME}] ${FILE}:${LINE}: ERROR !!! ${MSG}"
 #define FORMAT_WARNING "[${DATE} ${TIME}] ${FILE}: WARNING ! ${MSG}"
 

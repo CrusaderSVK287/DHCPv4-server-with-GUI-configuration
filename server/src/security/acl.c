@@ -144,7 +144,7 @@ enum ACL_status ACL_check_client_str(ACL_t *acl, const char *mac)
         if (found) {
                 return (acl->is_blacklist) ? ACL_DENY : ACL_ALLOW;
         } else {
-                return (acl->is_blacklist) ? ACL_ALLOW : ACL_ALLOW;
+                return (acl->is_blacklist) ? ACL_ALLOW : ACL_DENY;
         }
 }
 

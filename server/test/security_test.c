@@ -63,6 +63,19 @@ TEST test_security_ACL_allow_and_deny_client_str()
         PASS();
 }
 
+TEST test_security_ACL_whitelist()
+{
+        IF_ACL_NULL_SKIP
+
+        acl->is_blacklist = false;
+
+        ASSERT_EQ(ACL_ALLOW, ACL_check_client_str(acl, "aa:bb:cc:dd:ee:ff"));
+        ASSERT_EQ(ACL_ALLOW, ACL_check_client_str(acl, "11:22:33:44:55:66"));
+        ASSERT_EQ(ACL_DENY, ACL_check_client_str(acl, "aa:bb:cc:11:22:33"));
+
+        PASS();
+}
+
 TEST test_security_ACL_allow_all_ACL_off()
 {
         IF_ACL_NULL_SKIP
@@ -91,6 +104,8 @@ SUITE(security)
         RUN_TEST(test_security_ACL_load_acl_entries);
         RUN_TEST(test_security_ACL_allow_and_deny_client);
         RUN_TEST(test_security_ACL_allow_and_deny_client_str);
+        RUN_TEST(test_security_ACL_whitelist);
+        acl->is_blacklist = true;
         RUN_TEST(test_security_ACL_allow_all_ACL_off);
         if (acl) acl->enabled = true;
 
