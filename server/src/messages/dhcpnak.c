@@ -89,7 +89,8 @@ int message_dhcpnak_build(dhcp_server_t *server, dhcp_message_t *request)
         if_failed(dhcp_packet_build(nak), exit);
         if_failed(message_nak_send(server, nak), exit);
         if_failed(trans_cache_add_message(server->trans_cache, nak), exit);
-        database_store_message(nak);
+        if (server->config.db_enable)
+                database_store_message(nak);
 
         rv = 0;
 exit:

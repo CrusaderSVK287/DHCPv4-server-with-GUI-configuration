@@ -83,6 +83,7 @@ TEST test_config_parse_valid_arguments()
                 "--log", "3",
                 "--pool", "192.168.0.5:192.168.0.10:255.255.255.0",
                 "--option", "12:5:Hello",
+                "--db-disable",
                 NULL // Null-terminate the array
         };
 
@@ -92,6 +93,7 @@ TEST test_config_parse_valid_arguments()
         ASSERT_EQ(32, server.config.trans_duration);
         ASSERT_EQ(50, server.config.lease_expiration_check);
         ASSERT_EQ(3,  server.config.log_verbosity);
+        ASSERT_EQ(false, server.config.db_enable);
         address_pool_t *pool = allocator_get_pool_by_name(server.allocator, "pool");
         ASSERT_NEQ(NULL, pool);
         ASSERT_EQ(ipv4_address_to_uint32("192.168.0.5"), pool->start_address);

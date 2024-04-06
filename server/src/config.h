@@ -6,9 +6,9 @@
 /* Return value for when program called with --version or --help flag */
 #define CONFIG_EXIT_PROGRAM 1
 /* Since we need to keep track of untouched parts of config, we cannot use proper booleans */
-#define CONFIG_UNTOUCHED  0 
-#define CONFIG_BOOL_FALSE 1
-#define CONFIG_BOOL_TRUE  2 
+#define CONFIG_UNTOUCHED  2 
+#define CONFIG_BOOL_FALSE 0
+#define CONFIG_BOOL_TRUE  1 
 
 #define CONFIG_DEFAULT_PATH "/etc/dhcp/config.json"
 #define CONFIG_DEFAULT_TICK_DELAY 1000
@@ -23,9 +23,9 @@
 #define CONFIG_DEFAULT_POOL_END "192.168.1.100"
 #define CONFIG_DEFAULT_POOL_MASK "255.255.255.0"
 
-#define CONFIG_DEFAULT_ACL_ENABLE CONFIG_BOOL_TRUE
-#define CONFIG_DEFAULT_ACL_BLACKLIST CONFIG_BOOL_TRUE
-//TODO: Make a toggle to enable/disable database storing
+#define CONFIG_DEFAULT_ACL_ENABLE       CONFIG_BOOL_TRUE
+#define CONFIG_DEFAULT_ACL_BLACKLIST    CONFIG_BOOL_TRUE
+#define CONFIG_DEFAULT_DB_ENABLE        CONFIG_BOOL_TRUE
 
 int config_parse_arguments(dhcp_server_t *server, int argc, char **argv);
 

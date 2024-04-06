@@ -34,6 +34,7 @@ typedef struct dhcp_server {
         
         uint8_t     acl_enable;             // enable ACL security feature (default true)
         uint8_t     acl_blacklist;          // is ACL a blacklist? (default true)
+        uint8_t     db_enable;              // enable or disable dhcp packet database logging
     } config;
 
     ACL_t *acl;

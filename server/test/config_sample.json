@@ -6,7 +6,8 @@
         "transaction_duration": 60,
         "lease_expiration_check": 60,
         "log_verbosity": 4,
-        "lease_time": 43200
+        "lease_time": 43200,
+        "db_enable": true
     },
     "pools": [
         {
