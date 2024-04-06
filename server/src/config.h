@@ -25,6 +25,7 @@
 
 #define CONFIG_DEFAULT_ACL_ENABLE CONFIG_BOOL_TRUE
 #define CONFIG_DEFAULT_ACL_BLACKLIST CONFIG_BOOL_TRUE
+//TODO: Make a toggle to enable/disable database storing
 
 int config_parse_arguments(dhcp_server_t *server, int argc, char **argv);
 
