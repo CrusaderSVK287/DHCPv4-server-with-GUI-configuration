@@ -61,6 +61,7 @@ ECHO_CMD_TAIL:= ;fi
 
 ifneq ($(INC_DIR),)
 LDFLAGS+= -L$(INC_DIR) 
+CFLAGS+= -I$(INC_DIR)
 endif
 
 ### COMPILATION ###
