@@ -29,10 +29,10 @@
 
 ################################ CONFIGURATION #################################
 # Compiler flags
-CC = gcc
-LDLIBS =-lm
-CFLAGS = -Wall -Werror
-LDFLAGS =
+CC = g++
+LDLIBS = -lftxui-component -lftxui-dom -lftxui-screen -lpthread
+CFLAGS = -Wall -Werror -std=c++17
+LDFLAGS = 
 DEBUG_FLAGS = -g3 -DDEBUG
 
 # Source and build directories ending with /
@@ -43,7 +43,7 @@ BINDIR  = bin/
 TESTDIR = test/
 
 # Result binary name
-BINNAME = result_binary
+BINNAME = dhcps-gui
 
 ################################################################################
 #                                                                              #
@@ -61,14 +61,15 @@ ECHO_CMD_TAIL:= ;fi
 
 ifneq ($(INC_DIR),)
 LDFLAGS+= -L$(INC_DIR) 
+CFLAGS+= -I$(INC_DIR)
 endif
 
 ### COMPILATION ###
 
-SRCS  = $(shell find $(SRCDIR) -name '*.c')
-OBJS  = $(patsubst $(SRCDIR)%.c, $(OBJDIR)%.o, $(SRCS))
-TSRCS = $(shell find $(TESTDIR) -name '*.c')
-TOBJS = $(patsubst $(TESTDIR)%.c, $(OBJDIR)$(TESTDIR)%.o, $(TSRCS)) \
+SRCS  = $(shell find $(SRCDIR) -name '*.cpp')
+OBJS  = $(patsubst $(SRCDIR)%.cpp, $(OBJDIR)%.o, $(SRCS))
+TSRCS = $(shell find $(TESTDIR) -name '*.cpp')
+TOBJS = $(patsubst $(TESTDIR)%.cpp, $(OBJDIR)$(TESTDIR)%.o, $(TSRCS)) \
 	$(subst $(OBJDIR)main.o,,$(OBJS))
 
 BIN = $(BINDIR)$(BINNAME)
@@ -76,10 +77,10 @@ BIN = $(BINDIR)$(BINNAME)
 all: -setup $(BIN)
 
 $(BIN): $(OBJS)
-	$(CC) $(LDLIBS) $(LDFLAGS) $(OBJS) $(TESTFLAGS) -o $@
+	$(CC) -o $@ $(OBJS) $(LDFLAGS) $(LDLIBS) 
 	@echo -e "\n\nBuild successful, result generated in $(PWD)/$(BINDIR)\n\n\n"
 
-$(OBJDIR)%.o: $(SRCDIR)%.c
+$(OBJDIR)%.o: $(SRCDIR)%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CC) -c $(CFLAGS) $< -o $@
 
@@ -87,7 +88,7 @@ clean:
 	rm -rf $(OBJDIR) $(BINDIR)
 
 ### TESTS ###
-$(OBJDIR)$(TESTDIR)%.o: $(TESTDIR)%.c
+$(OBJDIR)$(TESTDIR)%.o: $(TESTDIR)%.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CC) $(CFLAGS) -I $(SRCDIR) -c $< -o $@
 
