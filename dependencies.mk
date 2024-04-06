@@ -8,6 +8,7 @@
 
 GIT_CMD=git clone
 MAKE_CMD=make $(MAKE_FLAGS) -C 
+NPROC=$(($(nproc) - 1))
 
 # if the parent Makefile was ran with S=y, silence git.
 ifeq ($(S),y)
@@ -39,3 +40,11 @@ greatest:
 	cp $(DEPS_DIR)/$@/greatest.h $(TOPDIR)/server/test
 	cp $(DEPS_DIR)/$@/greatest.h $(TOPDIR)/gui/test
 	cp $(DEPS_DIR)/$@/greatest.h $(INC_DIR)
+
+FTXUI:
+	$(GIT_CMD) https://github.com/ArthurSonzogni/FTXUI.git $(DEPS_DIR)/$@
+	@mkdir $(DEPS_DIR)/$@/build
+	@cd $(DEPS_DIR)/$@/build && cmake ..
+	$(MAKE_CMD) $(DEPS_DIR)/$@/build -j$(NPROC)
+	cp -r $(DEPS_DIR)/$@/include/ftxui $(INC_DIR)/ftxui
+	cp $(DEPS_DIR)/$@/build/libftxui* $(INC_DIR)/
