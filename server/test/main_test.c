@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
         cclogger_add_log_level(false, false, CCLOG_TTY_CLR_GRN, NULL, NULL, 100);
         cclogger_set_verbosity_level(-1000);
         
-        test_manual();
+        // test_manual();
 
         RUN_SUITE(linked_list);
         RUN_SUITE(dhcp_options);
