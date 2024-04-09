@@ -31,7 +31,7 @@
 # Compiler flags
 CC = g++
 LDLIBS = -lftxui-component -lftxui-dom -lftxui-screen -lpthread
-CFLAGS = -Wall -Werror -std=c++17
+CFLAGS = -Wall -Werror -std=c++20 -Wno-deprecated
 LDFLAGS = 
 DEBUG_FLAGS = -g3 -DDEBUG
 
