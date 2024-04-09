@@ -276,7 +276,8 @@ int dhcp_server_serve(dhcp_server_t *server)
                  * This database is only used for debugging purposes, we dont need to raise 
                  * and error if it fails
                  */
-                database_store_message(dhcp_msg);
+                if (server->config.db_enable)
+                        database_store_message(dhcp_msg);
                 
                 switch (dhcp_msg->type) {
                         case DHCP_DISCOVER: 

@@ -186,6 +186,11 @@ static int config_load_server_config(dhcp_server_t *server, cJSON *server_config
                 server->config.lease_time = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_LEASE_TIME;
         }
 
+        if (!server->config.db_enable) {
+                object = cJSON_GetObjectItem(server_config, "db_enable");
+                server->config.db_enable = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_DB_ENABLE;
+        }
+
         rv = 0;
 exit:
         return rv;
@@ -419,6 +424,7 @@ static int config_load_defaults(dhcp_server_t *server)
         /* Default config doesnt have acl at all */
         server->config.acl_enable = CONFIG_BOOL_FALSE;
         server->config.acl_blacklist = CONFIG_BOOL_FALSE;
+        server->config.db_enable = CONFIG_DEFAULT_DB_ENABLE;
         
         uint32_t lease_time_value = CONFIG_DEFAULT_LEASE_TIME;
         if (dhcp_option_add(server->allocator->default_options, dhcp_option_new_values(
@@ -577,6 +583,8 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
                 {"acl-disable",             no_argument,       0,  3 },
                 {"acl-whitelist-mode",      no_argument,       0,  4 },
 
+                {"db-disable",              no_argument,       0,  5 },
+
                 {"pool",    required_argument, 0, 'p'},
                 {"option",  required_argument, 0, 'o'},
                 {0, 0, 0, 0}
@@ -634,8 +642,6 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
                                 rv = -1;
                                 goto exit;
                         }
-
-
                         config_load_defaults(server);
                         break;
                 case 2: 
@@ -647,6 +653,9 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
                         break;
                 case 4: 
                         server->config.acl_blacklist = CONFIG_BOOL_FALSE;
+                        break;
+                case 5:
+                        server->config.db_enable = CONFIG_BOOL_FALSE;
                         break;
                 default:
                         if (optopt == 0) {

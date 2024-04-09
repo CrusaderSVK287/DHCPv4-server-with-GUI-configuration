@@ -23,10 +23,18 @@ int main(int argc, char *argv[])
         mkdir("/etc/dhcp", 0744);
         mkdir("/etc/dhcp/lease/", 0744);
 
+        // TODO: change way for --version and --help to not require sudo and be handled here 
         strcpy(dhcp_server.config.config_path, CONFIG_DEFAULT_PATH);
         if_failed(init_logging(), exit);
         if_failed(init_allocator(&dhcp_server), exit);
-        if_failed(config_parse_arguments(&dhcp_server, argc, argv), exit);
+        rv = config_parse_arguments(&dhcp_server, argc, argv);
+        if (rv == CONFIG_EXIT_PROGRAM) {
+                rv = 0;
+                goto exit;
+        } else if (rv != 0) {
+                rv = 1;
+                goto exit;
+        }
         if_failed(config_load_configuration(&dhcp_server), exit);
         cclogger_set_verbosity_level(dhcp_server.config.log_verbosity);
         if_failed(init_dhcp_server(&dhcp_server), exit);

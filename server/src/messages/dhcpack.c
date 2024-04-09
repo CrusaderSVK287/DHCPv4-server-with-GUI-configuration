@@ -132,7 +132,8 @@ int message_dhcpack_build(dhcp_server_t *server, dhcp_message_t *dhcp_request,
         if_failed(dhcp_packet_build(ack), exit);
         if_failed(message_dhcpack_send(server, ack, "acknownledging new lease of"), exit);
         if_failed(trans_cache_add_message(server->trans_cache, ack), exit);
-        database_store_message(ack);
+        if (server->config.db_enable)
+                database_store_message(ack);
 
         rv = 0;
 exit:
@@ -166,7 +167,9 @@ int message_dhcpack_build_lease_renew(dhcp_server_t *server, dhcp_message_t *req
         if_failed(dhcp_packet_build(ack), exit);
         if_failed(message_dhcpack_send(server,ack, "renewing lease of"), exit);
         if_failed(trans_cache_add_message(server->trans_cache, ack), exit);
-        database_store_message(ack);
+
+        if (server->config.db_enable)
+                database_store_message(ack);
 
         rv = 0;
 exit:
@@ -205,7 +208,8 @@ int message_dhcpack_build_inform_response(dhcp_server_t *server, dhcp_message_t 
         if_failed(dhcp_packet_build(ack), exit);
         if_failed(message_dhcpack_send(server,ack, "informing client on"), exit);
         if_failed(trans_cache_add_message(server->trans_cache, ack), exit);
-        database_store_message(ack);
+        if (server->config.db_enable)
+                database_store_message(ack);
 
         rv = 0;
 exit:
