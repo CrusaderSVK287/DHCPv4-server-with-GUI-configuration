@@ -30,7 +30,7 @@
 ################################ CONFIGURATION #################################
 # Compiler flags
 CC = g++
-LDLIBS = -lftxui-component -lftxui-dom -lftxui-screen -lpthread
+LDLIBS = -lftxui-component -lftxui-dom -lftxui-screen -lpthread -lcjson -lcjson_utils
 CFLAGS = -Wall -Werror -std=c++20 -Wno-deprecated
 LDFLAGS = 
 DEBUG_FLAGS = -g3 -DDEBUG

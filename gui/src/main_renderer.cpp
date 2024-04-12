@@ -14,6 +14,7 @@
 #include "version_info.hpp"
 
 #include "tab_logs.hpp"
+#include "tab_leases.hpp"
 
 using namespace ftxui;
 
@@ -30,18 +31,19 @@ int tui_loop()
 
     int tab_index = 0;
     std::vector<std::string> tab_entries = {
-        " help ", " logs ", " dhcp leases ", " config ", " idk ",
+        " Help ", " Config ", " Logs ", " Leases ", " Inspect ",
     };
 
     TabLogs tab_logs = TabLogs();
+    TabLease tab_lease = TabLease();
 
     auto tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated()) | hcenter;
     auto tab_contents = Container::Tab({
         _not_yet_implemented_tab("help"),
-        tab_logs.tab_contents,
-        _not_yet_implemented_tab("leases"),
         _not_yet_implemented_tab("config"),
-        _not_yet_implemented_tab("idk"),
+        tab_logs.tab_contents,
+        tab_lease.tab_contents,
+        _not_yet_implemented_tab("inspect"),
         },
         &tab_index);
 
@@ -53,7 +55,16 @@ int tui_loop()
     });
     
     auto main_renderer = Renderer(main_container, [&] {
-        tab_logs.refresh();
+            //TDOD: make some switch case where only active tab will refresh
+        switch (tab_index) {
+            case 0: break;
+            case 1: break;
+            case 2: tab_logs.refresh(); break;
+            case 3: tab_lease.refresh(); break;
+            case 4: break;
+            default:
+                break;
+        }
 
         return vbox({
             hbox({
