@@ -31,7 +31,7 @@ int tui_loop()
 
     int tab_index = 0;
     std::vector<std::string> tab_entries = {
-        " Help ", " Config ", " Logs ", " Leases ", " Inspect ",
+        " Help ", " Config ", " Logs ", " Leases ", " Inspect ", " Command "
     };
 
     TabLogs tab_logs = TabLogs();
@@ -44,6 +44,7 @@ int tui_loop()
         tab_logs.tab_contents,
         tab_lease.tab_contents,
         _not_yet_implemented_tab("inspect"),
+        _not_yet_implemented_tab("command"),
         },
         &tab_index);
 

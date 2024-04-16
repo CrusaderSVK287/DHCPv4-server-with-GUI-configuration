@@ -45,7 +45,7 @@ void TabLogs::load_file()
         log_content.push_back(s);
     }
     
-    file.close(); 
+    file.close();
 }
 
 void TabLogs::refresh()

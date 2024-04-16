@@ -10,6 +10,7 @@ public:
     void refresh();
 
     ftxui::Component tab_contents;
+    std::string error_msg;
 private:
     
 };

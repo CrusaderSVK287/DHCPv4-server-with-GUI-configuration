@@ -19,6 +19,8 @@ TabLease::TabLease()
 {
     this->pool_selected = 0;
     this->lease_selected = 0;
+    this->pool_selected_last = -1;
+    this->lease_selected_last = -1;
     
     this->lease_details_pool_name = "";
     this->lease_details_address = "";
@@ -36,7 +38,7 @@ TabLease::TabLease()
                     separator()
                 });
             }) ,
-            Menu({&this->pools, &this->pool_selected}),
+            Menu({&this->pools, &this->pool_selected}) | vscroll_indicator | yframe | yflex,
         }) | flex | size(WIDTH, LESS_THAN, 27) | size(WIDTH, GREATER_THAN, 7),
         Renderer([] {return separator();}),
 
@@ -47,7 +49,7 @@ TabLease::TabLease()
                     separator()
                 });
             }),
-            Menu({&this->leased_addresses, &this->lease_selected}),
+            Menu({&this->leased_addresses, &this->lease_selected}) | vscroll_indicator | yframe | yflex,
         }) | flex | size(WIDTH, EQUAL, 18),
         Renderer([] {return separator();}),
 
@@ -130,6 +132,8 @@ int TabLease::parse_json_leases(cJSON *_json, std::string _pool_name)
 }
 
 int TabLease::load_leases() {
+    if (pool_selected == pool_selected_last)
+        return 0;
 
     std::string pool = pools[pool_selected];
     std::string path = TabLease::leases_path + pool.substr(0, pool.size() - 1) + ".lease";
@@ -160,11 +164,18 @@ int TabLease::load_leases() {
         return -1;
     }
 
+    pool_selected_last = pool_selected;
+    lease_selected = 0;
+    lease_selected_last = -1;
+
     return 0;
 }
 
 void TabLease::load_lease_details()
 {
+    if (lease_selected == lease_selected_last)
+        return;
+
     /* If no leases, just return */
     if (leases.size() == 0) {
         lease_details_pool_name = "";
@@ -208,5 +219,7 @@ void TabLease::load_lease_details()
         std::stringstream ss; ss << uint8_array_to_mac(lease.client_mac_address);
         lease_details_mac = ss.str();
     }
+
+    lease_selected_last = lease_selected;
 }
 

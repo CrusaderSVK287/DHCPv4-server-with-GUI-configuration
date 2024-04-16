@@ -35,7 +35,9 @@ private:
     std::string lease_details_mac;
 
     int pool_selected;
+    int pool_selected_last;
     int lease_selected;
+    int lease_selected_last;
     std::vector<std::string> pools;
     std::vector<std::string> leased_addresses;
     std::vector<Lease> leases;
