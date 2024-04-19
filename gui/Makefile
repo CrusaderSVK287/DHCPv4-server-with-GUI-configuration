@@ -30,8 +30,8 @@
 ################################ CONFIGURATION #################################
 # Compiler flags
 CC = g++
-LDLIBS = -lftxui-component -lftxui-dom -lftxui-screen -lpthread
-CFLAGS = -Wall -Werror -std=c++17
+LDLIBS = -lftxui-component -lftxui-dom -lftxui-screen -lpthread -lcjson -lcjson_utils
+CFLAGS = -Wall -Werror -std=c++20 -Wno-deprecated
 LDFLAGS = 
 DEBUG_FLAGS = -g3 -DDEBUG
 
@@ -93,7 +93,7 @@ $(OBJDIR)$(TESTDIR)%.o: $(TESTDIR)%.cpp
 	$(CC) $(CFLAGS) -I $(SRCDIR) -c $< -o $@
 
 test: -setup $(OBJS) $(TOBJS)
-	$(CC) $(LDLIBS) -I $(SRCDIR) $(TOBJS) -o $(BINDIR)$@
+	$(CC) -o $(BINDIR)$@ -I $(SRCDIR) $(TOBJS) $(LDLIBS) 
 	@echo "----- RUNNING TESTS -----"
 	$(BINDIR)$@
 
