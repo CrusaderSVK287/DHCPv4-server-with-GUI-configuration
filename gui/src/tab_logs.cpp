@@ -34,11 +34,14 @@ void TabLogs::load_entries()
 
 void TabLogs::load_file()
 {
+    log_content.clear();
+
+    if (entries.size() == 0)
+        return;
+
     std::string s;
     std::string path = TabLogs::logs_path + "dhcp-log-" + entries[selected] + ".log";
     std::ifstream file(path);
-
-    log_content.clear();
 
     while (getline (file, s)) {
         //TODO: try to make it so that on long lines, the string is split into multiple and prefixed with "  " 2 spaces

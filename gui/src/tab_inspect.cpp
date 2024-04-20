@@ -157,6 +157,9 @@ void TabInspect::load_selected_message_options()
     loaded_dhcp_options.clear();
     dhcp_option_entries.clear();
 
+    if (loaded_transaction_selected == loaded_transaction_selected_last)
+        return;
+
     dhcp_option o = {0};
 
     uint8_t *options = loaded_transaction[loaded_transaction_selected].options;
@@ -226,6 +229,27 @@ void TabInspect::load_selected_message()
     if (loaded_transaction_selected == loaded_transaction_selected_last)
         return;
 
+    if (transaction_entries_xid.size() == 0) {
+        loaded_message.opcode = "";
+        loaded_message.htype = "";
+        loaded_message.hlen = "";
+        loaded_message.hops = "";
+        loaded_message.xid = "";
+        loaded_message.secs = "";
+        loaded_message.flags = "";
+        loaded_message.ciaddr = "";
+        loaded_message.yiaddr = "";
+        loaded_message.siaddr = "";
+        loaded_message.giaddr = "";
+        loaded_message.chaddr = "";
+        loaded_message.sname = "";
+        loaded_message.filename = "";
+        loaded_message.cookie = "";
+        loaded_message.options = "";
+        loaded_message.msg_type = "";
+        loaded_message.time_when_stored = "";
+        return;
+    }
     dhcp_message &m = loaded_transaction[loaded_transaction_selected];
 
     loaded_message.msg_type = m.msg_type;
@@ -286,6 +310,9 @@ void TabInspect::load_selected_message()
 
 void TabInspect::load_selected_transaction()
 {
+    if (transaction_entries_xid.size() == 0)
+        return;
+
     loaded_transaction.clear();
     loaded_transaction_msg_types.clear();
     
@@ -337,6 +364,16 @@ void TabInspect::load_transactions()
 
 void TabInspect::load_selected_option()
 {
+    if (transaction_entries_xid.size() == 0) {
+        selected_dhcp_option.value_str  = "";
+        selected_dhcp_option.name_str   = "";
+        selected_dhcp_option.lenght_str = "";
+        selected_dhcp_option.tag        = 0;
+        selected_dhcp_option.lenght     = 0;
+        selected_dhcp_option.format     = "";
+        return;
+    }
+
     if (option_detail_selected_last == option_detail_selected)
         return;
 

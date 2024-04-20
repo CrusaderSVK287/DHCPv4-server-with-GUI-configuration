@@ -135,6 +135,9 @@ int TabLease::load_leases() {
     if (pool_selected == pool_selected_last)
         return 0;
 
+    if (pools.size() == 0)
+        return -1;
+
     std::string pool = pools[pool_selected];
     std::string path = TabLease::leases_path + pool.substr(0, pool.size() - 1) + ".lease";
 
