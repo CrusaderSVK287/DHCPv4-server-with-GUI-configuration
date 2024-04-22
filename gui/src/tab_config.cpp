@@ -104,15 +104,9 @@ TabConfig::TabConfig()
 
 }
 
-static int tmp = 0;
 void TabConfig::refresh()
 {
-    if (tmp < 1) {
-        config_entries[5].val = "THIS IS A TEST VAL";
-    } else {
-        return;
-    }
-    tmp++;
+
 }
 
 int TabConfig::load_config_file()
@@ -149,10 +143,8 @@ int TabConfig::load_config_file()
     //      server config
     // -------------------------
 
-    ConfEntry &entry = config_entries[0];
     for (int i = CONF_INTERFACE; i <= CONF_DB_ENABLE; i++) {
-        entry = config_entries[i];
-        log("LOADING " +entry.name + " " + entry.json_path);
+        ConfEntry &entry = config_entries[i];
         entry.json = cJSON_GetObjectItem(config_json.server, entry.json_path.c_str());
 
         /* If the configuration entry wasnt present in the config file before, create it now */
@@ -203,12 +195,11 @@ int TabConfig::load_config_file()
                 break;
             }
             case NUMERIC: {
-                // entry.val.erase();
                 if (!cJSON_IsNumber(entry.json)) {
                     log(entry.name + " Is not a number");
                     return -1;
                 }
-                entry.val = std::to_string(entry.json->valueint); //std::to_string(cJSON_GetNumberValue(entry.json));
+                entry.val = std::to_string(cJSON_GetNumberValue(entry.json));
                 break;
             }
             case BOOLEAN: {
@@ -216,13 +207,12 @@ int TabConfig::load_config_file()
                     log(entry.name + " Is not a bool");
                     return -1;
                 }
-                entry.val_i = cJSON_GetNumberValue(entry.json);
+                entry.val_i = cJSON_IsTrue(entry.json);
                 break;
             }
             default:
                 break;
         }
-        log(entry.name + " val end: " + entry.val);
     }
 
     return 0;
@@ -250,9 +240,7 @@ int TabConfig::initialize()
         .json_path = "tick_delay",
         .type = NUMERIC,
         .val = "1000",
-        .val_i = 1000,
         .def_val= "1000",
-        .def_val_i = 1000,
     };
     config_entries.push_back(c_tick_delay);
 
@@ -263,9 +251,7 @@ int TabConfig::initialize()
         .json_path = "cache_size",
         .type = NUMERIC,
         .val = "25",
-        .val_i = 25,
         .def_val= "25",
-        .def_val_i = 25,
     };
     config_entries.push_back(c_cache_size);
 
@@ -276,9 +262,7 @@ int TabConfig::initialize()
         .json_path = "transaction_duration",
         .type = NUMERIC,
         .val = "60",
-        .val_i = 60,
         .def_val = "60",
-        .def_val_i = 60,
     };
     config_entries.push_back(c_transaction_duration);
 
@@ -289,9 +273,7 @@ int TabConfig::initialize()
         .json_path = "lease_expiration_check",
         .type = NUMERIC,
         .val = "60",
-        .val_i = 60,
         .def_val = "60",
-        .def_val_i = 60,
     };
     config_entries.push_back(c_lease_expiration_check);
 
@@ -302,9 +284,7 @@ int TabConfig::initialize()
         .json_path = "log_verbosity",
         .type = NUMERIC,
         .val = "4",
-        .val_i = 4,
         .def_val= "4",
-        .def_val_i = 4,
     };
     config_entries.push_back(c_log_verbosity);
 
@@ -315,9 +295,7 @@ int TabConfig::initialize()
         .json_path = "lease_time",
         .type = NUMERIC,
         .val = "43200",
-        .val_i = 43200,
         .def_val = "43200",
-        .def_val_i = 43200,
     };
     config_entries.push_back(c_lease_time);
 

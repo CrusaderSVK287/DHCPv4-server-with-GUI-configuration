@@ -8,15 +8,15 @@
 #include "tab.hpp"
 
 enum ConfigName {
-    CONF_INTERFACE,
-    CONF_TICK_DELAY,
-    CONF_CACHE_SIZE,
-    CONF_TRANSACTION_DURATION,
-    CONF_LEASE_EXPIRATION_CHECK,
-    CONF_LOG_VERBOSITY,
-    CONF_LEASE_TIME,
-    CONF_DB_ENABLE,
-    CONFIG_COUNT // Add this to keep track of the number of configs
+    CONF_INTERFACE = 0, 
+    CONF_TICK_DELAY = 1,
+    CONF_CACHE_SIZE = 2,
+    CONF_TRANSACTION_DURATION = 3,
+    CONF_LEASE_EXPIRATION_CHECK = 4,
+    CONF_LOG_VERBOSITY = 5,
+    CONF_LEASE_TIME = 6,
+    CONF_DB_ENABLE = 7,
+    CONFIG_COUNT = 8 // Add this to keep track of the number of configs
 };
 
 enum ConfType {
