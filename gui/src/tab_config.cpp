@@ -7,6 +7,8 @@
 
 #include <exception>
 #include <fstream>
+#include <iostream>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 
@@ -31,9 +33,14 @@ std::vector<std::string> TabConfig::boolean_toogle = {
 TabConfig::TabConfig()
 {
     this->initialize();
-    this->load_config_file();
 
+    this->load_config_file();
+    for(auto &entry : config_entries) {
+        std::cout << entry.name << std::endl;
+    }
     this->config_server_selected = 0;
+
+
     // We require the initialize function to be run before doing this.
     this->config_menu_server = Container::Horizontal({
         Container::Vertical({
@@ -87,16 +94,25 @@ TabConfig::TabConfig()
     }, &this->config_menu_selected);
 
     this->tab_contents = Container::Horizontal({
-        Menu(&TabConfig::config_menu_entries, &this->config_menu_selected) | size(WIDTH, EQUAL, 11),
+        Container::Vertical({
+            Menu(&TabConfig::config_menu_entries, &this->config_menu_selected) | size(WIDTH, EQUAL, 11),
+            Button("Apply", [&] {this->apply_settings();}),
+        }),
         Renderer([]{return separator();}),
         this->config_menu_tab,
     });
 
 }
 
+static int tmp = 0;
 void TabConfig::refresh()
 {
-
+    if (tmp < 1) {
+        config_entries[5].val = "THIS IS A TEST VAL";
+    } else {
+        return;
+    }
+    tmp++;
 }
 
 int TabConfig::load_config_file()
@@ -123,7 +139,6 @@ int TabConfig::load_config_file()
         log("Erorr: failed to parse JSON");
         return -1;
     }
-    log(cJSON_Print(config_json.config));
 
     config_json.server   = cJSON_GetObjectItem(config_json.config, "server"  );
     config_json.pools    = cJSON_GetObjectItem(config_json.config, "pools"   );
@@ -135,46 +150,79 @@ int TabConfig::load_config_file()
     // -------------------------
 
     ConfEntry &entry = config_entries[0];
-    for (int i = 0; i <= CONF_DB_ENABLE; i++) {
+    for (int i = CONF_INTERFACE; i <= CONF_DB_ENABLE; i++) {
         entry = config_entries[i];
+        log("LOADING " +entry.name + " " + entry.json_path);
         entry.json = cJSON_GetObjectItem(config_json.server, entry.json_path.c_str());
-        if (entry.json) {
+
+        /* If the configuration entry wasnt present in the config file before, create it now */
+        if (!entry.json) {
             switch (entry.type) {
-                case STRING: {
-                    if (!cJSON_IsString(entry.json)) {
-                        log(entry.name + " Is not a string");
-                        return -1;
+                case STRING:
+                case IP:
+                    if (!cJSON_AddStringToObject(config_json.server, entry.json_path.c_str(), entry.def_val.c_str())) {
+                        log("Failed to add " + entry.json_path + " to object");
                     }
-                    entry.val = cJSON_GetStringValue(entry.json);
-                }
-                case IP: {
-                    if (!cJSON_IsString(entry.json)) {
-                        log(entry.name + " Is not a string");
-                        return -1;
-                    }   
-                    entry.val = cJSON_GetStringValue(entry.json);
-                    // Check if the string is valid IP address
-                    if (ipv4_address_to_uint32(entry.val.c_str()) == 0)
-                        return -1;
-                }
-                case NUMERIC: {
-                    if (!cJSON_IsNumber(entry.json)) {
-                        log(entry.name + " Is not a number");
-                        return -1;
-                    }
-                    entry.val = std::to_string(cJSON_GetNumberValue(entry.json));
-                    }
-                case BOOLEAN: {
-                    if (!cJSON_IsBool(entry.json)) {
-                        log(entry.name + " Is not a bool");
-                        return -1;
-                    }
-                    entry.val_i = cJSON_GetNumberValue(entry.json);
-                }
-                default:
                     break;
+                case NUMERIC:
+                    if (!cJSON_AddNumberToObject(config_json.server, entry.json_path.c_str(), entry.def_val_i)) {
+                        log("Failed to add " + entry.json_path + " to object");
+                    }
+                    break;
+                case BOOLEAN:
+                    if(!cJSON_AddBoolToObject(config_json.server, entry.json_path.c_str(), entry.def_val_i)){
+                        log("Failed to add " + entry.json_path + " to object");
+                    }
+                    break;
+                default:
+                    continue;
             }
+
+            entry.json = cJSON_GetObjectItem(config_json.server, entry.json_path.c_str());
+            continue;
         }
+
+        switch (entry.type) {
+            case STRING: {
+                if (!cJSON_IsString(entry.json)) {
+                    log(entry.name + " Is not a string");
+                    return -1;
+                }
+                entry.val = cJSON_GetStringValue(entry.json);
+                break;
+            }
+            case IP: {
+                if (!cJSON_IsString(entry.json)) {
+                    log(entry.name + " Is not a string");
+                    return -1;
+                }   
+                entry.val = cJSON_GetStringValue(entry.json);
+                // Check if the string is valid IP address
+                if (ipv4_address_to_uint32(entry.val.c_str()) == 0)
+                    return -1;
+                break;
+            }
+            case NUMERIC: {
+                // entry.val.erase();
+                if (!cJSON_IsNumber(entry.json)) {
+                    log(entry.name + " Is not a number");
+                    return -1;
+                }
+                entry.val = std::to_string(entry.json->valueint); //std::to_string(cJSON_GetNumberValue(entry.json));
+                break;
+            }
+            case BOOLEAN: {
+                if (!cJSON_IsBool(entry.json)) {
+                    log(entry.name + " Is not a bool");
+                    return -1;
+                }
+                entry.val_i = cJSON_GetNumberValue(entry.json);
+                break;
+            }
+            default:
+                break;
+        }
+        log(entry.name + " val end: " + entry.val);
     }
 
     return 0;
@@ -182,7 +230,7 @@ int TabConfig::load_config_file()
 
 int TabConfig::initialize()
 {
-    config_entries.clear();
+    // config_entries.clear();
 
     // Initialize 'Interface' entry.
     ConfEntry c_interface = {
@@ -202,7 +250,9 @@ int TabConfig::initialize()
         .json_path = "tick_delay",
         .type = NUMERIC,
         .val = "1000",
+        .val_i = 1000,
         .def_val= "1000",
+        .def_val_i = 1000,
     };
     config_entries.push_back(c_tick_delay);
 
@@ -213,7 +263,9 @@ int TabConfig::initialize()
         .json_path = "cache_size",
         .type = NUMERIC,
         .val = "25",
+        .val_i = 25,
         .def_val= "25",
+        .def_val_i = 25,
     };
     config_entries.push_back(c_cache_size);
 
@@ -224,7 +276,9 @@ int TabConfig::initialize()
         .json_path = "transaction_duration",
         .type = NUMERIC,
         .val = "60",
+        .val_i = 60,
         .def_val = "60",
+        .def_val_i = 60,
     };
     config_entries.push_back(c_transaction_duration);
 
@@ -235,7 +289,9 @@ int TabConfig::initialize()
         .json_path = "lease_expiration_check",
         .type = NUMERIC,
         .val = "60",
+        .val_i = 60,
         .def_val = "60",
+        .def_val_i = 60,
     };
     config_entries.push_back(c_lease_expiration_check);
 
@@ -246,7 +302,9 @@ int TabConfig::initialize()
         .json_path = "log_verbosity",
         .type = NUMERIC,
         .val = "4",
+        .val_i = 4,
         .def_val= "4",
+        .def_val_i = 4,
     };
     config_entries.push_back(c_log_verbosity);
 
@@ -257,7 +315,9 @@ int TabConfig::initialize()
         .json_path = "lease_time",
         .type = NUMERIC,
         .val = "43200",
+        .val_i = 43200,
         .def_val = "43200",
+        .def_val_i = 43200,
     };
     config_entries.push_back(c_lease_time);
 
@@ -277,3 +337,58 @@ int TabConfig::initialize()
 
     return 0;
 }
+
+
+int TabConfig::apply_settings()
+{
+    ConfEntry &entry = config_entries[0];
+    for (int i = 0; i <= CONF_DB_ENABLE; i++) {
+        entry = config_entries[i];
+        entry.json = cJSON_GetObjectItem(config_json.server, entry.json_path.c_str());
+        if (entry.json) {
+            switch (entry.type) {
+                case STRING: {
+                    if (!cJSON_IsString(entry.json)) {
+                        log(entry.name + " Is not a string");
+                        return -1;
+                    }
+                    cJSON_SetValuestring(entry.json, entry.val.c_str());
+                    break; // Don't forget to break after each case
+                }
+                case IP: {
+                    if (!cJSON_IsString(entry.json)) {
+                        log(entry.name + " Is not a string");
+                        return -1;
+                    }   
+                    cJSON_SetValuestring(entry.json, entry.val.c_str());
+                    // No need to check IP validity here as we're just updating the value
+                    break;
+                }
+                case NUMERIC: {
+                    if (!cJSON_IsNumber(entry.json)) {
+                        log(entry.name + " Is not a number");
+                        return -1;
+                    }
+                    cJSON_SetNumberValue(entry.json, std::stoi(entry.val));
+                    break;
+                }
+                case BOOLEAN: {
+                    if (!cJSON_IsBool(entry.json)) {
+                        log(entry.name + " Is not a bool");
+                        return -1;
+                    }
+                    cJSON_SetBoolValue(entry.json, entry.val_i);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    }
+    
+    log(cJSON_Print(config_json.config));
+    // TODO: DONT FORGET to actually overwrite the config file
+
+    return 0;
+}
+

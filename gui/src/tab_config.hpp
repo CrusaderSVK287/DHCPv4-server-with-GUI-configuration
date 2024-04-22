@@ -43,14 +43,12 @@ public:
     TabConfig();
         
     void refresh();
+    // loads config file
     int load_config_file();
+    // initializes structures, vectors etc
     int initialize();
-
-    void set_config_server(ftxui::Component c);
-    void set_config_pools(ftxui::Component c);
-    void set_config_options(ftxui::Component c);
-    void set_config_security(ftxui::Component c);
-    // ~TabConfig();
+    // writes configuration to file
+    int apply_settings();
 
 private:
 

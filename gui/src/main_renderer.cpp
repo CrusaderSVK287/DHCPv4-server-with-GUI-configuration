@@ -41,6 +41,7 @@ int tui_loop()
     TabLease tab_lease = TabLease();
     TabInspect tab_inspect = TabInspect();
     TabConfig tab_config = TabConfig();
+    tab_config.load_config_file();
 
     auto tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated()) | hcenter;
     auto tab_contents = Container::Tab({
