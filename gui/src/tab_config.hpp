@@ -1,6 +1,7 @@
 #ifndef __TAB_CONFIG_HPP__
 #define __TAB_CONFIG_HPP__
 
+#include <cstddef>
 #include <ftxui/component/component_base.hpp>
 #include <string>
 #include <vector>
@@ -8,15 +9,19 @@
 #include "tab.hpp"
 
 enum ConfigName {
-    CONF_INTERFACE = 0, 
-    CONF_TICK_DELAY = 1,
-    CONF_CACHE_SIZE = 2,
-    CONF_TRANSACTION_DURATION = 3,
-    CONF_LEASE_EXPIRATION_CHECK = 4,
-    CONF_LOG_VERBOSITY = 5,
-    CONF_LEASE_TIME = 6,
-    CONF_DB_ENABLE = 7,
-    CONFIG_COUNT = 8 // Add this to keep track of the number of configs
+    CONF_INTERFACE,
+    CONF_TICK_DELAY,
+    CONF_CACHE_SIZE,
+    CONF_TRANSACTION_DURATION,
+    CONF_LEASE_EXPIRATION_CHECK,
+    CONF_LOG_VERBOSITY,
+    CONF_LEASE_TIME,
+    CONF_DB_ENABLE,
+
+    CONF_SEC_ACL_ENABLE,
+    CONF_SEC_ACL_MODE,
+    CONF_SEC_ACL_ENTRIES,
+    CONFIG_COUNT // Add this to keep track of the number of configs
 };
 
 enum ConfType {
@@ -49,6 +54,7 @@ public:
     int initialize();
     // writes configuration to file
     int apply_settings();
+    void update_acl_entries();
 
 private:
 
@@ -56,11 +62,15 @@ private:
 
     static std::vector<std::string> config_menu_entries;
     static std::vector<std::string> boolean_toogle;
+    static std::vector<std::string> enable_disable_toggle;
+    static std::vector<std::string> blacklist_whitelist_toggle;
     ftxui::Component config_menu_tab;
     ftxui::Component config_menu_server;
     ftxui::Component config_menu_pools;
     ftxui::Component config_menu_options;
+
     ftxui::Component config_menu_security;
+    ftxui::Component config_menu_security_acl_entries;
     int config_menu_selected;
 
     int config_server_selected;
@@ -73,6 +83,9 @@ private:
         cJSON *security;
     } config_json;
     std::vector<ConfEntry> config_entries;
+
+    std::vector<std::string> security_acl_entries;
+    size_t security_acl_entries_size_last;
 };
 
 #endif // !__TAB_CONFIG_HPP__

@@ -5,6 +5,7 @@
 #include "xtoy.hpp"
 #include "logger.hpp"
 
+#include <climits>
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -25,36 +26,43 @@ std::vector<std::string> TabConfig::boolean_toogle = {
     "False",
     "True",
 };
-// TabConfig::~TabConfig()
-// {
-    // cJSON_Delete(config_json.config);
-// }
+std::vector<std::string> TabConfig::enable_disable_toggle = {
+    "Disabled ",
+    "Enabled"
+};
+std::vector<std::string> TabConfig::blacklist_whitelist_toggle = {
+    "Whitelist",
+    "Blacklist"
+};
+
+static void clearArray(cJSON *array) {
+    cJSON *element = cJSON_GetArrayItem(array, 0);
+    while (element != NULL) {
+        cJSON_DeleteItemFromArray(array, 0);
+        element = cJSON_GetArrayItem(array, 0);
+    }
+}
 
 TabConfig::TabConfig()
 {
     this->initialize();
 
     this->load_config_file();
-    for(auto &entry : config_entries) {
-        std::cout << entry.name << std::endl;
-    }
     this->config_server_selected = 0;
 
 
     // We require the initialize function to be run before doing this.
     this->config_menu_server = Container::Horizontal({
-        Container::Vertical({
-            Renderer([&] {return vbox({
-                    text(this->config_entries[CONF_INTERFACE].name) | bold,
-                    text(this->config_entries[CONF_TICK_DELAY].name) | bold,
-                    text(this->config_entries[CONF_CACHE_SIZE].name) | bold,
-                    text(this->config_entries[CONF_TRANSACTION_DURATION].name) | bold,
-                    text(this->config_entries[CONF_LEASE_EXPIRATION_CHECK].name) | bold,
-                    text(this->config_entries[CONF_LOG_VERBOSITY].name) | bold,
-                    text(this->config_entries[CONF_LEASE_TIME].name) | bold,
-                    text(this->config_entries[CONF_DB_ENABLE].name) | bold,
-                });
-            }),
+        Renderer([&] {return vbox({
+                text(this->config_entries[CONF_INTERFACE].name) | bold,
+                text(this->config_entries[CONF_TICK_DELAY].name) | bold,
+                text(this->config_entries[CONF_CACHE_SIZE].name) | bold,
+                text(this->config_entries[CONF_TRANSACTION_DURATION].name) | bold,
+                text(this->config_entries[CONF_LEASE_EXPIRATION_CHECK].name) | bold,
+                text(this->config_entries[CONF_LOG_VERBOSITY].name) | bold,
+                text(this->config_entries[CONF_LEASE_TIME].name) | bold,
+                text(this->config_entries[CONF_DB_ENABLE].name) | bold,
+            });
         }),
         Renderer([] {return separatorEmpty();}),
         Container::Vertical({
@@ -82,7 +90,40 @@ TabConfig::TabConfig()
     
     this->config_menu_pools = Renderer([] {return text("pools");});
     this->config_menu_options = Renderer([] {return text("options");});
-    this->config_menu_security = Renderer([] {return text("security");});
+
+    this->config_menu_security_acl_entries = Container::Vertical({});
+    this->config_menu_security = Container::Vertical({
+        Container::Horizontal({
+            Renderer([&] {return vbox({
+                    text(this->config_entries[CONF_SEC_ACL_ENABLE].name) | bold,
+                    text(this->config_entries[CONF_SEC_ACL_MODE].name) | bold,
+                });
+            }),
+            Renderer([] {return separatorEmpty() | size(WIDTH, EQUAL, 3);}),
+            Container::Vertical({
+                Toggle(&TabConfig::enable_disable_toggle, &this->config_entries[CONF_SEC_ACL_ENABLE].val_i),
+                Toggle(&TabConfig::blacklist_whitelist_toggle, &this->config_entries[CONF_SEC_ACL_MODE].val_i),
+            }),
+        }),
+        Renderer([] {return vbox({
+                        separatorEmpty(),
+                        text("Enter your ACL entries below:") | bold,
+                    });
+        }),
+        this->config_menu_security_acl_entries | vscroll_indicator | yframe | yflex,
+        Renderer([] {return separatorEmpty();}),
+
+        Container::Horizontal({
+            Button("+ Add new entry", [&] {this->security_acl_entries.push_back("00:00:00:00:00:00");}),
+            Button("- Delete empty entries", [&] {
+                    this->security_acl_entries.erase(std::remove(
+                                            this->security_acl_entries.begin(), 
+                                            this->security_acl_entries.end(), 
+                                            ""), 
+                                          this->security_acl_entries.end());
+                    }),
+        })
+    });
     
     this->config_menu_selected = 0;
 
@@ -102,11 +143,12 @@ TabConfig::TabConfig()
         this->config_menu_tab,
     });
 
+    this->security_acl_entries_size_last = INT_MAX;
 }
 
 void TabConfig::refresh()
 {
-
+    update_acl_entries();
 }
 
 int TabConfig::load_config_file()
@@ -199,7 +241,9 @@ int TabConfig::load_config_file()
                     log(entry.name + " Is not a number");
                     return -1;
                 }
-                entry.val = std::to_string(cJSON_GetNumberValue(entry.json));
+                std::ostringstream oss;
+                oss << std::fixed << std::setprecision(0) << cJSON_GetNumberValue(entry.json);
+                entry.val = oss.str();
                 break;
             }
             case BOOLEAN: {
@@ -215,7 +259,70 @@ int TabConfig::load_config_file()
         }
     }
 
+
+    // -------------------------------
+    //        security config 
+    // -------------------------------
+
+    ConfEntry &acl_enable = config_entries[CONF_SEC_ACL_ENABLE];
+    ConfEntry &acl_mode = config_entries[CONF_SEC_ACL_MODE];
+    ConfEntry &acl_list = config_entries[CONF_SEC_ACL_ENTRIES];
+    acl_enable.json = cJSON_GetObjectItem(config_json.security, acl_enable.json_path.c_str());
+    acl_mode.json = cJSON_GetObjectItem(config_json.security, acl_mode.json_path.c_str());
+    acl_list.json = cJSON_GetObjectItem(config_json.security, acl_list.json_path.c_str());
+
+    if (!acl_enable.json) {
+        acl_enable.json = cJSON_AddBoolToObject(config_json.security, acl_enable.json_path.c_str(), acl_enable.def_val_i);
+    }
+    if (!acl_mode.json) {
+        acl_mode.json = cJSON_AddBoolToObject(config_json.security, acl_mode.json_path.c_str(), acl_mode.def_val_i);
+    }
+    if (!acl_list.json) {
+        acl_enable.json = cJSON_AddArrayToObject(config_json.security, acl_list.json_path.c_str());
+    }
+
+    if (!cJSON_IsBool(acl_enable.json)) {
+        log("ACL enable is not bool");
+        return -1;
+    }
+    if (!cJSON_IsBool(acl_mode.json)) {
+        log("ACL mode is not bool");
+        return -1;
+    }
+    if (!cJSON_IsArray(acl_list.json)) {
+        log("ACL entries is not an array");
+        return -1;
+    }
+
+    security_acl_entries.clear();
+
+    cJSON *e;
+    cJSON_ArrayForEach(e, acl_list.json) {
+        security_acl_entries.push_back(e->valuestring);
+    }
+    security_acl_entries_size_last = security_acl_entries.size();
+
     return 0;
+}
+
+void TabConfig::update_acl_entries()
+{
+    if (security_acl_entries.size() == security_acl_entries_size_last)
+        return;
+
+    config_menu_security_acl_entries->DetachAllChildren();
+    // config_menu_security_acl_entries.
+    for(auto &entry : security_acl_entries) {
+        log(entry);
+        config_menu_security_acl_entries->Add({
+            Container::Horizontal({
+                Input(&entry),
+                Renderer([]{return text(" <");}),
+            })
+        });
+    }
+
+    security_acl_entries_size_last = security_acl_entries.size();
 }
 
 int TabConfig::initialize()
@@ -310,6 +417,41 @@ int TabConfig::initialize()
     };
     config_entries.push_back(c_db_enable);
 
+    // -------------------------------------
+    //           security configs 
+    // ------------------------------------
+
+    ConfEntry c_acl_enable = {
+        .name = "ACL enable",
+        .description = "Enable or disable ACL security feature. If enabled, each client is decided whether to be served or not based on ACL mode and entries in the list.",
+        .json_path = "acl_enable",
+        .type = BOOLEAN,
+        .val_i = 1,
+        .def_val_i = 1,
+    };
+    config_entries.push_back(c_acl_enable);
+
+    ConfEntry c_acl_mode = {
+        .name = "ACL mode",
+        .description = "Sets the mode of ACL. Blacklist mode means that all clients specified in the list will be declined service. Whitelist mode means that the clients in the list will be served, and all others will be denied.",
+        .json_path = "acl_blacklist",
+        .type = BOOLEAN,
+        .val_i = 1,
+        .def_val_i = 1,
+    };
+    config_entries.push_back(c_acl_mode);
+
+    // Not really used, just for completion sake and JSON handling. Values are stored in a vector
+    ConfEntry c_acl_entries = {
+        .name = "ACL entries",
+        .description = "Clients in ACL list",
+        .json_path = "entries",
+        .type = STRING,
+        .val = "",
+        .def_val = "",
+    };
+    config_entries.push_back(c_acl_entries);
+
     if (config_entries.size() != CONFIG_COUNT)
         throw std::runtime_error("TabConfig inproperly initialized");
 
@@ -363,7 +505,29 @@ int TabConfig::apply_settings()
             }
         }
     }
+
+    // ------------------------
+    //       security 
+    // ------------------------
+    this->security_acl_entries.erase(std::remove(
+                                            this->security_acl_entries.begin(), 
+                                            this->security_acl_entries.end(), 
+                                            ""), 
+                                          this->security_acl_entries.end());
+    update_acl_entries();
+
+    ConfEntry &acl_enable = config_entries[CONF_SEC_ACL_ENABLE];
+    ConfEntry &acl_mode = config_entries[CONF_SEC_ACL_MODE];
+    ConfEntry &acl_list = config_entries[CONF_SEC_ACL_ENTRIES];
+    cJSON_SetBoolValue(acl_enable.json, acl_enable.val_i);
+    cJSON_SetBoolValue(acl_mode.json, acl_mode.val_i);
     
+    clearArray(acl_list.json);
+    for(auto &entry : security_acl_entries) {
+        cJSON_AddItemToArray(acl_list.json, cJSON_CreateString(entry.c_str()));
+    }
+
+
     log(cJSON_Print(config_json.config));
     // TODO: DONT FORGET to actually overwrite the config file
 
