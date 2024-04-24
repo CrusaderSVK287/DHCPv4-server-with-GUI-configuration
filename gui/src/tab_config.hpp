@@ -31,6 +31,25 @@ enum ConfType {
     IP
 };
 
+struct DHCPOption {
+    int tag;
+    int lenght;
+    std::string value;
+};
+
+struct DHCPOptionConfig {
+    std::vector<DHCPOption> options;
+    cJSON *json;
+};
+
+struct DHCPPool {
+    std::string name;
+    std::string start_addr;
+    std::string end_addr;
+    std::string subnet;
+    cJSON *options_json;
+};
+
 struct ConfEntry {
     std::string name;
     std::string description;
@@ -55,6 +74,7 @@ public:
     // writes configuration to file
     int apply_settings();
     void update_acl_entries();
+    void options_load();
 
 private:
 
@@ -84,8 +104,26 @@ private:
     } config_json;
     std::vector<ConfEntry> config_entries;
 
+    // security
     std::vector<std::string> security_acl_entries;
     size_t security_acl_entries_size_last;
+
+    // pools
+    std::vector<DHCPPool> pools_pools;
+    std::vector<std::string> pools_entries;
+    int pools_pool_selected;
+
+    // options
+    std::vector<std::string> options_list;
+    int options_list_selected;
+    int options_list_selected_last;
+    std::vector<DHCPOptionConfig> options_config_entries;
+    DHCPOptionConfig options_loaded_list;
+    std::vector<std::string> options_loaded_list_entries;
+    int options_loaded_list_selected;
+    int options_loaded_list_selected_last;
+    ftxui::Component options_value_container;
+    std::string options_loaded_type;
 };
 
 #endif // !__TAB_CONFIG_HPP__

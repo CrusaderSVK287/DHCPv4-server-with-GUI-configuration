@@ -4,10 +4,12 @@
 #include "ftxui/dom/elements.hpp"
 #include "xtoy.hpp"
 #include "logger.hpp"
+#include "RFC-2132.hpp"
 
 #include <climits>
 #include <exception>
 #include <fstream>
+#include <ftxui/dom/node.hpp>
 #include <iostream>
 #include <ostream>
 #include <stdexcept>
@@ -49,8 +51,12 @@ TabConfig::TabConfig()
 
     this->load_config_file();
     this->config_server_selected = 0;
+    this->pools_pool_selected = 0;
+    this->options_list_selected = 0;
+    this->options_list_selected_last = -1;
 
-
+    this->options_loaded_list_selected = 0;
+    this->options_loaded_list_selected_last = -1;
     // We require the initialize function to be run before doing this.
     this->config_menu_server = Container::Horizontal({
         Renderer([&] {return vbox({
@@ -92,8 +98,51 @@ TabConfig::TabConfig()
                     });})
     });
     
-    this->config_menu_pools = Renderer([] {return text("pools");});
-    this->config_menu_options = Renderer([] {return text("options");});
+    this->config_menu_pools = Container::Horizontal({
+        Container::Vertical({
+            Dropdown(&this->pools_entries, &this->pools_pool_selected),
+            // new pool Button
+            // delete pool Button
+        }),
+        Container::Vertical({
+            // tmp
+            Renderer([&] {
+                return vbox({
+                    text(this->pools_pools[this->pools_pool_selected].name),   
+                    text(this->pools_pools[this->pools_pool_selected].start_addr),   
+                    text(this->pools_pools[this->pools_pool_selected].end_addr),   
+                    text(this->pools_pools[this->pools_pool_selected].subnet),   
+                });
+            })
+        })
+    }),
+
+    /*
+     *  Dropdown s pool options a s general options
+     *
+     *  list podobny ako pri security s options
+     *  tag | length | value 
+     */
+    this->options_value_container = Container::Horizontal({});
+    this->config_menu_options = Container::Vertical({
+        Container::Horizontal({
+            Dropdown(&this->options_list, &this->options_list_selected),
+            Dropdown(&this->options_loaded_list_entries, &this->options_loaded_list_selected),
+            // new option button
+            // delete option button
+        }),
+        Renderer([&] {
+                return vbox({
+                    separator(),
+                    text("Option is of type " + this->options_loaded_type) | bold,
+                    separatorEmpty()    
+                });
+        }),
+        Container::Horizontal({
+            Renderer([] {return text("Option value: ");}),
+            this->options_value_container,
+        }),
+    });
 
     this->config_menu_security_acl_entries = Container::Vertical({});
     this->config_menu_security = Container::Vertical({
@@ -140,7 +189,7 @@ TabConfig::TabConfig()
 
     this->tab_contents = Container::Horizontal({
         Container::Vertical({
-            Menu(&TabConfig::config_menu_entries, &this->config_menu_selected) | size(WIDTH, EQUAL, 11),
+            Menu(&TabConfig::config_menu_entries, &this->config_menu_selected) | size(WIDTH, EQUAL, 11)  | vscroll_indicator | yframe | yflex,
             Button("Apply", [&] {this->apply_settings();}),
         }),
         Renderer([]{return separator();}),
@@ -153,6 +202,52 @@ TabConfig::TabConfig()
 void TabConfig::refresh()
 {
     update_acl_entries();
+    options_load();
+}
+
+static void load_dhcp_config(DHCPOptionConfig &c) 
+{
+    log("loading dhcp");
+    if (!c.json) 
+        return;
+
+    log(cJSON_Print(c.json));
+
+    c.options.clear();
+
+    cJSON *e;
+    cJSON_ArrayForEach(e, c.json) {
+        log("loading dhcp option");
+        log(cJSON_Print(e));
+        int tag = cJSON_GetNumberValue(cJSON_GetObjectItem(e, "tag"));
+        int lenght = cJSON_GetNumberValue(cJSON_GetObjectItem(e, "lenght"));
+
+        DHCPOption o = {
+            .tag = tag,
+            .lenght = lenght,
+        };
+
+        switch (dhcp_option_tag_to_type(tag)) {
+            case DHCP_OPTION_IP:
+            case DHCP_OPTION_STRING:
+                o.value = cJSON_GetStringValue(cJSON_GetObjectItem(e, "value"));
+                break;
+            case DHCP_OPTION_NUMERIC:
+            case DHCP_OPTION_BOOL: {
+                std::ostringstream oss;
+                oss << std::fixed << std::setprecision(0) << cJSON_GetNumberValue(cJSON_GetObjectItem(e, "value"));
+                o.value = oss.str();
+                break;
+            }
+            case DHCP_OPTION_BIN:
+            default:
+                break;
+        }
+
+        if (o.value.length() != 0) {
+            c.options.push_back(o);
+        }
+    }
 }
 
 int TabConfig::load_config_file()
@@ -263,7 +358,6 @@ int TabConfig::load_config_file()
         }
     }
 
-
     // -------------------------------
     //        security config 
     // -------------------------------
@@ -306,6 +400,63 @@ int TabConfig::load_config_file()
     }
     security_acl_entries_size_last = security_acl_entries.size();
 
+    // -----------------------
+    //        Pools
+    // -----------------------
+
+    pools_entries.clear();
+    pools_pools.clear();
+
+    e = NULL;
+    cJSON_ArrayForEach(e, config_json.pools) {
+        DHCPPool pool = {
+            .name = cJSON_GetStringValue(cJSON_GetObjectItem(e, "name")),
+            .start_addr = cJSON_GetStringValue(cJSON_GetObjectItem(e, "start")),
+            .end_addr = cJSON_GetStringValue(cJSON_GetObjectItem(e, "end")),
+            .subnet = cJSON_GetStringValue(cJSON_GetObjectItem(e, "subnet")),
+            .options_json = cJSON_GetObjectItem(e, "options")
+        };
+
+        if (!pool.options_json) {
+            pool.options_json = cJSON_AddArrayToObject(e, "options");
+        }
+
+        if (pool.name.length() == 0 || ipv4_address_to_uint32(pool.start_addr.c_str()) == 0
+                                    || ipv4_address_to_uint32(pool.end_addr.c_str()) == 0
+                                    || ipv4_address_to_uint32(pool.subnet.c_str()) == 0)
+            return -1;
+
+        pools_pools.push_back(pool);
+        pools_entries.push_back(pool.name);
+    }
+
+    // ----------------------
+    //      options
+    // ----------------------
+    
+    options_list.clear();
+    options_list.push_back("Global");
+    for(auto &entry : pools_entries) {
+        options_list.push_back(entry);
+    }
+
+    // Global options
+
+    DHCPOptionConfig options_global = {
+        .json = config_json.options
+    };
+    load_dhcp_config(options_global);
+    options_config_entries.push_back(options_global);
+
+    for (auto &entry : pools_pools) {
+        DHCPOptionConfig options_pool = {
+            .json = entry.options_json
+        };
+        load_dhcp_config(options_pool);
+        log("loaded pool " + entry.name);
+        options_config_entries.push_back(options_pool);
+    }
+
     return 0;
 }
 
@@ -315,7 +466,6 @@ void TabConfig::update_acl_entries()
         return;
 
     config_menu_security_acl_entries->DetachAllChildren();
-    // config_menu_security_acl_entries.
     for(auto &entry : security_acl_entries) {
         log(entry);
         config_menu_security_acl_entries->Add({
@@ -462,6 +612,59 @@ int TabConfig::initialize()
     return 0;
 }
 
+static void apply_options(DHCPOptionConfig &o)
+{
+
+    clearArray(o.json);
+
+    for (auto &entry : o.options) {
+        cJSON *opt = cJSON_CreateObject();
+
+        // Set correct option sizes, particullarly for string options
+        switch(dhcp_option_tag_to_type(entry.tag)) {
+            case DHCP_OPTION_STRING:
+                entry.lenght = entry.value.length();
+                break;
+            case DHCP_OPTION_IP:
+                if (ipv4_address_to_uint32(entry.value.c_str()) == 0) {
+                    log("Bad IP format");
+                    return;
+                }
+                entry.lenght = 4;
+                break;
+            case DHCP_OPTION_BOOL:
+                entry.lenght = 1;
+                break;
+            case DHCP_OPTION_NUMERIC: // TODO: pozriet dlzky jednotlivych options
+                if (entry.lenght == 0)
+                    entry.lenght = 4;
+                break;
+            case DHCP_OPTION_BIN:
+            default:
+                break;
+        }
+
+        cJSON_AddNumberToObject(opt, "tag", entry.tag);
+        cJSON_AddNumberToObject(opt, "lenght", entry.lenght);
+        switch(dhcp_option_tag_to_type(entry.tag)) {
+            case DHCP_OPTION_STRING:
+            case DHCP_OPTION_IP:
+                cJSON_AddStringToObject(opt, "value", entry.value.c_str());
+                break;
+
+            case DHCP_OPTION_BOOL:
+                cJSON_AddBoolToObject(opt, "value", std::stoi(entry.value));
+                break;
+            case DHCP_OPTION_NUMERIC:
+                cJSON_AddNumberToObject(opt, "value", std::stoi(entry.value));
+                break;
+            default:
+                break;
+        }
+
+        cJSON_AddItemToArray(o.json, opt);
+    }
+}
 
 int TabConfig::apply_settings()
 {
@@ -531,10 +734,52 @@ int TabConfig::apply_settings()
         cJSON_AddItemToArray(acl_list.json, cJSON_CreateString(entry.c_str()));
     }
 
+    // --------------------
+    //       options
+    // --------------------
+    apply_options(options_config_entries.front());
+    for (size_t i = 1; i < options_config_entries.size(); i++) {
+        apply_options(options_config_entries[i]);
+    }
+
 
     log(cJSON_Print(config_json.config));
     // TODO: DONT FORGET to actually overwrite the config file
 
     return 0;
+}
+
+void TabConfig::options_load()
+{
+    if (options_list_selected != options_list_selected_last) {
+        options_loaded_list = options_config_entries.at(options_list_selected);
+
+        options_loaded_list_entries.clear();
+        for(auto &entry : options_loaded_list.options) {
+            options_loaded_list_entries.push_back(std::to_string(entry.tag) + " - " +
+                    DHCPv4_tag_to_full_name((DHCPv4_Options)entry.tag));
+        }
+
+        options_loaded_list_selected_last = -2;
+        options_loaded_list_selected = 0;
+        options_list_selected_last = options_list_selected;
+    }
+
+    if (options_loaded_list_selected != options_loaded_list_selected_last) {
+        switch(dhcp_option_tag_to_type((dhcp_option_type)options_loaded_list.options[options_loaded_list_selected].tag)) {
+            case DHCP_OPTION_STRING: options_loaded_type = "string"; break;
+            case DHCP_OPTION_BOOL: options_loaded_type = "boolean (0/1)"; break;
+            case DHCP_OPTION_NUMERIC: options_loaded_type = "numeric"; break;
+            case DHCP_OPTION_IP: options_loaded_type = "IP (example: 192.168.1.1)"; break;
+            case DHCP_OPTION_BIN: options_loaded_type = "binary"; break;
+        }
+
+        options_value_container->DetachAllChildren();
+        if (options_list_selected >= 0 && options_loaded_list_selected >= 0) {
+            options_value_container->Add(Input(&this->options_config_entries[options_list_selected].
+                             options[options_loaded_list_selected].value));
+        }
+        options_loaded_list_selected_last = options_loaded_list_selected;
+    }
 }
 
