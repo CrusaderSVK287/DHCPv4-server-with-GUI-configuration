@@ -74,18 +74,22 @@ TabConfig::TabConfig()
             Input(&this->config_entries[CONF_LOG_VERBOSITY].val),
             Input(&this->config_entries[CONF_LEASE_TIME].val),
             Toggle(&TabConfig::boolean_toogle ,&this->config_entries[CONF_DB_ENABLE].val_i),
-        }), 
-        // TODO: Try to make the description work
-        // | CatchEvent([&] (Event event) {
-        //     if ((event == Event::Character('j') || event == Event::ArrowDown) && this->config_server_selected / 2 < CONF_DB_ENABLE) {
-        //         this->config_server_selected += 1;
-        //     } else if ((event == Event::Character('k') || event == Event::ArrowUp) && this->config_server_selected / 2 > 0) {
-        //         this->config_server_selected -= 1;
-        //     }
-        //     return false;
-        // }),
+        })
+        | CatchEvent([&] (Event event) {
+            Component &inputs = this->config_menu_server->ChildAt(2)->ChildAt(0);
+            for (size_t i = 0; i < inputs->ChildCount(); i++) {
+                if (inputs->ChildAt(i)->Focused()) {
+                    this->config_server_selected = i;
+                    break;
+                }
+            }
+            return false;
+        }),
         Renderer([] {return separatorEmpty();}),
-        Renderer([&] {return paragraphAlignLeft(this->config_entries[this->config_server_selected].description);})
+        Renderer([&] {return vbox({
+                        text(this->config_entries[this->config_server_selected].name + ":"),
+                        paragraphAlignLeft(this->config_entries[this->config_server_selected].description)
+                    });})
     });
     
     this->config_menu_pools = Renderer([] {return text("pools");});
