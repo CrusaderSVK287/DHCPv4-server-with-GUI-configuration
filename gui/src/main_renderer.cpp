@@ -16,6 +16,8 @@
 #include "tab_logs.hpp"
 #include "tab_leases.hpp"
 #include "tab_inspect.hpp"
+#include "tab_config.hpp"
+#include "logger.hpp"
 
 using namespace ftxui;
 
@@ -38,11 +40,12 @@ int tui_loop()
     TabLogs tab_logs = TabLogs();
     TabLease tab_lease = TabLease();
     TabInspect tab_inspect = TabInspect();
+    TabConfig tab_config = TabConfig();
 
     auto tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated()) | hcenter;
     auto tab_contents = Container::Tab({
         _not_yet_implemented_tab("help"),
-        _not_yet_implemented_tab("config"),
+        tab_config.tab_contents,
         tab_logs.tab_contents,
         tab_lease.tab_contents,
         tab_inspect.tab_contents,
@@ -61,7 +64,7 @@ int tui_loop()
             //TDOD: make some switch case where only active tab will refresh
         switch (tab_index) {
             case 0: break;
-            case 1: break;
+            case 1: tab_config.refresh(); break;
             case 2: tab_logs.refresh(); break;
             case 3: tab_lease.refresh(); break;
             case 4: tab_inspect.refresh(); break;
