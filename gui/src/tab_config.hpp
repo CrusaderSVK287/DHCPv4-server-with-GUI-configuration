@@ -77,6 +77,8 @@ public:
     void options_load();
 
 private:
+    void dhcp_option_ctl(bool remove);
+    std::string dhcp_option_ctl_input;
 
     static constexpr const char* default_config_path = "/etc/dhcp/config.json";
 

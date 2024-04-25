@@ -141,6 +141,13 @@ TabConfig::TabConfig()
         Container::Horizontal({
             Renderer([] {return text("Option value: ");}),
             this->options_value_container,
+        }) | yflex_grow,
+        Container::Horizontal({
+            Button(" Add ", [&] {this->dhcp_option_ctl(false);}),
+            Renderer([] {return text("/");}) | vcenter,
+            Button("Remove", [&] {this->dhcp_option_ctl(true);}),
+            Renderer([] {return text("option number ");}) | vcenter,
+            Input(&this->dhcp_option_ctl_input, "...") | vcenter,
         }),
     });
 
@@ -207,18 +214,13 @@ void TabConfig::refresh()
 
 static void load_dhcp_config(DHCPOptionConfig &c) 
 {
-    log("loading dhcp");
     if (!c.json) 
         return;
-
-    log(cJSON_Print(c.json));
 
     c.options.clear();
 
     cJSON *e;
     cJSON_ArrayForEach(e, c.json) {
-        log("loading dhcp option");
-        log(cJSON_Print(e));
         int tag = cJSON_GetNumberValue(cJSON_GetObjectItem(e, "tag"));
         int lenght = cJSON_GetNumberValue(cJSON_GetObjectItem(e, "lenght"));
 
@@ -453,7 +455,6 @@ int TabConfig::load_config_file()
             .json = entry.options_json
         };
         load_dhcp_config(options_pool);
-        log("loaded pool " + entry.name);
         options_config_entries.push_back(options_pool);
     }
 
@@ -467,7 +468,6 @@ void TabConfig::update_acl_entries()
 
     config_menu_security_acl_entries->DetachAllChildren();
     for(auto &entry : security_acl_entries) {
-        log(entry);
         config_menu_security_acl_entries->Add({
             Container::Horizontal({
                 Input(&entry),
@@ -622,6 +622,7 @@ static void apply_options(DHCPOptionConfig &o)
 
         // Set correct option sizes, particullarly for string options
         switch(dhcp_option_tag_to_type(entry.tag)) {
+            case DHCP_OPTION_BIN:
             case DHCP_OPTION_STRING:
                 entry.lenght = entry.value.length();
                 break;
@@ -635,11 +636,10 @@ static void apply_options(DHCPOptionConfig &o)
             case DHCP_OPTION_BOOL:
                 entry.lenght = 1;
                 break;
-            case DHCP_OPTION_NUMERIC: // TODO: pozriet dlzky jednotlivych options
+            case DHCP_OPTION_NUMERIC:
                 if (entry.lenght == 0)
                     entry.lenght = 4;
                 break;
-            case DHCP_OPTION_BIN:
             default:
                 break;
         }
@@ -649,6 +649,7 @@ static void apply_options(DHCPOptionConfig &o)
         switch(dhcp_option_tag_to_type(entry.tag)) {
             case DHCP_OPTION_STRING:
             case DHCP_OPTION_IP:
+            case DHCP_OPTION_BIN:
                 cJSON_AddStringToObject(opt, "value", entry.value.c_str());
                 break;
 
@@ -662,7 +663,8 @@ static void apply_options(DHCPOptionConfig &o)
                 break;
         }
 
-        cJSON_AddItemToArray(o.json, opt);
+        if (dhcp_option_tag_to_type(entry.tag) != DHCP_OPTION_BIN)
+            cJSON_AddItemToArray(o.json, opt);
     }
 }
 
@@ -751,7 +753,7 @@ int TabConfig::apply_settings()
 
 void TabConfig::options_load()
 {
-    if (options_list_selected != options_list_selected_last) {
+    if (options_list_selected != options_list_selected_last && options_list_selected >= 0) {
         options_loaded_list = options_config_entries.at(options_list_selected);
 
         options_loaded_list_entries.clear();
@@ -760,12 +762,23 @@ void TabConfig::options_load()
                     DHCPv4_tag_to_full_name((DHCPv4_Options)entry.tag));
         }
 
+        if (options_loaded_list.options.size() == 0) {
+            options_loaded_list_entries.push_back("No options");
+        }
+
         options_loaded_list_selected_last = -2;
         options_loaded_list_selected = 0;
         options_list_selected_last = options_list_selected;
     }
 
-    if (options_loaded_list_selected != options_loaded_list_selected_last) {
+    if (options_loaded_list_selected != options_loaded_list_selected_last && options_loaded_list_selected >= 0) {
+        // TODO: Fix crash when no options in list
+        if (options_loaded_list.options.size() == 0) {
+            options_loaded_type = "";
+            options_value_container->DetachAllChildren();
+            options_value_container->Add(Renderer([]{return text("No option selected");}));
+            return;
+        }
         switch(dhcp_option_tag_to_type((dhcp_option_type)options_loaded_list.options[options_loaded_list_selected].tag)) {
             case DHCP_OPTION_STRING: options_loaded_type = "string"; break;
             case DHCP_OPTION_BOOL: options_loaded_type = "boolean (0/1)"; break;
@@ -777,9 +790,52 @@ void TabConfig::options_load()
         options_value_container->DetachAllChildren();
         if (options_list_selected >= 0 && options_loaded_list_selected >= 0) {
             options_value_container->Add(Input(&this->options_config_entries[options_list_selected].
-                             options[options_loaded_list_selected].value));
+                             options[options_loaded_list_selected].value, "..."));
         }
         options_loaded_list_selected_last = options_loaded_list_selected;
     }
+}
+
+void TabConfig::dhcp_option_ctl(bool remove)
+{
+    if (dhcp_option_ctl_input.length() < 1 || std::stoi(dhcp_option_ctl_input) > 82)
+        return;
+
+    // Check if we have the needed 
+    bool option_exists = false;
+    int i = 0;
+    for (auto &entry : options_loaded_list.options) {
+        if (entry.tag == std::stoi(dhcp_option_ctl_input)) {
+            option_exists = true;
+
+            break;
+        }
+        i++;
+    }
+
+    // interface doesnt support binary configs
+    if (dhcp_option_tag_to_type(std::stoi(dhcp_option_ctl_input)) == DHCP_OPTION_BIN) {
+        return;
+    }
+    // remove if option exists
+    if (remove && option_exists) {
+        options_loaded_list_selected = 0;
+        auto &vec = options_config_entries[options_list_selected].options;
+        vec.erase(vec.begin() + i);
+
+    } else if (!remove && !option_exists) {  
+        // create if it doesnt exist
+        DHCPOption o = {
+            .tag = std::stoi(dhcp_option_ctl_input),
+            .lenght = 0,
+            .value = ""
+        };
+        options_config_entries[options_list_selected].options.push_back(o);
+        options_loaded_list_selected = options_config_entries[options_list_selected].options.size() - 1;
+    }
+
+    options_list_selected_last = -1;
+    options_load();
+    options_loaded_list = options_config_entries[options_list_selected];
 }
 
