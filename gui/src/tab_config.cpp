@@ -7,10 +7,12 @@
 #include "RFC-2132.hpp"
 
 #include <climits>
-#include <cstdio>
-#include <exception>
+#include <cerrno> // For errno
+#include <cstring> // For strerrorinclude <cstdio>
 #include <fstream>
+#include <ftxui/dom/deprecated.hpp>
 #include <ftxui/dom/node.hpp>
+#include <ftxui/screen/color.hpp>
 #include <iostream>
 #include <ostream>
 #include <stdexcept>
@@ -127,6 +129,7 @@ TabConfig::TabConfig()
         Container::Horizontal({
             Button("+ Add pool", [&] {pool_ctl(false);}),
             Button("- Remove pool", [&] {pool_ctl(true);}),
+            // TODO: add some button to go to options from pool and to pools from options for convenience
         })
     }),
 
@@ -199,13 +202,17 @@ TabConfig::TabConfig()
         this->config_menu_security
     }, &this->config_menu_selected);
 
-    this->tab_contents = Container::Horizontal({
-        Container::Vertical({
-            Menu(&TabConfig::config_menu_entries, &this->config_menu_selected) | size(WIDTH, EQUAL, 11)  | vscroll_indicator | yframe | yflex,
-            Button("Apply", [&] {this->apply_settings();}),
-        }),
-        Renderer([]{return separator();}),
-        this->config_menu_tab,
+    this->tab_contents = Container::Vertical({ 
+        Container::Horizontal({
+            Container::Vertical({
+                Menu(&TabConfig::config_menu_entries, &this->config_menu_selected) | size(WIDTH, EQUAL, 11)  | vscroll_indicator | yframe | yflex,
+                Button("Apply", [&] {this->apply_settings();}),
+            
+            }),
+            Renderer([]{return separator();}),
+            this->config_menu_tab,
+        }) | flex,
+        Renderer([&] {return paragraph(this->error_msg) | bgcolor(Color::Red);})
     });
 
     this->security_acl_entries_size_last = INT_MAX;
@@ -213,6 +220,7 @@ TabConfig::TabConfig()
 
 void TabConfig::refresh()
 {
+    // error_msg = "";
     update_acl_entries();
     options_load();
     pools_refresh();
@@ -261,33 +269,37 @@ static void load_dhcp_config(DHCPOptionConfig &c)
 int TabConfig::load_config_file()
 {
     std::ifstream file(TabConfig::default_config_path, std::ios::binary);
-    if (!file) {
-        return -1;
+    if (file) {
+        file.seekg(0, std::ios::end);
+        std::streampos file_size = file.tellg();
+        file.seekg(0, std::ios::beg);
+
+        std::unique_ptr<char[]> buffer(new char[file_size]);
+        if (!buffer) {
+            file.close();
+            return -1;
+        }
+
+        file.read(buffer.get(), file_size);
+
+        config_json.config = cJSON_Parse(buffer.get());
+        if (!config_json.config) {
+            log("Erorr: failed to parse JSON");
+            return -1;
+        }
+
+        config_json.server   = cJSON_GetObjectItem(config_json.config, "server"  );
+        config_json.pools    = cJSON_GetObjectItem(config_json.config, "pools"   );
+        config_json.options  = cJSON_GetObjectItem(config_json.config, "options" );
+        config_json.security = cJSON_GetObjectItem(config_json.config, "security");
+    } else {
+        config_json.config   = cJSON_CreateObject();
+        config_json.server   = cJSON_AddObjectToObject(config_json.config, "server");
+        config_json.pools    = cJSON_AddArrayToObject(config_json.config, "pools");
+        config_json.options  = cJSON_AddArrayToObject(config_json.config, "options");
+        config_json.security = cJSON_AddObjectToObject(config_json.config, "security");
     }
 
-    file.seekg(0, std::ios::end);
-    std::streampos file_size = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    std::unique_ptr<char[]> buffer(new char[file_size]);
-    if (!buffer) {
-        file.close();
-        return -1;
-    }
-
-    file.read(buffer.get(), file_size);
-
-    config_json.config = cJSON_Parse(buffer.get());
-    if (!config_json.config) {
-        log("Erorr: failed to parse JSON");
-        return -1;
-    }
-
-    config_json.server   = cJSON_GetObjectItem(config_json.config, "server"  );
-    config_json.pools    = cJSON_GetObjectItem(config_json.config, "pools"   );
-    config_json.options  = cJSON_GetObjectItem(config_json.config, "options" );
-    config_json.security = cJSON_GetObjectItem(config_json.config, "security");
-    
     // -------------------------
     //      server config
     // -------------------------
@@ -384,7 +396,7 @@ int TabConfig::load_config_file()
         acl_mode.json = cJSON_AddBoolToObject(config_json.security, acl_mode.json_path.c_str(), acl_mode.def_val_i);
     }
     if (!acl_list.json) {
-        acl_enable.json = cJSON_AddArrayToObject(config_json.security, acl_list.json_path.c_str());
+        acl_list.json = cJSON_AddArrayToObject(config_json.security, acl_list.json_path.c_str());
     }
 
     if (!cJSON_IsBool(acl_enable.json)) {
@@ -772,14 +784,21 @@ int TabConfig::apply_settings()
         apply_options(options_config_entries[i]);
     }
 
-
-
     // ---------------------
     //     write to file
     // ---------------------     
-    log(cJSON_Print(config_json.config));
-    // TODO: DONT FORGET to actually overwrite the config file
+    // log(cJSON_Print(config_json.config));
 
+    std::ofstream file(TabConfig::default_config_path, std::ios::binary); 
+    char *new_settings = cJSON_Print(config_json.config);
+    if (file.fail()) {
+        error_msg = strerror(errno);
+    } else if (!new_settings) {
+        error_msg = "Error with configuration";
+    } else {
+        file << new_settings << std::endl;
+        file.close();
+    }
     return 0;
 }
 

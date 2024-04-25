@@ -2,6 +2,7 @@
 #define  __TAB_HPP__
 
 #include <ftxui/component/component_base.hpp>
+#include <string>
 
 class UITab{
 public:
@@ -12,7 +13,6 @@ public:
     ftxui::Component tab_contents;
     std::string error_msg;
 private:
-    
 };
 
 #endif // !__TAB_HPP__
