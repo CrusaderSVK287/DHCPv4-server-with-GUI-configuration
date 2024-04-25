@@ -7,6 +7,7 @@
 #include "RFC-2132.hpp"
 
 #include <climits>
+#include <cstdio>
 #include <exception>
 #include <fstream>
 #include <ftxui/dom/node.hpp>
@@ -57,6 +58,7 @@ TabConfig::TabConfig()
 
     this->options_loaded_list_selected = 0;
     this->options_loaded_list_selected_last = -1;
+    this->pools_pool_selected_last = -1;
     // We require the initialize function to be run before doing this.
     this->config_menu_server = Container::Horizontal({
         Renderer([&] {return vbox({
@@ -98,38 +100,41 @@ TabConfig::TabConfig()
                     });})
     });
     
-    this->config_menu_pools = Container::Horizontal({
-        Container::Vertical({
-            Dropdown(&this->pools_entries, &this->pools_pool_selected),
+    this->pools_value_container = Container::Vertical({});
+    this->config_menu_pools = Container::Vertical({
+        Container::Horizontal({
+            // Dropdown(&this->pools_entries, &this->pools_pool_selected),
+            Menu(&this->pools_entries, &this->pools_pool_selected)
+                | vscroll_indicator | yframe | yflex | size(WIDTH, GREATER_THAN, 10),
+            Renderer([] {return hbox({separatorEmpty(), separator(), separatorEmpty()});}),
             // new pool Button
             // delete pool Button
-        }),
-        Container::Vertical({
-            // tmp
-            Renderer([&] {
-                return vbox({
-                    text(this->pools_pools[this->pools_pool_selected].name),   
-                    text(this->pools_pools[this->pools_pool_selected].start_addr),   
-                    text(this->pools_pools[this->pools_pool_selected].end_addr),   
-                    text(this->pools_pools[this->pools_pool_selected].subnet),   
-                });
-            })
+            Container::Vertical({
+                // tmp
+                Renderer([&] {
+                    return vbox({
+                        text("Pool name") | bold,   
+                        text("Start address") | bold,   
+                        text("End address") | bold,   
+                        text("Subnet mask") | bold,   
+                    });
+                })
+            }),
+            Renderer([]{return separatorEmpty();}),
+            this->pools_value_container,
+        }) | flex,
+        Renderer([]{return separator();}),
+        Container::Horizontal({
+            Button("+ Add pool", [&] {pool_ctl(false);}),
+            Button("- Remove pool", [&] {pool_ctl(true);}),
         })
     }),
 
-    /*
-     *  Dropdown s pool options a s general options
-     *
-     *  list podobny ako pri security s options
-     *  tag | length | value 
-     */
     this->options_value_container = Container::Horizontal({});
     this->config_menu_options = Container::Vertical({
         Container::Horizontal({
             Dropdown(&this->options_list, &this->options_list_selected),
             Dropdown(&this->options_loaded_list_entries, &this->options_loaded_list_selected),
-            // new option button
-            // delete option button
         }),
         Renderer([&] {
                 return vbox({
@@ -210,6 +215,7 @@ void TabConfig::refresh()
 {
     update_acl_entries();
     options_load();
+    pools_refresh();
 }
 
 static void load_dhcp_config(DHCPOptionConfig &c) 
@@ -736,6 +742,28 @@ int TabConfig::apply_settings()
         cJSON_AddItemToArray(acl_list.json, cJSON_CreateString(entry.c_str()));
     }
 
+    // ---------------------
+    //         pools 
+    // ---------------------
+    
+    clearArray(config_json.pools);
+    for (size_t i = 0; i < pools_pools.size(); i++) {
+        DHCPPool &p = pools_pools[i];
+
+        cJSON *json_pool = cJSON_CreateObject();
+        cJSON_AddStringToObject(json_pool, "name", p.name.c_str());
+        cJSON_AddStringToObject(json_pool, "start", p.start_addr.c_str());
+        cJSON_AddStringToObject(json_pool, "end", p.end_addr.c_str());
+        cJSON_AddStringToObject(json_pool, "subnet", p.subnet.c_str());
+        cJSON *pool_options = cJSON_AddArrayToObject(json_pool, "options");
+
+        if (i + 1 < options_config_entries.size()) {
+            options_config_entries[i + 1].json = pool_options;
+            log(cJSON_Print(json_pool));
+            cJSON_AddItemToArray(config_json.pools, json_pool);
+        }
+    }
+
     // --------------------
     //       options
     // --------------------
@@ -745,6 +773,10 @@ int TabConfig::apply_settings()
     }
 
 
+
+    // ---------------------
+    //     write to file
+    // ---------------------     
     log(cJSON_Print(config_json.config));
     // TODO: DONT FORGET to actually overwrite the config file
 
@@ -753,6 +785,12 @@ int TabConfig::apply_settings()
 
 void TabConfig::options_load()
 {
+    options_list.clear();
+    options_list.push_back("General");
+    for(auto &entry : pools_entries) {
+        options_list.push_back(entry);
+    }
+
     if (options_list_selected != options_list_selected_last && options_list_selected >= 0) {
         options_loaded_list = options_config_entries.at(options_list_selected);
 
@@ -837,5 +875,64 @@ void TabConfig::dhcp_option_ctl(bool remove)
     options_list_selected_last = -1;
     options_load();
     options_loaded_list = options_config_entries[options_list_selected];
+}
+
+void TabConfig::pools_refresh()
+{
+    if (pools_pool_selected == pools_pool_selected_last)
+        return;
+
+    pools_entries.clear();
+    for (auto &entry : pools_pools) {
+        pools_entries.push_back(entry.name);
+    }
+    
+    pools_value_container->DetachAllChildren();
+    if (pools_entries.size() == 0) {
+        pools_value_container->Add({
+            Renderer([] {return text("No pool selected");})
+        });
+    } else {
+        DHCPPool &p = pools_pools[pools_pool_selected];       
+
+        pools_value_container->Add({Input(&p.name)});
+        pools_value_container->Add({Input(&p.start_addr)});
+        pools_value_container->Add({Input(&p.end_addr)});
+        pools_value_container->Add({Input(&p.subnet)});
+    }
+
+    pools_pool_selected_last = pools_pool_selected;
+}
+
+void TabConfig::pool_ctl(bool remove)
+{
+    if (remove) {
+        pools_pools.erase(pools_pools.begin() + pools_pool_selected);
+        options_config_entries.erase(options_config_entries.begin() + pools_pool_selected + 1);
+        pools_pool_selected = 0;
+    } else {
+        DHCPPool pool = {
+            .name = "New pool",
+            .start_addr = "0.0.0.0",
+            .end_addr = "0.0.0.0",
+            .subnet = "0.0.0.0",
+            .options_json = cJSON_CreateArray()  
+        };
+
+        pools_pools.push_back(pool);
+
+        DHCPOptionConfig option = {
+            .json = pool.options_json
+        };
+        options_config_entries.push_back(option);
+
+        pools_pool_selected = pools_pools.size() - 1;
+    }
+
+    pools_pool_selected_last = -1;
+    options_list_selected = 0;
+    options_list_selected_last = -1;
+    pools_refresh();
+    options_load();
 }
 

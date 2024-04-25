@@ -75,9 +75,11 @@ public:
     int apply_settings();
     void update_acl_entries();
     void options_load();
+    void pools_refresh();
 
 private:
     void dhcp_option_ctl(bool remove);
+    void pool_ctl(bool remove);
     std::string dhcp_option_ctl_input;
 
     static constexpr const char* default_config_path = "/etc/dhcp/config.json";
@@ -114,6 +116,8 @@ private:
     std::vector<DHCPPool> pools_pools;
     std::vector<std::string> pools_entries;
     int pools_pool_selected;
+    int pools_pool_selected_last;
+    ftxui::Component pools_value_container;
 
     // options
     std::vector<std::string> options_list;
