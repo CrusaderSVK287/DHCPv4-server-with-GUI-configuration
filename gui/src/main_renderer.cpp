@@ -17,6 +17,7 @@
 #include "tab_leases.hpp"
 #include "tab_inspect.hpp"
 #include "tab_config.hpp"
+#include "tab_command.hpp"
 #include "logger.hpp"
 
 using namespace ftxui;
@@ -41,6 +42,7 @@ int tui_loop()
     TabLease tab_lease = TabLease();
     TabInspect tab_inspect = TabInspect();
     TabConfig tab_config = TabConfig();
+    TabCommand tab_command = TabCommand();
 
     auto tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated()) | hcenter;
     auto tab_contents = Container::Tab({
@@ -49,7 +51,7 @@ int tui_loop()
         tab_logs.tab_contents,
         tab_lease.tab_contents,
         tab_inspect.tab_contents,
-        _not_yet_implemented_tab("command"),
+        tab_command.tab_contents,
         },
         &tab_index);
 

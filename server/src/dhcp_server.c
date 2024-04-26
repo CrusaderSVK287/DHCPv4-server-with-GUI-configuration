@@ -12,6 +12,7 @@
 #include "timer.h"
 #include "timer_args.h"
 #include "transaction.h"
+#include "unix_server.h"
 #include "utils/llist.h"
 #include "utils/xtoy.h"
 #include "transaction_cache.h"
@@ -234,7 +235,9 @@ int dhcp_server_serve(dhcp_server_t *server)
 	do
 	{
                 /* Update various timers used by server (e.g. transaction cache timers) */
-                update_timers(server);        
+                update_timers(server);
+                /* Handle pottention communication on unix server */
+                unix_server_handle(&server->unix_server);
 
 		rv = recv(server->sock_fd, &dhcp_msg->packet, sizeof(dhcp_packet_t), 0);
 		if (rv < 0 && errno == EAGAIN) {

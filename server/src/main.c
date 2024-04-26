@@ -9,6 +9,7 @@
 #include "lease.h"
 #include "logging.h"
 #include "dhcp_server.h"
+#include "unix_server.h"
 #include "init.h"
 #include "config.h"
 #include "utils/xtoy.h"
@@ -39,6 +40,7 @@ int main(int argc, char *argv[])
         cclogger_set_verbosity_level(dhcp_server.config.log_verbosity);
         if_failed(init_dhcp_server(&dhcp_server), exit);
         if_failed(init_dhcp_server_timers(&dhcp_server), exit);
+        if_failed_n(unix_server_init(&dhcp_server.unix_server), exit);
         if_failed(init_dhcp_options(&dhcp_server), exit);
         if_failed(init_ACL(&dhcp_server), exit);
         /* We need to have address pools and allocator initialised before loading leases */
@@ -47,6 +49,7 @@ int main(int argc, char *argv[])
 
         dhcp_server_serve(&dhcp_server);
 
+        unix_server_clean(&dhcp_server.unix_server);
         uninit_dhcp_server(&dhcp_server);
         uninit_logging();
 
@@ -54,3 +57,4 @@ int main(int argc, char *argv[])
 exit:
         return rv;
 }
+
