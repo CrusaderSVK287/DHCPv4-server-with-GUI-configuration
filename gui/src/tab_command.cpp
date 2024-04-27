@@ -2,6 +2,9 @@
 #include <cJSON.h>
 #include <cJSON_Utils.h>
 #include <cstdio>
+#include <cstring>
+#include <iterator>
+#include <sstream>
 #include <ftxui/component/component.hpp>
 #include <ftxui/dom/elements.hpp>
 #include <string>
@@ -29,8 +32,7 @@ TabCommand::TabCommand()
 
     tab_contents = Container::Vertical({
         Container::Horizontal({
-            Renderer([]{return text("> ") | bold;}),
-            Input(&this->input),
+            Input(&this->input, "Enter your command here.."),
         }) | border | CatchEvent([&] (Event event) {
             // If the event is NOT enter, exit
             if (event != Event::Return) {
@@ -84,6 +86,7 @@ void TabCommand::handle_command()
             continue;
         }
 
+        output.push_back("$ " + input);
         if (entry.ipc) {
             print_response(send_command());
         } else {
@@ -94,6 +97,32 @@ void TabCommand::handle_command()
     }
 
     output.push_back("Unknown command: " + input);
+}
+
+static char* json_create_command(std::string input)
+{
+    cJSON *json = cJSON_CreateObject();
+    if (!json) {
+        return NULL;
+    }
+    std::istringstream iss(input);
+    std::vector<std::string> words {
+        std::istream_iterator<std::string>{iss},
+        std::istream_iterator<std::string>{}
+    };
+    cJSON_AddStringToObject(json, "command", words.front().c_str());
+    cJSON *array = cJSON_AddArrayToObject(json, "parameters");
+    for (size_t i = 1; i < words.size(); i++) {
+        cJSON_AddItemToArray(array, cJSON_CreateString(words[i].c_str()));
+    }
+
+    char *json_string = cJSON_PrintUnformatted(json);
+    cJSON_Delete(json);
+    if (!json_string) {
+        return NULL;
+    }
+
+    return json_string;
 }
 
 cJSON *TabCommand::send_command()
@@ -116,20 +145,32 @@ cJSON *TabCommand::send_command()
         return json_error("Connection failed");
     }
 
-    // Send the message to the server
-    if (send(client_socket, input.c_str(), input.length(), 0) == -1) {
-        return json_error("Send failed");
+    // construct a json from the input in this format:
+    // {
+    //   "command": "command_name",
+    //   "parameters": [
+    //     "parameter1",
+    //     "parameter2"
+    //   ]
+    // }
+    char *json_string = json_create_command(input);
+    if (!json_string) {
+        return json_error("Failed to create a command");
     }
 
-    // Receive the echoed message from the server
+    // Send the message to the server
+    if (send(client_socket, json_string, strlen(json_string), 0) == -1) {
+        return json_error("Send failed");
+    }
+    free(json_string);
+
+    // Receive response from server
     char buffer[BUFSIZ];
     memset(buffer, 0, BUFSIZ);
     int bytes_received = recv(client_socket, buffer, BUFSIZ, 0);
     if (bytes_received <= 0) {
         return json_error("Receive failed or connection closed");
     }
-
-    // output.push_back(buffer);
 
     close(client_socket);
 

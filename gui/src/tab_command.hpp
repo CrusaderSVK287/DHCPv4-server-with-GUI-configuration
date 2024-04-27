@@ -4,6 +4,7 @@
 
 #include "tab.hpp"
 #include <cJSON.h>
+#include <ftxui/component/component_base.hpp>
 #include <string>
 #include <vector>
 class TabCommand;
