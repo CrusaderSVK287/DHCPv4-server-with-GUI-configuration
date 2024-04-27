@@ -1,6 +1,10 @@
 #include "unix_server.h"
+#include "commands.h"
+#include "dhcp_server.h"
 #include "logging.h"
+#include "utils/llist.h"
 #include <asm-generic/errno.h>
+#include <cJSON.h>
 #include <cclog_macros.h>
 #include <errno.h>
 #include <stdint.h>
@@ -40,10 +44,44 @@ exit:
         return server->fd;
 }
 
-int unix_server_handle(unix_server_t *server)
+static char* handle_command(dhcp_server_t *_dhcp_server, cJSON *json)
 {
-        if (!server)
+        if (!_dhcp_server|| !json)
+                goto error;
+        
+        dhcp_server_t *dhcp_server = (dhcp_server_t*)_dhcp_server;
+        unix_server_t *server = &dhcp_server->unix_server;
+        if_null(server, error);
+
+        const char *command = cJSON_GetStringValue(cJSON_GetObjectItem(json, "command"));
+        cJSON *params = cJSON_GetObjectItem(json, "parameters");
+        if_null(command, error);
+        if_null(params, error);
+        
+        command_t *cmd;
+        llist_foreach(server->commands, {
+                cmd = (command_t*)node->data;
+
+                if (strcmp(cmd->name, command) == 0) {
+                        /* Commands return formated JSON string */
+                        return cmd->func(params, dhcp_server);
+                }
+        });
+
+        return strdup("[\"ERROR: Unknown command\"]");
+error:
+        cclog(LOG_UNIX, NULL, "ERROR handling command");
+        return NULL;
+}
+
+int unix_server_handle(void *_dhcp_server)
+{
+        if (!_dhcp_server)
                 return -1;
+
+        /* This workaround is needed since we cannot have recursive includes in header files */
+        dhcp_server_t *dhcp_server = (dhcp_server_t*)_dhcp_server;
+        unix_server_t *server = &dhcp_server->unix_server;
 
         int rv = -1;
         struct sockaddr_un caddr;
@@ -67,8 +105,14 @@ int unix_server_handle(unix_server_t *server)
         if_failed_log_n(bytes, exit, LOG_UNIX, NULL, "Failed to receive request");
 
         cclog(LOG_UNIX, NULL, "Received message: %s", buffer);
+        cJSON *json = cJSON_Parse(buffer);
+        if_null_log(json, error_respond, LOG_UNIX, NULL, "Bad request");
 
-        if_failed_log_n(send(client_sock, buffer, bytes, 0), exit, LOG_UNIX, NULL, 
+        char *response = handle_command(dhcp_server, json);
+        cJSON_Delete(json);
+        if_null_log(response, error_respond, LOG_UNIX, NULL, "ERROR: Failed to handle command");
+
+        if_failed_log_n(send(client_sock, response, bytes, 0), exit, LOG_UNIX, NULL, 
                 "Failed to send respnse");
 
         close(client_sock);
@@ -76,12 +120,24 @@ exit_ok:
         rv = UNIX_STATUS_OK;
 exit:
         return rv;
+
+/* 
+ * Special case, since we need to notify client of an error. This usually means the error is on 
+ * clients requrest rather than server.
+ */
+error_respond:
+        if (client_sock >= 0)
+                send(client_sock, "[\"ERROR\"]", bytes, 0);
+        goto exit_ok;
 }
 
 void unix_server_clean(unix_server_t *server) 
 {
-        if (!server && server->fd >= 0) {
-                unlink(UNIX_SOCKET_PATH);;
+        if (server && server->fd >= 0) {
+                unlink(UNIX_SOCKET_PATH);
+                if (server->commands) {
+                        llist_destroy(&server->commands);
+                }
                 close(server->fd);
         }
 }

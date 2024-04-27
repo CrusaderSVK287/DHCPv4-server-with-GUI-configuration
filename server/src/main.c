@@ -41,6 +41,7 @@ int main(int argc, char *argv[])
         if_failed(init_dhcp_server(&dhcp_server), exit);
         if_failed(init_dhcp_server_timers(&dhcp_server), exit);
         if_failed_n(unix_server_init(&dhcp_server.unix_server), exit);
+        if_failed(init_unix_commands(&dhcp_server.unix_server), exit);
         if_failed(init_dhcp_options(&dhcp_server), exit);
         if_failed(init_ACL(&dhcp_server), exit);
         /* We need to have address pools and allocator initialised before loading leases */

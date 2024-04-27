@@ -236,8 +236,11 @@ int dhcp_server_serve(dhcp_server_t *server)
 	{
                 /* Update various timers used by server (e.g. transaction cache timers) */
                 update_timers(server);
-                /* Handle pottention communication on unix server */
-                unix_server_handle(&server->unix_server);
+                /*
+                 * Handle pottention communication on unix server. 
+                 * PARAMETER IS VOID POINTER TO DHCP SERVER due to limitations
+                 */
+                unix_server_handle(server);
 
 		rv = recv(server->sock_fd, &dhcp_msg->packet, sizeof(dhcp_packet_t), 0);
 		if (rv < 0 && errno == EAGAIN) {

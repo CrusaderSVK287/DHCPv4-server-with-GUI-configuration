@@ -1,10 +1,12 @@
 #ifndef __UNIX_SERVER__
 #define __UNIX_SERVER__
 
+#include "utils/llist.h"
 #define UNIX_SOCKET_PATH "/run/dhcp.sock"
 
 typedef struct unix_server {    
     int fd;
+    llist_t *commands;
 } unix_server_t;
 
 enum unix_svr_status {
@@ -16,7 +18,8 @@ enum unix_svr_status {
 
 int unix_server_init(unix_server_t *server);
 
-int unix_server_handle(unix_server_t *server);
+/* We cannot recursively include, we need to use void pointer and then cast it */
+int unix_server_handle(void *dhcp_server);
 
 void unix_server_clean(unix_server_t *server);
 
