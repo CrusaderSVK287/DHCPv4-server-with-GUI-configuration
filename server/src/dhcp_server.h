@@ -6,6 +6,7 @@
 #include "timer.h"
 #include "utils/llist.h"
 #include "security/acl.h"
+#include "unix_server.h"
 #include <linux/limits.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -38,6 +39,7 @@ typedef struct dhcp_server {
     } config;
 
     ACL_t *acl;
+    unix_server_t unix_server;
 } dhcp_server_t;
 
 /**

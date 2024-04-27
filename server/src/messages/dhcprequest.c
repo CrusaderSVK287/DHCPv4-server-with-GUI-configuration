@@ -27,7 +27,6 @@ static int dhcp_requst_commit_lease(dhcp_server_t *server, dhcp_message_t *reque
         if_null(lease, exit);
 
         lease->xid = request->xid;
-        // TODO: Implement flags like static lease - reserved lease(permanent lease etc)
         lease->flags = 0;
         lease->address = leased_address;
         lease->subnet = pool->mask;
@@ -237,11 +236,10 @@ int message_dhcprequest_handle(dhcp_server_t *server, dhcp_message_t *request)
          * address. If not, its eighter rebinding or renewing
          */
         if (o54) {
-                // TODO: OPRAVIT - AK BUDE INY SERVER IDENTIFIER NEPOSIELAT ANI NAK ANI ACK
-                if (dhcp_request_response_to_offer(server, request, o54) < 0) {
+                if ((rv = dhcp_request_response_to_offer(server, request, o54)) < 0) {
                         /* Error, send DHCPNAK to client, lease will be freed when transaction expires */
                         if_failed_n(message_dhcpnak_build(server, request), exit);
-                } else {
+                } else if (rv != DHCP_REQUEST_DIFFERENT_SERVER_IDENTIFICATOR) {
                         /* Success, send DHCPACK to client */
                         dhcp_option_t *o50 = dhcp_option_retrieve(request->dhcp_options, 
                                         DHCP_OPTION_REQUESTED_IP_ADDRESS);

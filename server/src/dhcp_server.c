@@ -12,11 +12,13 @@
 #include "timer.h"
 #include "timer_args.h"
 #include "transaction.h"
+#include "unix_server.h"
 #include "utils/llist.h"
 #include "utils/xtoy.h"
 #include "transaction_cache.h"
 #include "security/acl.h"
 #include "database.h"
+#include "security/dhcp_snooping/dhcp_snoop.h"
 
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
@@ -234,7 +236,12 @@ int dhcp_server_serve(dhcp_server_t *server)
 	do
 	{
                 /* Update various timers used by server (e.g. transaction cache timers) */
-                update_timers(server);        
+                update_timers(server);
+                /*
+                 * Handle pottention communication on unix server. 
+                 * PARAMETER IS VOID POINTER TO DHCP SERVER due to limitations
+                 */
+                unix_server_handle(server);
 
 		rv = recv(server->sock_fd, &dhcp_msg->packet, sizeof(dhcp_packet_t), 0);
 		if (rv < 0 && errno == EAGAIN) {
@@ -248,6 +255,10 @@ int dhcp_server_serve(dhcp_server_t *server)
                 if (dhcp_packet_parse(dhcp_msg) < 0)
                         continue;
 
+#ifdef CONFIG_SECURITY_ENABLE_DHCP_SNOOPING
+                if (dhcp_snooper_check_xid(dhcp_msg->xid))
+                        continue;
+#endif
 
                 /* Check ACL database to determine if the client is allowed to be served */
                 if (ACL_check_client(server->acl, dhcp_msg->chaddr) != ACL_ALLOW) {

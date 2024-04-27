@@ -7,6 +7,7 @@
 #define FORMAT_FATAL "[${DATE} ${TIME}] ${FILE}:${LINE}: *** FATAL ERROR *** ${MSG} (${ERMSG})"
 #define FORMAT_ERROR "[${DATE} ${TIME}] ${FILE}:${LINE}: ERROR !!! ${MSG}"
 #define FORMAT_WARNING "[${DATE} ${TIME}] ${FILE}: WARNING ! ${MSG}"
+#define FORMAT_UNIX "[${DATE} ${TIME}] UNIX: ${MSG} - ${ERMSG}"
 
 #ifdef DEBUG
 #define FORMAT_TRACE "===TRACE=== [${UPTIME}] ${FILE} ${FUNCTION} ${LINE}: ${MSG}"
@@ -35,6 +36,8 @@ int init_logging()
         if_failed(cclogger_add_log_level(true, false, CCLOG_TTY_CLR_DEF, NULL, NULL, 4), exit);
         /* Info - generaly not needed, hence high verbosity level required */
         if_failed(cclogger_add_log_level(true, false, CCLOG_TTY_CLR_DEF, NULL, NULL, 5), exit);
+        /* UNIX - only used for information regarding UNIX server */
+        if_failed(cclogger_add_log_level(true, true, CCLOG_TTY_CLR_DEF, NULL, FORMAT_UNIX, 5), exit);
         
 #ifdef DEBUG
         /* Trace */

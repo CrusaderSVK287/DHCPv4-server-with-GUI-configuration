@@ -24,8 +24,6 @@ int message_dhcpdecline_handle(dhcp_server_t *server, dhcp_message_t *message)
                 allocator_request_this_address(server->allocator, ack->yiaddr, &addrbuff);
         }
 
-        // TODO: set misconfigured flag on lease (when lease flags are implemented)
-
         rv = 0;
 exit:
         return rv;

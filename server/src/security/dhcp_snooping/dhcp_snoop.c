@@ -28,6 +28,8 @@
 #define STATUS_MSG_LEN 4096
 
 static int keep_waiting_for_offer = 0;
+/* Used to check xid so we dont handle our own message */
+static uint32_t xid_used_in_scan = 0;
 
 static int discover_send(int socket, dhcp_message_t *discover)
 {
@@ -64,28 +66,8 @@ static int get_dhcp_options(dhcp_message_t *discover)
         dhcp_option_t *o = dhcp_option_new_values(DHCP_OPTION_DHCP_MESSAGE_TYPE,
                                                   1,
                                                   &val);
-        // char *hostname = "xyasvewvews";
-        // dhcp_option_t *o_hostname = dhcp_option_new_values(DHCP_OPTION_HOST_NAME,
-        //                                           strlen(hostname),
-        //                                           hostname);
-        // uint8_t client_id[7] = {1, discover->chaddr[0],discover->chaddr[1],discover->chaddr[2],
-        //         discover->chaddr[3],discover->chaddr[4],discover->chaddr[5]};
-        // dhcp_option_t *o_client_id = dhcp_option_new_values(DHCP_OPTION_CLIENT_IDENTIFIER,
-        //                                           7,
-        //                                           client_id);
-        // uint8_t parameter_request[] = {1, 3, 6, 12, 15, 51, 54};
-        // dhcp_option_t *o_paameters = dhcp_option_new_values(DHCP_OPTION_PARAMETER_REQUEST_LIST,
-        //                                                     7,
-                                                            // parameter_request);
-
         if_failed_log(dhcp_option_add(discover->dhcp_options, o), exit, LOG_ERROR, NULL, 
                       "Cannot perform DHCP scan, failed to set up dhcp discover options");
-        // if_failed_log(dhcp_option_add(discover->dhcp_options, o_hostname), exit, LOG_ERROR, NULL, 
-        //               "Cannot perform DHCP scan, failed to set up dhcp discover options");
-        // if_failed_log(dhcp_option_add(discover->dhcp_options, o_client_id), exit, LOG_ERROR, NULL, 
-        //               "Cannot perform DHCP scan, failed to set up dhcp discover options");
-        // if_failed_log(dhcp_option_add(discover->dhcp_options, o_paameters), exit, LOG_ERROR, NULL, 
-        //               "Cannot perform DHCP scan, failed to set up dhcp discover options");
 
         rv = 0;
 exit:
@@ -106,10 +88,9 @@ static int snoop_send_dhcp_discover(int socket, const char *spoofed_mac, uint32_
         discover->htype  = ETHERNET;
         discover->hlen   = 6;
         discover->hops   = 0;
-        // TODO: check whether our server catches this message after the scan. If yes, 
-        // create a rule to ignore this message based on xid
         srand(time(NULL));
         discover->xid    = rand();
+        xid_used_in_scan = discover->xid;
         discover->secs   = htons(65535);
         discover->ciaddr = 0;
         discover->yiaddr = 0;
@@ -165,16 +146,16 @@ static void log_threat(dhcp_message_t *msg, char *status)
         
         dhcp_option_t *o_server_id = dhcp_option_retrieve(msg->dhcp_options, DHCP_OPTION_SERVER_IDENTIFIER);
         if (!o_server_id) {
-                sprintf(buff, "T: No_ID");
+                sprintf(buff, "Threat: No_ID - ");
         } else {
-                sprintf(buff, "T: %s", uint32_to_ipv4_address(o_server_id->value.ip));
+                sprintf(buff, "Threat: %s - ", uint32_to_ipv4_address(o_server_id->value.ip));
         }
         strcat(status, buff);
         dhcp_option_t *o_hostname = dhcp_option_retrieve(msg->dhcp_options, DHCP_OPTION_HOST_NAME);
         if (!o_server_id) {
-                sprintf(buff, " No_host,");
+                sprintf(buff, "No hostname,");
         } else {
-                sprintf(buff, " host %s,", o_hostname->value.string);
+                sprintf(buff, "hostname: %s,", o_hostname->value.string);
         }
         strcat(status, buff);
 
@@ -226,7 +207,7 @@ static enum dhcp_snooper_status listen_to_offers(int socket,
         }
         
         if (rv != DHCP_SNOOP_POTENTIAL_ROGUE) {
-                strcat(status_msg, "NO_THREAT");
+                strcat(status_msg, "No threats detected");
                 rv = DHCP_SNOOP_NO_THREAT;
         }
 exit:
@@ -302,9 +283,13 @@ enum dhcp_snooper_status dhcp_snooper_perform_scan(dhcp_server_t *server,
 
         rv = listen_to_offers(socket, server_whitelist, *status_msg, xid);
         close(socket);
-        printf("%s\n", *status_msg);
 
 exit:
         return rv;
+}
+
+int dhcp_snooper_check_xid(uint32_t xid)
+{
+        return (xid == xid_used_in_scan);
 }
 

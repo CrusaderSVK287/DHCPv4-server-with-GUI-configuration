@@ -9,8 +9,9 @@ enum LOG_LEVELS {
     LOG_CRITICAL,  /* verbosity 1, critical process ending errors */
     LOG_ERROR,     /* verbosity 2, errors that can be recovered from */
     LOG_WARN,      /* verbosity 3, warnings */
-    LOG_MSG,       /* verbosity 10, generic log message */
-    LOG_INFO,      /* verbosity 15, information that may be needed for debugging */
+    LOG_MSG,       /* verbosity 4, generic log message */
+    LOG_INFO,      /* verbosity 5, information that may be needed for debugging */
+    LOG_UNIX       /* verbosity 5, For unix server */
 #ifdef DEBUG
     /* These logs will only be created when DEBUG is defined. 
      * Dont use directly with cclog macro, use macros defined below

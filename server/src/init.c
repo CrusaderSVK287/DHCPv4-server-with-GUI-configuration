@@ -1,12 +1,15 @@
 #include "init.h"
 #include "RFC/RFC-2132.h"
 #include "allocator.h"
+#include "commands.h"
 #include "dhcp_options.h"
 #include "logging.h"
 #include "transaction_cache.h"
+#include <cclog_macros.h>
 #include <stdint.h>
 #include "config.h"
 #include "security/acl.h"
+#include "utils/llist.h"
 
 /**
  * Temporary solution until proper configuration API is made
@@ -77,6 +80,39 @@ int init_ACL(dhcp_server_t *server)
         return 0;
 error:
         cclog(LOG_CRITICAL, NULL, "Failed to initialise acl");
+        return -1;
+}
+
+static int register_command(unix_server_t *s, const char *name, command_func f)
+{
+        command_t *c = calloc(1, sizeof(command_t));
+        if_null(c, error);
+
+        c->name = name;
+        c->func = f;
+
+        if_failed(llist_append(s->commands, c, true), error)
+
+        return 0;
+error:
+        return -1;
+}
+
+int init_unix_commands(unix_server_t *s)
+{
+        if (!s)
+                goto error;
+
+        s->commands = llist_new();
+        if_null(s->commands, error);
+
+        if_failed(register_command(s, "echo", command_echo), error);
+        if_failed(register_command(s, "stop-server", command_stop), error);
+        if_failed(register_command(s, "rogue-scan", command_rogue_scan), error);
+
+        return 0;
+error:
+        cclog(LOG_CRITICAL, NULL, "Failed to initialise UNIX server commands");
         return -1;
 }
 
