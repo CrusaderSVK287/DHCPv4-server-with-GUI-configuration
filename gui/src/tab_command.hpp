@@ -14,6 +14,7 @@ struct Command {
     bool ipc;
     void (TabCommand::*func)();
     std::string help;
+    std::string usage;
 };
 
 class TabCommand : public UITab {

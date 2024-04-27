@@ -98,7 +98,6 @@ int unix_server_handle(void *_dhcp_server)
         /* Message received, handle it */
 
         rv = UNIX_STATUS_ERROR;
-        /* TODO: temporaty solution, until command API is fully implemented */
         char buffer[BUFSIZ];
         memset(buffer, 0, BUFSIZ);
         int bytes = recv(client_sock, buffer, BUFSIZ, 0);
@@ -112,7 +111,8 @@ int unix_server_handle(void *_dhcp_server)
         cJSON_Delete(json);
         if_null_log(response, error_respond, LOG_UNIX, NULL, "ERROR: Failed to handle command");
 
-        if_failed_log_n(send(client_sock, response, bytes, 0), exit, LOG_UNIX, NULL, 
+        cclog(LOG_UNIX, NULL, "Sending response: %s", response);
+        if_failed_log_n(send(client_sock, response, strlen(response), 0), exit, LOG_UNIX, NULL, 
                 "Failed to send respnse");
 
         close(client_sock);

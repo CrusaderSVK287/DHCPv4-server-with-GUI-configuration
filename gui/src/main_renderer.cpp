@@ -70,7 +70,7 @@ int tui_loop()
             case 2: tab_logs.refresh(); break;
             case 3: tab_lease.refresh(); break;
             case 4: tab_inspect.refresh(); break;
-            case 5: break;
+            case 5: tab_command.refresh(); break;
             default:
                 break;
         }

@@ -18,6 +18,7 @@
 #include "transaction_cache.h"
 #include "security/acl.h"
 #include "database.h"
+#include "security/dhcp_snooping/dhcp_snoop.h"
 
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
@@ -254,6 +255,10 @@ int dhcp_server_serve(dhcp_server_t *server)
                 if (dhcp_packet_parse(dhcp_msg) < 0)
                         continue;
 
+#ifdef CONFIG_SECURITY_ENABLE_DHCP_SNOOPING
+                if (dhcp_snooper_check_xid(dhcp_msg->xid))
+                        continue;
+#endif
 
                 /* Check ACL database to determine if the client is allowed to be served */
                 if (ACL_check_client(server->acl, dhcp_msg->chaddr) != ACL_ALLOW) {

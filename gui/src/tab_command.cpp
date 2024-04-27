@@ -58,11 +58,13 @@ TabCommand::TabCommand()
 void TabCommand::initialize_commands()
 {
     // Localy handled commands
-    this->commands.push_back({"clear", false, &TabCommand::command_clear, "Deletes all output"});
-    this->commands.push_back({"help", false, &TabCommand::command_help, "Shows short help page for each command"});
+    this->commands.push_back({"clear", false, &TabCommand::command_clear, "Deletes all output", "clear"});
+    this->commands.push_back({"help", false, &TabCommand::command_help, "Shows short help page for each command", "help"});
 
     // Server handled commands
-    this->commands.push_back({"echo", true, nullptr, "Echoes back what the user types in arguments"});
+    this->commands.push_back({"echo", true, nullptr, "Echoes back what the user types in arguments", "echo param1 param2 ..."});
+    this->commands.push_back({"stop-server", true, nullptr, "Stops the running dhcp server", "stop-server"});
+    this->commands.push_back({"rogue-scan", true, nullptr, "Perform a scan for potential dhcp rogue servers (running server must have support for scanning)", "rogue-scan <mac-address> [legit-server-ip ...]"});
 }
 
 void TabCommand::refresh()

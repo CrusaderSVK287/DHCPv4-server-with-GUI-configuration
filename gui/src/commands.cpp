@@ -12,6 +12,7 @@ void TabCommand::command_help()
 
     for(auto &entry : commands) {
         output.push_back("  " + entry.name + " : " + entry.help);
+        output.push_back("    Usage: " + entry.usage);
     }
 }
 
