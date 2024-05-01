@@ -622,7 +622,7 @@ int TabConfig::initialize()
     ConfEntry c_acl_entries = {
         .name = "ACL entries",
         .description = "Clients in ACL list",
-        .json_path = "entries",
+        .json_path = "acl_entries",
         .type = STRING,
         .val = "",
         .def_val = "",
