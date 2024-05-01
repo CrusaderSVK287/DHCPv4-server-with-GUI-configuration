@@ -89,6 +89,7 @@ enum dhcp_option_type dhcp_option_tag_to_type(int tag) {
     case DHCP_OPTION_LOG_SERVERS:
     case DHCP_OPTION_COOKIE_SERVERS:
     case DHCP_OPTION_LPR_SERVERS:
+    case DHCP_OPTION_SERVER_IDENTIFIER:
     case DHCP_OPTION_IMPRESS_SERVERS:
     case DHCP_OPTION_RESOURCE_LOCATION_SERVERS:
     case DHCP_OPTION_SWAP_SERVER:
@@ -118,6 +119,7 @@ enum dhcp_option_type dhcp_option_tag_to_type(int tag) {
     case DHCP_OPTION_NETBIOS_NODE_TYPE:
     case DHCP_OPTION_RENEWAL_TIME_VALUE:
     case DHCP_OPTION_REBINDING_TIME_VALUE:
+    case DHCP_OPTION_DHCP_MESSAGE_TYPE:
         return DHCP_OPTION_NUMERIC;
 
     case DHCP_OPTION_IP_FORWARDING_ENABLE_DISABLE:
