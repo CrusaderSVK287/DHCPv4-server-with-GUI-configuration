@@ -266,6 +266,13 @@ int dhcp_server_serve(dhcp_server_t *server)
                         continue;
                 }
 
+                // TODO:
+                /* Check/update dynamic ACL */
+                //if (dynamic_ACL_check(server->dacl, dhcp_msg->chaddr) != ACL_ALLOW) {
+                //        cclog(LOG_INFO, NULL, "Dynamic ACL detected potential threat %s. Inspect and take action if needed", uint8_array_to_mac(dhcp_msg->chaddr));
+                //        continue;
+                //}
+
                 /* If we capture a message sent by a server, drop it */
                 if (dhcp_msg->type == DHCP_OFFER || 
                         dhcp_msg->type == DHCP_ACK || 

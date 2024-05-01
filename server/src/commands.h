@@ -22,6 +22,7 @@ typedef struct command{
 char *command_echo(cJSON *params, dhcp_server_t *server);
 char *command_stop(cJSON *params, dhcp_server_t *server);
 char *command_rogue_scan(cJSON *params, dhcp_server_t *server);
+char *command_pool_status(cJSON *params, dhcp_server_t *server);
 
 #endif // !__COMMANDS_H__
 

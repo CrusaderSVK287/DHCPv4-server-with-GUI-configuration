@@ -19,7 +19,12 @@
 #include <string>
 
 using namespace ftxui;
-
+// TODO: try to make it possible to do configuration using command. 
+// I think something like
+// config path.to.config.entry.[i].name new-name
+// basically:
+// config <path> <new-value>
+// TODO: nejaky check na zaciatku ci som root
 std::vector<std::string> TabConfig::config_menu_entries = {
     "General",
     "Pools",

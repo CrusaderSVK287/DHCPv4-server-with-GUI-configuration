@@ -109,6 +109,7 @@ int init_unix_commands(unix_server_t *s)
         if_failed(register_command(s, "echo", command_echo), error);
         if_failed(register_command(s, "stop-server", command_stop), error);
         if_failed(register_command(s, "rogue-scan", command_rogue_scan), error);
+        if_failed(register_command(s, "pool-status", command_pool_status), error);
 
         return 0;
 error:

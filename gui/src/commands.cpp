@@ -11,8 +11,10 @@ void TabCommand::command_help()
     output.push_back("Short description of each command");
 
     for(auto &entry : commands) {
-        output.push_back("  " + entry.name + " : " + entry.help);
-        output.push_back("    Usage: " + entry.usage);
+        if (entry.name.compare("?") != 0) {
+            output.push_back("  " + entry.name + " : " + entry.help);
+            output.push_back("    Usage: " + entry.usage);
+        }
     }
 }
 

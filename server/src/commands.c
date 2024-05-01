@@ -4,9 +4,24 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include "address_pool.h"
 #include "security/dhcp_snooping/dhcp_snoop.h"
 #include "utils/llist.h"
 #include "utils/xtoy.h"
+#include "logging.h"
+
+// COMMAND TEMPLATE
+// char *command_template(cJSON *params, dhcp_server_t *server)
+// {
+//         if_null(server, error);
+//         
+//         cJSON *json = cJSON_CreateArray();
+//
+//
+//         return cJSON_PrintUnformatted(json);
+// error:
+//         return strdup("[\"Error\"]");
+// }
 
 char *command_echo(cJSON *params, dhcp_server_t *server)
 {
@@ -61,5 +76,38 @@ char *command_rogue_scan(cJSON *params, dhcp_server_t *server)
 error:
         return strdup("[\"Error\"]");
 #endif
+}
+
+char *command_pool_status(cJSON *params, dhcp_server_t *server)
+{
+        if_null(server, error);
+        
+        cJSON *json = cJSON_CreateArray();
+
+        llist_t *pools = server->allocator->address_pools;
+        char buff[BUFSIZ];
+
+        address_pool_t *p;
+        llist_foreach(pools, {
+                p = (address_pool_t*) node->data;
+
+                char *start = strdup(uint32_to_ipv4_address(p->start_address));
+                char *end= strdup(uint32_to_ipv4_address(p->end_address));
+
+                if (!start || !end)
+                        continue;
+
+                snprintf(buff, BUFSIZ, "%s (%s to %s): %u available leases", 
+                         p->name, start, end, p->available_addresses);
+
+                free(start);
+                free(end);
+
+                cJSON_AddItemToArray(json, cJSON_CreateString(buff));
+        });
+
+        return cJSON_PrintUnformatted(json);
+error:
+        return strdup("[\"Error\"]");
 }
 

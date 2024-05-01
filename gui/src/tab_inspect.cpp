@@ -7,6 +7,7 @@
 #include <ftxui/dom/node.hpp>
 #include <algorithm>
 #include <ftxui/screen/terminal.hpp>
+#include <netinet/in.h>
 #include <string.h>
 #include <string>
 #include <arpa/inet.h>
