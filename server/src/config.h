@@ -23,6 +23,7 @@
 #define CONFIG_DEFAULT_POOL_END "192.168.1.100"
 #define CONFIG_DEFAULT_POOL_MASK "255.255.255.0"
 
+// TODO: check booleans, not working properly
 #define CONFIG_DEFAULT_ACL_ENABLE       CONFIG_BOOL_TRUE
 #define CONFIG_DEFAULT_ACL_BLACKLIST    CONFIG_BOOL_TRUE
 #define CONFIG_DEFAULT_DB_ENABLE        CONFIG_BOOL_TRUE
@@ -35,6 +36,8 @@ int config_get_interface_info(dhcp_server_t *server);
 
 /* Finishes up confiugring server by fetching missing data from config file in path, or from default path when n ocustom path is set*/
 int config_load_configuration(dhcp_server_t *server);
+
+void _config_dump(dhcp_server_t *server);
 
 #endif // !__CONFIG_H__
 

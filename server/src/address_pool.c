@@ -160,6 +160,7 @@ exit:
         return rv;
 }
 
+// TODO: overit tie bitmasky, daco nefunguje ak nie je start address *8
 int address_pool_set_address_allocation(address_pool_t *pool, uint32_t address)
 {
         return address_pool_address_allocation_ctl(pool, address, 's');

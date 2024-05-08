@@ -294,6 +294,29 @@ TEST test_get_pool_by_address()
         PASS();
 }
 
+TEST test_allocaotr_address_pool_not_starting_with_8_multiplicier_address()
+{
+        address_allocator_t *allocator = address_allocator_new();
+        ASSERT_NEQ(allocator, NULL);
+        ASSERT_EQ(ALLOCATOR_OK, allocator_add_pool(allocator, address_pool_new_str("pool", "192.168.0.2", "192.168.0.100", "255.255.255.0")));
+
+        uint32_t adr1;
+        ASSERT_EQ(ALLOCATOR_OK, allocator_request_any_address(allocator, &adr1));
+        ASSERT_EQ(ipv4_address_to_uint32("192.168.0.2"), adr1);
+        ASSERT_EQ(ALLOCATOR_ADDR_IN_USE, allocator_request_this_address_str(allocator, "192.168.0.2", &adr1));
+
+        ASSERT_EQ(ALLOCATOR_OK, allocator_request_any_address(allocator, &adr1));
+        ASSERT_EQ(ipv4_address_to_uint32("192.168.0.3"), adr1);
+
+        ASSERT_EQ(0, allocator_is_address_available(allocator, ipv4_address_to_uint32("192.168.0.2")));
+        ASSERT_EQ(0, allocator_is_address_available(allocator, ipv4_address_to_uint32("192.168.0.3")));
+
+        allocator_destroy(&allocator);
+        ASSERT_EQ(allocator, NULL);
+
+        PASS();
+}
+
 SUITE(allocator)
 {
         a = address_allocator_new();
@@ -323,6 +346,7 @@ SUITE(allocator)
         RUN_TEST(test_release_address_not_in_use);
         RUN_TEST(test_get_pool_by_name);
         RUN_TEST(test_get_pool_by_address);
+        RUN_TEST(test_allocaotr_address_pool_not_starting_with_8_multiplicier_address);
 
         if (a)
                 allocator_destroy(&a);

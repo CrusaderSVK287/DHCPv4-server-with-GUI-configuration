@@ -44,7 +44,7 @@ greatest:
 FTXUI:
 	$(GIT_CMD) https://github.com/ArthurSonzogni/FTXUI.git $(DEPS_DIR)/$@
 	@mkdir $(DEPS_DIR)/$@/build
-	@cd $(DEPS_DIR)/$@/build && cmake ..
+	@cd $(DEPS_DIR)/$@/build && git checkout -q 2216f3a5daaee3d41eec0684a63ae599c3fd991a && cmake ..
 	$(MAKE_CMD) $(DEPS_DIR)/$@/build -j$(NPROC)
 	cp -r $(DEPS_DIR)/$@/include/ftxui $(INC_DIR)/ftxui
 	cp $(DEPS_DIR)/$@/build/libftxui* $(INC_DIR)/

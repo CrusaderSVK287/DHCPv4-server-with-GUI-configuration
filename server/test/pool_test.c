@@ -120,6 +120,28 @@ TEST test_pool_allocate_address_edge_cases()
         PASS();
 }
 
+/* This test is supposed to check allocation bug when pool starts as a non 8 multiplier, likely resulting in bitmask to not work correctly */
+TEST test_pool_allocate_address_pool_not_starting_with_8_multiplicier_address()
+{
+        address_pool_t *pool = address_pool_new_str("test", "192.168.1.2", "192.168.1.100", "255.255.255.0");
+        ASSERT_NEQ(NULL, pool);
+        ASSERT_EQ(99, pool->available_addresses);
+
+        int rv = address_pool_set_address_allocation_str(pool, "192.168.1.2"); // allocate 11th address (byte 1, bit 1)
+        ASSERT_EQ(0, rv);
+        rv = address_pool_set_address_allocation_str(pool, "192.168.1.3"); // allocate 11th address (byte 1, bit 2)
+        ASSERT_EQ(0, rv);
+        ASSERT_EQ(97, pool->available_addresses);
+
+        ASSERT_EQ(1, address_pool_get_address_allocation_str(pool, "192.168.1.2"));
+        ASSERT_EQ(1, address_pool_get_address_allocation_str(pool, "192.168.1.3"));
+
+        ASSERT_EQ(0b00000011, pool->leases_bm[0]);
+
+        address_pool_destroy(&pool);
+        PASS();
+}
+
 SUITE(pool)
 {
         RUN_TEST(test_create_new_pool_and_destroy_it);
@@ -130,5 +152,6 @@ SUITE(pool)
         RUN_TEST(test_pool_allocate_address_edge_cases);
         RUN_TEST(test_create_pool_switched_addresses);
         RUN_TEST(test_create_pool_valid_range_dhcp_option_present);
+        RUN_TEST(test_pool_allocate_address_pool_not_starting_with_8_multiplicier_address);
 }
 

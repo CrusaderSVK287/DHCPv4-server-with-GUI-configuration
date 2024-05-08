@@ -70,8 +70,8 @@ int init_ACL(dhcp_server_t *server)
         server->acl = ACL_new();
         if_null(server->acl, error);
 
-        server->acl->enabled = server->config.acl_enable - 1;
-        server->acl->is_blacklist = server->config.acl_blacklist -1;
+        server->acl->enabled = server->config.acl_enable;
+        server->acl->is_blacklist = server->config.acl_blacklist;
 
         if (ACL_load_acl_entries(server->acl, server->config.config_path) < 0) {
                 goto error;
