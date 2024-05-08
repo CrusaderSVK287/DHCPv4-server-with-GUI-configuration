@@ -19,11 +19,6 @@
 #include <string>
 
 using namespace ftxui;
-// TODO: try to make it possible to do configuration using command. 
-// I think something like
-// config path.to.config.entry.[i].name new-name
-// basically:
-// config <path> <new-value>
 // TODO: nejaky check na zaciatku ci som root
 std::vector<std::string> TabConfig::config_menu_entries = {
     "General",
@@ -110,12 +105,9 @@ TabConfig::TabConfig()
     this->pools_value_container = Container::Vertical({});
     this->config_menu_pools = Container::Vertical({
         Container::Horizontal({
-            // Dropdown(&this->pools_entries, &this->pools_pool_selected),
             Menu(&this->pools_entries, &this->pools_pool_selected)
                 | vscroll_indicator | yframe | yflex | size(WIDTH, GREATER_THAN, 10),
             Renderer([] {return hbox({separatorEmpty(), separator(), separatorEmpty()});}),
-            // new pool Button
-            // delete pool Button
             Container::Vertical({
                 // tmp
                 Renderer([&] {

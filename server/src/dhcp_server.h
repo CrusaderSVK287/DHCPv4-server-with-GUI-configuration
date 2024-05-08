@@ -24,8 +24,8 @@ typedef struct dhcp_server {
     struct {
         char        config_path[PATH_MAX];
         char        interface[256];         // name of bound interface. Can be empty if ip address is specified
-        uint32_t    bound_ip;               // ip address of server. Is retrieved using the interace name
-        uint32_t    broadcast_addr;         // broadcast domain of the server. Is determined from interface name
+        uint32_t    bound_ip;               // HOST BYTE ORDER ip address of server. Is retrieved using the interace name
+        uint32_t    broadcast_addr;         // HOST BYTE ORDER broadcast domain of the server. Is determined from interface name
         uint32_t    tick_delay;             // delay in miliseconds between server ticks.
         uint32_t    cache_size;             // number of max transactions held in a cache 
         uint32_t    trans_duration;         // duration in seconds for which the transactions are stored in cache

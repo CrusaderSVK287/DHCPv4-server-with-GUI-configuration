@@ -37,5 +37,7 @@ int config_get_interface_info(dhcp_server_t *server);
 /* Finishes up confiugring server by fetching missing data from config file in path, or from default path when n ocustom path is set*/
 int config_load_configuration(dhcp_server_t *server);
 
+void _config_dump(dhcp_server_t *server);
+
 #endif // !__CONFIG_H__
 

@@ -26,7 +26,7 @@ int message_dhcpack_send(dhcp_server_t *server, dhcp_message_t *message, const c
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_port = htons(68);
-        addr.sin_addr.s_addr = (message->ciaddr) ? htonl(message->ciaddr) : server->config.broadcast_addr;
+        addr.sin_addr.s_addr = (message->ciaddr) ? htonl(message->ciaddr) : htonl(server->config.broadcast_addr);
 
         cclog(LOG_MSG, NULL, "Sending dhcp ack message %s address %s to %s",
                         reason, uint32_to_ipv4_address(message->yiaddr), uint32_to_ipv4_address(addr.sin_addr.s_addr));
@@ -120,7 +120,7 @@ int message_dhcpack_build(dhcp_server_t *server, dhcp_message_t *dhcp_request,
         ack->secs   = 0;
         ack->ciaddr = dhcp_request->ciaddr;
         ack->yiaddr = leased_address;
-        ack->siaddr = ntohl(server->config.bound_ip);
+        ack->siaddr = server->config.bound_ip;
         ack->flags  = dhcp_request->flags;
         ack->giaddr = dhcp_request->giaddr;
         ack->cookie = dhcp_request->cookie;
@@ -157,7 +157,7 @@ int message_dhcpack_build_lease_renew(dhcp_server_t *server, dhcp_message_t *req
         ack->secs   = 0;
         ack->ciaddr = request->ciaddr;
         ack->yiaddr = request->ciaddr;
-        ack->siaddr = ntohl(server->config.bound_ip);
+        ack->siaddr = server->config.bound_ip;
         ack->flags  = request->flags;
         ack->giaddr = 0;
         ack->cookie = request->cookie;
@@ -196,7 +196,7 @@ int message_dhcpack_build_inform_response(dhcp_server_t *server, dhcp_message_t 
         ack->secs   = 0;
         ack->ciaddr = inform->ciaddr;
         ack->yiaddr = 0;
-        ack->siaddr = ntohl(server->config.bound_ip);
+        ack->siaddr = server->config.bound_ip;
         ack->flags  = inform->flags;
         ack->giaddr = inform->giaddr;
         ack->cookie = inform->cookie;

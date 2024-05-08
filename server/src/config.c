@@ -54,12 +54,12 @@ int config_get_interface_info(dhcp_server_t *server)
 
                 if (ifa->ifa_addr->sa_family == AF_INET) {
                         struct sockaddr_in *addr = (struct sockaddr_in *)ifa->ifa_addr;
-                        server->config.bound_ip = addr->sin_addr.s_addr;
+                        server->config.bound_ip = ntohl(addr->sin_addr.s_addr);
                 }
 
                 if (ifa->ifa_broadaddr != NULL && ifa->ifa_addr->sa_family == AF_INET) {
                         struct sockaddr_in *broadcast = (struct sockaddr_in *)ifa->ifa_broadaddr;
-                        server->config.broadcast_addr = broadcast->sin_addr.s_addr;
+                        server->config.broadcast_addr = ntohl(broadcast->sin_addr.s_addr);
                 }
 
                 /* If we have both interface ip and broadcast addresses, we can exit the loop */
@@ -186,9 +186,9 @@ static int config_load_server_config(dhcp_server_t *server, cJSON *server_config
                 server->config.lease_time = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_LEASE_TIME;
         }
 
-        if (!server->config.db_enable) {
+        if (server->config.db_enable == CONFIG_UNTOUCHED) {
                 object = cJSON_GetObjectItem(server_config, "db_enable");
-                server->config.db_enable = (object) ? cJSON_GetNumberValue(object) : CONFIG_DEFAULT_DB_ENABLE;
+                server->config.db_enable = (object) ? cJSON_IsTrue(object) : CONFIG_DEFAULT_DB_ENABLE;
         }
 
         rv = 0;
@@ -566,6 +566,10 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
                 goto exit;
         }
 
+        server->config.acl_enable = CONFIG_UNTOUCHED;
+        server->config.acl_blacklist = CONFIG_UNTOUCHED;
+        server->config.db_enable = CONFIG_UNTOUCHED;
+
         static struct option long_options[] = {
                 {"version",                 no_argument,        0, 'v'},
                 {"help",                    no_argument,        0, 'h'},
@@ -672,3 +676,24 @@ exit:
         return rv;
 }
 
+void _config_dump(dhcp_server_t *server)
+{
+        printf("Bound ip:     %s\n", uint32_to_ipv4_address(server->config.bound_ip));
+        printf("Broadcast ip: %s\n", uint32_to_ipv4_address(server->config.broadcast_addr));
+        printf("config path:  %s\n", server->config.config_path);
+        printf("interface:    %s\n", server->config.interface);
+
+        printf("tick delay:   %u\n", server->config.tick_delay);
+        printf("cache size:   %u\n", server->config.cache_size);
+        printf("trans durat:  %u\n", server->config.trans_duration);
+        printf("lease expir:  %u\n", server->config.lease_expiration_check);
+        printf("lease time:   %u\n", server->config.lease_time);
+        printf("log verbosi:  %u\n", server->config.log_verbosity);
+        printf("acl enable:  %d\n", server->config.acl_enable);
+        printf("acl blacklist:  %d\n", server->config.acl_blacklist);
+        printf("db_enable:  %d\n", server->config.db_enable);
+        
+        llist_foreach(server->acl->entries, {
+                printf("%s\n", (char *)node->data);
+        }) 
+}
