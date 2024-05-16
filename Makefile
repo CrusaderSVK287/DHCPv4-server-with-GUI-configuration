@@ -40,6 +40,7 @@ MAKE_FLAGS:=
 MAKE_CMD_TAIL:=
 
 COLOUR_RED=\033[0;31m
+COLOUR_YELLOW=\033[0;33m
 COLOUR_GREEN=\033[0;32m
 COLOUR_RESET =\033[0m
 
@@ -67,7 +68,7 @@ projects: -setup
 	@echo -e "$(COLOUR_GREEN)Project tree compiled successfully$(COLOUR_RESET)"; \
 
 ifeq (,$(findstring $(INC_DIR),$(LD_LIBRARY_PATH)))
-	@echo -e "\n\n$(COLOUR_RED)LD_LIBRARY_PATH does not include $(INC_DIR). Please set it manually, or copy contents of include folder to your systems default library folder (usualy /usr/lib). \
+	@echo -e "\n\n$(COLOUR_YELLOW)LD_LIBRARY_PATH does not include $(INC_DIR). Please set it manually, or copy contents of include folder to your systems default library folder (usualy /usr/lib). \
 		To set the path, use 'export LD_LIBRARY_PATH=$(INC_DIR)::\$$LD_LIBRARY_PATH'$(COLOUR_RESET)\n\n"
 endif
 

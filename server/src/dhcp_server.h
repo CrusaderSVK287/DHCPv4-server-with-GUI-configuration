@@ -34,11 +34,13 @@ typedef struct dhcp_server {
         uint8_t     log_verbosity;          // verbosity of logger messages
         
         uint8_t     acl_enable;             // enable ACL security feature (default true)
+        uint8_t     dynamic_acl_enable;     // enable dynamic ACL security feature (default true)
         uint8_t     acl_blacklist;          // is ACL a blacklist? (default true)
         uint8_t     db_enable;              // enable or disable dhcp packet database logging
     } config;
 
     ACL_t *acl;
+    ACL_t *dacl;
     unix_server_t unix_server;
 } dhcp_server_t;
 

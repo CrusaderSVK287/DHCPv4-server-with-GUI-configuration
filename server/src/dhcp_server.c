@@ -19,6 +19,7 @@
 #include "security/acl.h"
 #include "database.h"
 #include "security/dhcp_snooping/dhcp_snoop.h"
+#include "security/dynamic_acl.h"
 
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
@@ -193,6 +194,9 @@ int uninit_dhcp_server(dhcp_server_t *server)
         allocator_destroy(&server->allocator);
         trans_cache_destroy(&server->trans_cache);
 
+        ACL_destroy(&server->acl);
+        ACL_destroy(&server->dacl);
+
         timer_destroy(&server->timers.lease_expiration_check);
 
 	cclog(LOG_MSG, NULL, "Server stoped successfully");
@@ -266,12 +270,13 @@ int dhcp_server_serve(dhcp_server_t *server)
                         continue;
                 }
 
-                // TODO:
                 /* Check/update dynamic ACL */
-                //if (dynamic_ACL_check(server->dacl, dhcp_msg->chaddr) != ACL_ALLOW) {
-                //        cclog(LOG_INFO, NULL, "Dynamic ACL detected potential threat %s. Inspect and take action if needed", uint8_array_to_mac(dhcp_msg->chaddr));
-                //        continue;
-                //}
+                if (dynamic_ACL_check(server->dacl, dhcp_msg->chaddr, server->trans_cache) != ACL_ALLOW) {
+                       cclog(LOG_WARN, NULL, "Dynamic ACL detected potential threat %s. "
+                                             "Inspect and take action if needed", 
+                                             uint8_array_to_mac(dhcp_msg->chaddr));
+                       continue;
+                }
 
                 /* If we capture a message sent by a server, drop it */
                 if (dhcp_msg->type == DHCP_OFFER || 

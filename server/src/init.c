@@ -4,6 +4,7 @@
 #include "commands.h"
 #include "dhcp_options.h"
 #include "logging.h"
+#include "security/dynamic_acl.h"
 #include "transaction_cache.h"
 #include <cclog_macros.h>
 #include <stdint.h>
@@ -114,6 +115,20 @@ int init_unix_commands(unix_server_t *s)
         return 0;
 error:
         cclog(LOG_CRITICAL, NULL, "Failed to initialise UNIX server commands");
+        return -1;
+}
+
+int init_dynamic_ACL(dhcp_server_t *server)
+{
+        if_null(server, error);
+
+        server->dacl = dynamic_ACL_new();
+
+        server->dacl->enabled = CONFIG_BOOL_TRUE;
+        
+        return 0;
+error:
+        cclog(LOG_CRITICAL, NULL, "Failed to initialise dynamic ACL");
         return -1;
 }
 
