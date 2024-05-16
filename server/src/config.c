@@ -570,6 +570,7 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
         server->config.acl_blacklist = CONFIG_UNTOUCHED;
         server->config.db_enable = CONFIG_UNTOUCHED;
 
+        //TODO: pridat dynamic ACL, nezabudnut zmenit aj v init a v gui
         static struct option long_options[] = {
                 {"version",                 no_argument,        0, 'v'},
                 {"help",                    no_argument,        0, 'h'},
@@ -689,7 +690,8 @@ void _config_dump(dhcp_server_t *server)
         printf("lease expir:  %u\n", server->config.lease_expiration_check);
         printf("lease time:   %u\n", server->config.lease_time);
         printf("log verbosi:  %u\n", server->config.log_verbosity);
-        printf("acl enable:  %d\n", server->config.acl_enable);
+        printf("acl enable:   %d\n", server->config.acl_enable);
+        printf("dacl enable:  %d\n", server->config.dynamic_acl_enable);
         printf("acl blacklist:  %d\n", server->config.acl_blacklist);
         printf("db_enable:  %d\n", server->config.db_enable);
         

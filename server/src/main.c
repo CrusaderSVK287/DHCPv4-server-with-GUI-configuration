@@ -44,10 +44,13 @@ int main(int argc, char *argv[])
         if_failed(init_unix_commands(&dhcp_server.unix_server), exit);
         if_failed(init_dhcp_options(&dhcp_server), exit);
         if_failed(init_ACL(&dhcp_server), exit);
+        /* dynamic ACL requires cache */
+        if_failed(init_cache(&dhcp_server), exit);
+        if_failed(init_dynamic_ACL(&dhcp_server), exit);
         /* We need to have address pools and allocator initialised before loading leases */
         if_failed(init_load_persisten_leases(&dhcp_server), exit);
-        if_failed(init_cache(&dhcp_server), exit);
 
+        // _config_dump(&dhcp_server);
         dhcp_server_serve(&dhcp_server);
 
         unix_server_clean(&dhcp_server.unix_server);
