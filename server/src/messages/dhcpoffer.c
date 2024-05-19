@@ -120,7 +120,6 @@ int message_dhcpoffer_build(dhcp_server_t *server, dhcp_message_t *dhcp_discover
         if (server->config.db_enable)
                 database_store_message(offer);
 
-        // TODO: try to fix that weirl endianned regarding server ID
         rv = 0;
 exit:
         return rv;

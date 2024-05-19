@@ -578,7 +578,6 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
         server->config.db_enable = CONFIG_UNTOUCHED;
         server->config.dynamic_acl_enable = CONFIG_UNTOUCHED;
 
-        //TODO: pridat dynamic ACL, nezabudnut zmenit aj v init a v gui
         static struct option long_options[] = {
                 {"version",                 no_argument,        0, 'v'},
                 {"help",                    no_argument,        0, 'h'},

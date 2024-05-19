@@ -11,7 +11,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-// TODO: Server identifier endianness is wrong
 // TODO: Finish the switch, only example / common are here now
 enum dhcp_option_type dhcp_option_tag_to_type(int tag) {
         switch(tag) {

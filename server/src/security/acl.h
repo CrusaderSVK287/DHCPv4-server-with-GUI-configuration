@@ -12,7 +12,6 @@ enum ACL_status {
     ACL_DENY    = 2,
 };
 
-// TODO: When doing config interface, it may be possible to update the ACL without restating server
 typedef struct acces_control_list {
     llist_t *entries;
     bool enabled;
