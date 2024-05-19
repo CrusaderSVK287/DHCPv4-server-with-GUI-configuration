@@ -27,6 +27,7 @@
 #define CONFIG_DEFAULT_ACL_ENABLE       CONFIG_BOOL_TRUE
 #define CONFIG_DEFAULT_ACL_BLACKLIST    CONFIG_BOOL_TRUE
 #define CONFIG_DEFAULT_DB_ENABLE        CONFIG_BOOL_TRUE
+#define CONFIG_DEFAULT_DACL             CONFIG_BOOL_TRUE
 
 int config_parse_arguments(dhcp_server_t *server, int argc, char **argv);
 

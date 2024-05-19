@@ -161,12 +161,14 @@ TabConfig::TabConfig()
         Container::Horizontal({
             Renderer([&] {return vbox({
                     text(this->config_entries[CONF_SEC_ACL_ENABLE].name) | bold,
+                    text(this->config_entries[CONF_SEC_DYN_ACL_ENABLE].name) | bold,
                     text(this->config_entries[CONF_SEC_ACL_MODE].name) | bold,
                 });
             }),
             Renderer([] {return separatorEmpty() | size(WIDTH, EQUAL, 3);}),
             Container::Vertical({
                 Toggle(&TabConfig::enable_disable_toggle, &this->config_entries[CONF_SEC_ACL_ENABLE].val_i),
+                Toggle(&TabConfig::enable_disable_toggle, &this->config_entries[CONF_SEC_DYN_ACL_ENABLE].val_i),
                 Toggle(&TabConfig::blacklist_whitelist_toggle, &this->config_entries[CONF_SEC_ACL_MODE].val_i),
             }),
         }),
@@ -380,10 +382,12 @@ int TabConfig::load_config_file()
     // -------------------------------
 
     ConfEntry &acl_enable = config_entries[CONF_SEC_ACL_ENABLE];
+    ConfEntry &dacl_enable = config_entries[CONF_SEC_DYN_ACL_ENABLE];
     ConfEntry &acl_mode = config_entries[CONF_SEC_ACL_MODE];
     ConfEntry &acl_list = config_entries[CONF_SEC_ACL_ENTRIES];
     acl_enable.json = cJSON_GetObjectItem(config_json.security, acl_enable.json_path.c_str());
     acl_mode.json = cJSON_GetObjectItem(config_json.security, acl_mode.json_path.c_str());
+    dacl_enable.json = cJSON_GetObjectItem(config_json.security, dacl_enable.json_path.c_str());
     acl_list.json = cJSON_GetObjectItem(config_json.security, acl_list.json_path.c_str());
 
     if (!acl_enable.json) {
@@ -391,6 +395,9 @@ int TabConfig::load_config_file()
     }
     if (!acl_mode.json) {
         acl_mode.json = cJSON_AddBoolToObject(config_json.security, acl_mode.json_path.c_str(), acl_mode.def_val_i);
+    }
+    if (!dacl_enable.json) {
+        dacl_enable.json = cJSON_AddBoolToObject(config_json.security, dacl_enable.json_path.c_str(), acl_mode.def_val_i);
     }
     if (!acl_list.json) {
         acl_list.json = cJSON_AddArrayToObject(config_json.security, acl_list.json_path.c_str());
@@ -610,6 +617,16 @@ int TabConfig::initialize()
     };
     config_entries.push_back(c_acl_mode);
 
+    ConfEntry c_dacl_enabled = {
+        .name = "Dynamic ACL",
+        .description = "Enable or disable dynamic ACL",
+        .json_path = "dynamic_acl",
+        .type = BOOLEAN,
+        .val_i = 1,
+        .def_val_i = 1,
+    };
+    config_entries.push_back(c_dacl_enabled);
+
     // Not really used, just for completion sake and JSON handling. Values are stored in a vector
     ConfEntry c_acl_entries = {
         .name = "ACL entries",
@@ -741,8 +758,10 @@ int TabConfig::apply_settings()
     update_acl_entries();
 
     ConfEntry &acl_enable = config_entries[CONF_SEC_ACL_ENABLE];
+    ConfEntry &dacl_enable = config_entries[CONF_SEC_DYN_ACL_ENABLE];
     ConfEntry &acl_mode = config_entries[CONF_SEC_ACL_MODE];
     ConfEntry &acl_list = config_entries[CONF_SEC_ACL_ENTRIES];
+    cJSON_SetBoolValue(dacl_enable.json, dacl_enable.val_i);
     cJSON_SetBoolValue(acl_enable.json, acl_enable.val_i);
     cJSON_SetBoolValue(acl_mode.json, acl_mode.val_i);
     

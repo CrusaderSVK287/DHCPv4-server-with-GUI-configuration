@@ -127,6 +127,11 @@ static int config_load_security_config(dhcp_server_t *server, cJSON *security_co
                 server->config.acl_blacklist = (object) ? cJSON_IsTrue(object) : CONFIG_DEFAULT_ACL_BLACKLIST;
         }
 
+        if (server->config.dynamic_acl_enable == CONFIG_UNTOUCHED) {
+                object = cJSON_GetObjectItem(security_config, "dynamic_acl");
+                server->config.dynamic_acl_enable = (object) ? cJSON_IsTrue(object) : CONFIG_DEFAULT_DACL;
+        }
+
         rv = 0;
 
         return rv;
@@ -425,6 +430,7 @@ static int config_load_defaults(dhcp_server_t *server)
         server->config.acl_enable = CONFIG_BOOL_FALSE;
         server->config.acl_blacklist = CONFIG_BOOL_FALSE;
         server->config.db_enable = CONFIG_DEFAULT_DB_ENABLE;
+        server->config.dynamic_acl_enable = CONFIG_DEFAULT_DACL;
         
         uint32_t lease_time_value = CONFIG_DEFAULT_LEASE_TIME;
         if (dhcp_option_add(server->allocator->default_options, dhcp_option_new_values(
@@ -566,9 +572,11 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
                 goto exit;
         }
 
+        /* We need to set untouched flags so that default values are assigned if not specified in config */
         server->config.acl_enable = CONFIG_UNTOUCHED;
         server->config.acl_blacklist = CONFIG_UNTOUCHED;
         server->config.db_enable = CONFIG_UNTOUCHED;
+        server->config.dynamic_acl_enable = CONFIG_UNTOUCHED;
 
         //TODO: pridat dynamic ACL, nezabudnut zmenit aj v init a v gui
         static struct option long_options[] = {
@@ -587,8 +595,9 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
 
                 {"acl-disable",             no_argument,       0,  3 },
                 {"acl-whitelist-mode",      no_argument,       0,  4 },
+                {"dynamic-acl-disable",     no_argument,       0,  5 },
 
-                {"db-disable",              no_argument,       0,  5 },
+                {"db-disable",              no_argument,       0,  6 },
 
                 {"pool",    required_argument, 0, 'p'},
                 {"option",  required_argument, 0, 'o'},
@@ -660,6 +669,9 @@ int config_parse_arguments(dhcp_server_t *server, int argc, char **argv)
                         server->config.acl_blacklist = CONFIG_BOOL_FALSE;
                         break;
                 case 5:
+                        server->config.dynamic_acl_enable = CONFIG_BOOL_FALSE;
+                        break;
+                case 6:
                         server->config.db_enable = CONFIG_BOOL_FALSE;
                         break;
                 default:
