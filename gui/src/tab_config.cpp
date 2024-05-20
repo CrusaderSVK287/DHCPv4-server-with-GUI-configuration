@@ -19,7 +19,6 @@
 #include <string>
 
 using namespace ftxui;
-// TODO: nejaky check na zaciatku ci som root
 std::vector<std::string> TabConfig::config_menu_entries = {
     "General",
     "Pools",
@@ -126,7 +125,6 @@ TabConfig::TabConfig()
         Container::Horizontal({
             Button("+ Add pool", [&] {pool_ctl(false);}),
             Button("- Remove pool", [&] {pool_ctl(true);}),
-            // TODO: add some button to go to options from pool and to pools from options for convenience
         })
     }),
 
@@ -845,7 +843,6 @@ void TabConfig::options_load()
     }
 
     if (options_loaded_list_selected != options_loaded_list_selected_last && options_loaded_list_selected >= 0) {
-        // TODO: Fix crash when no options in list
         if (options_loaded_list.options.size() == 0) {
             options_loaded_type = "";
             options_value_container->DetachAllChildren();

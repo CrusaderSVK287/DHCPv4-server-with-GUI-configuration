@@ -5,6 +5,7 @@
 #include <ftxui/dom/deprecated.hpp>
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/dom/node.hpp>
+#include <ftxui/screen/terminal.hpp>
 #include <string>
 #include <fstream>
 
@@ -44,8 +45,12 @@ void TabLogs::load_file()
     std::ifstream file(path);
 
     while (getline (file, s)) {
-        //TODO: try to make it so that on long lines, the string is split into multiple and prefixed with "  " 2 spaces
-        log_content.push_back(s);
+        int dimx = Terminal::Size().dimx - 25;
+        log_content.push_back(s.substr(0, dimx));
+        dimx -=4;
+        for (unsigned i = dimx + 4; i < s.length(); i += dimx) {
+            log_content.push_back("    " + s.substr(i, dimx));
+        }
     }
     
     file.close();

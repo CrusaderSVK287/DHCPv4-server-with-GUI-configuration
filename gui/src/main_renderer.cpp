@@ -46,7 +46,7 @@ int tui_loop()
 
     auto tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated()) | hcenter;
     auto tab_contents = Container::Tab({
-        _not_yet_implemented_tab("help"),
+        _not_yet_implemented_tab("help"), //TODO: implement help page
         tab_config.tab_contents,
         tab_logs.tab_contents,
         tab_lease.tab_contents,
