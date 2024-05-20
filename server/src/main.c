@@ -96,7 +96,6 @@ int main(int argc, char *argv[])
         mkdir("/etc/dhcp", 0744);
         mkdir("/etc/dhcp/lease/", 0744);
 
-        // TODO: change way for --version and --help to not require sudo and be handled here 
         strcpy(dhcp_server.config.config_path, CONFIG_DEFAULT_PATH);
         if_failed(init_logging(), exit);
         if_failed(init_allocator(&dhcp_server), exit);

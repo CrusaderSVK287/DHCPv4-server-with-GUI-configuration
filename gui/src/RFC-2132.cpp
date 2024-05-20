@@ -78,7 +78,6 @@ std::string DHCPv4_tag_to_full_name(enum DHCPv4_Options tag)
     }
 }
 
-// TODO: Finish the switch, only example / common are here now
 enum dhcp_option_type dhcp_option_tag_to_type(int tag) {
     switch(tag) {
     case DHCP_OPTION_SUBNET_MASK:
@@ -96,7 +95,6 @@ enum dhcp_option_type dhcp_option_tag_to_type(int tag) {
     case DHCP_OPTION_BROADCAST_ADDRESS:
     case DHCP_OPTION_ROUTER_SOLICITATION_ADDRESS:
     case DHCP_OPTION_STATIC_ROUTE:
-    case DHCP_OPTION_ARP_CACHE_TIMEOUT:
     case DHCP_OPTION_NIS_SERVERS:
     case DHCP_OPTION_NTP_SERVERS:
     case DHCP_OPTION_NETBIOS_NAME_SERVERS:
@@ -114,12 +112,13 @@ enum dhcp_option_type dhcp_option_tag_to_type(int tag) {
     case DHCP_OPTION_MAX_DGRAM_REASSEMBLY_SIZE:
     case DHCP_OPTION_DEFAULT_TCP_TTL:
     case DHCP_OPTION_TCP_KEEPALIVE_INTERVAL:
-    case DHCP_OPTION_TCP_KEEPALIVE_GARBAGE:
     case DHCP_OPTION_IP_ADDRESS_LEASE_TIME:
     case DHCP_OPTION_NETBIOS_NODE_TYPE:
     case DHCP_OPTION_RENEWAL_TIME_VALUE:
     case DHCP_OPTION_REBINDING_TIME_VALUE:
     case DHCP_OPTION_DHCP_MESSAGE_TYPE:
+    case DHCP_OPTION_ARP_CACHE_TIMEOUT:
+    case DHCP_OPTION_OVERLOAD:
         return DHCP_OPTION_NUMERIC;
 
     case DHCP_OPTION_IP_FORWARDING_ENABLE_DISABLE:
@@ -129,6 +128,8 @@ enum dhcp_option_type dhcp_option_tag_to_type(int tag) {
     case DHCP_OPTION_MASK_SUPPLIER:
     case DHCP_OPTION_TRAILER_ENCAPSULATION:
     case DHCP_OPTION_PERFORM_MASK_DISCOVERY:
+    case DHCP_OPTION_IEEE802_3_ENCAPSULATION:
+    case DHCP_OPTION_TCP_KEEPALIVE_GARBAGE:
         return DHCP_OPTION_BOOL;
 
     case DHCP_OPTION_POLICY_FILTER:
@@ -139,6 +140,7 @@ enum dhcp_option_type dhcp_option_tag_to_type(int tag) {
     case DHCP_OPTION_FQDN:
     case DHCP_OPTION_ROOT_PATH:
     case DHCP_OPTION_EXTENSIONS_PATH:
+    case DHCP_OPTION_NETBIOS_SCOPE:
         return DHCP_OPTION_STRING;
 
     default:

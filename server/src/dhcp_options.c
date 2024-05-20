@@ -11,18 +11,42 @@
 #include <string.h>
 #include <sys/types.h>
 
-// TODO: Finish the switch, only example / common are here now
 enum dhcp_option_type dhcp_option_tag_to_type(int tag) {
         switch(tag) {
         case DHCP_OPTION_IP_FORWARDING_ENABLE_DISABLE:
         case DHCP_OPTION_NON_LOCAL_SOURCE_ROUTING_ENABLE_DISABLE:
         case DHCP_OPTION_ROUTER_DISCOVERY:
+        case DHCP_OPTION_ALL_SUBNETS_LOCAL:
+        case DHCP_OPTION_MASK_SUPPLIER:
+        case DHCP_OPTION_TRAILER_ENCAPSULATION:
+        case DHCP_OPTION_PERFORM_MASK_DISCOVERY:
+        case DHCP_OPTION_IEEE802_3_ENCAPSULATION:
+        case DHCP_OPTION_TCP_KEEPALIVE_GARBAGE:
+
                 return DHCP_OPTION_BOOL;
 
         case DHCP_OPTION_SUBNET_MASK:
         case DHCP_OPTION_ROUTER:
         case DHCP_OPTION_REQUESTED_IP_ADDRESS:
         case DHCP_OPTION_SERVER_IDENTIFIER:
+        case DHCP_OPTION_TIME_SERVERS:
+        case DHCP_OPTION_NAME_SERVERS:
+        case DHCP_OPTION_DOMAIN_NAME_SERVERS:
+        case DHCP_OPTION_LOG_SERVERS:
+        case DHCP_OPTION_COOKIE_SERVERS:
+        case DHCP_OPTION_LPR_SERVERS:
+        case DHCP_OPTION_IMPRESS_SERVERS:
+        case DHCP_OPTION_RESOURCE_LOCATION_SERVERS:
+        case DHCP_OPTION_SWAP_SERVER:
+        case DHCP_OPTION_BROADCAST_ADDRESS:
+        case DHCP_OPTION_ROUTER_SOLICITATION_ADDRESS:
+        case DHCP_OPTION_STATIC_ROUTE:
+        case DHCP_OPTION_NIS_SERVERS:
+        case DHCP_OPTION_NTP_SERVERS:
+        case DHCP_OPTION_NETBIOS_NAME_SERVERS:
+        case DHCP_OPTION_NETBIOS_DD_SERVER:
+        case DHCP_OPTION_X_WINDOW_FONT_SERVER:
+        case DHCP_OPTION_X_WINDOW_DISPLAY_MANAGER:
                 return DHCP_OPTION_IP;
 
         case DHCP_OPTION_DHCP_MESSAGE_TYPE:
@@ -31,11 +55,27 @@ enum dhcp_option_type dhcp_option_tag_to_type(int tag) {
         case DHCP_OPTION_MERIT_DUMP:
         case DHCP_OPTION_MAX_DGRAM_REASSEMBLY_SIZE:
         case DHCP_OPTION_IP_ADDRESS_LEASE_TIME:
+        case DHCP_OPTION_DEFAULT_IP_TTL:
+        case DHCP_OPTION_PATH_MTU_AGING_TIMEOUT:
+        case DHCP_OPTION_INTERFACE_MTU:
+        case DHCP_OPTION_DEFAULT_TCP_TTL:
+        case DHCP_OPTION_TCP_KEEPALIVE_INTERVAL:
+        case DHCP_OPTION_NETBIOS_NODE_TYPE:
+        case DHCP_OPTION_RENEWAL_TIME_VALUE:
+        case DHCP_OPTION_REBINDING_TIME_VALUE:
+        case DHCP_OPTION_ARP_CACHE_TIMEOUT:
+        case DHCP_OPTION_OVERLOAD:
                 return DHCP_OPTION_NUMERIC;
 
         case DHCP_OPTION_HOST_NAME:
         case DHCP_OPTION_DOMAIN_NAME:
-        case DHCP_OPTION_SWAP_SERVER:
+        case DHCP_OPTION_POLICY_FILTER:
+        case DHCP_OPTION_NIS_DOMAIN:
+        case DHCP_OPTION_USER_CLASS:
+        case DHCP_OPTION_FQDN:
+        case DHCP_OPTION_ROOT_PATH:
+        case DHCP_OPTION_EXTENSIONS_PATH:
+        case DHCP_OPTION_NETBIOS_SCOPE:
                 return DHCP_OPTION_STRING;
 
         default:
