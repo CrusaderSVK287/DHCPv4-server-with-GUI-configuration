@@ -55,15 +55,16 @@ int tui_loop()
         },
         &tab_index);
 
+    auto exit_button = Button("Exit", [&]{screen.Exit();});
     auto main_container = Container::Vertical({
         Container::Horizontal({
             tab_selection,
+            exit_button
         }),
         tab_contents,
     });
     
     auto main_renderer = Renderer(main_container, [&] {
-            //TDOD: make some switch case where only active tab will refresh
         switch (tab_index) {
             case 0: break;
             case 1: tab_config.refresh(); break;
@@ -82,7 +83,7 @@ int tui_loop()
             }),
             hbox({
                 tab_selection->Render() | flex,
-                // TODO: add some quit button
+                exit_button->Render()
             }),
             tab_contents->Render() | flex,
         });
