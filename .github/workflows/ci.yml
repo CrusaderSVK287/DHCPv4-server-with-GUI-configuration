@@ -76,7 +76,9 @@ jobs:
           name: build-artifacts
 
       - name: Set up environment
-        run: export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
+        run: |
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 
       - name: Run unit tests
         run: make test __PIPELINE_BUILD=y
