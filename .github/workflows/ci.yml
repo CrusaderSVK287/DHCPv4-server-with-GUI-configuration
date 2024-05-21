@@ -13,11 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     container: gcc
     steps:
-      - name: Set up environment
-        run: |
-          mkdir $GITHUB_WORKSPACE/include
-          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Run unit tests
+      - name: Set up environment
+        run: export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
+
+      - name: Compile projects
         run: make test __PIPELINE_BUILD=y
 
