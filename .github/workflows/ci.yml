@@ -1,12 +1,12 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  push:  # Run the workflow on every push to any branch
+    branches: 
+      - '**'
+  pull_request:  # Also run the workflow on every pull request
+    branches: 
+      - '**'
 
 jobs:
   build-dependencies:
