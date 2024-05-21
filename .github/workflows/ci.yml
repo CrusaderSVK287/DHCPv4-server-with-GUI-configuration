@@ -22,6 +22,12 @@ jobs:
       - name: Set up environment
         run: export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
 
+      - name: Compile dependencies
+        run: make deps
+
       - name: Compile projects
+        run: make projects
+
+      - name: Compile tests
         run: make test __PIPELINE_BUILD=y
 
