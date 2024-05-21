@@ -100,7 +100,7 @@ void TabCommand::handle_command()
         return;
     }
 
-    output.push_back("Unknown command: " + input);
+    output.push_back("Unknown command: " + input + ". Use command 'help' to show all commands");
 }
 
 static char* json_create_command(std::string input)
