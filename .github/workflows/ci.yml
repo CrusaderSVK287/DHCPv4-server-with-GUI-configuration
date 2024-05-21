@@ -19,10 +19,10 @@ jobs:
 
       - name: Set up environment
         run: |
-          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
+          mkdir $GITHUB_WORKSPACE/include
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include::$LD_LIBRARY_PATH
           apt-get update -qy
           apt-get install -y cmake 
-          mkdir $GITHUB_WORKSPACE/include
 
       - name: Compile dependencies
         run: make deps
