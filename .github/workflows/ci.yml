@@ -15,9 +15,8 @@ jobs:
     steps:
       - name: Set up environment
         run: |
+          mkdir $GITHUB_WORKSPACE/include
           export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
-          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-          ls -la $GITHUB_WORKSPACE/include
 
       - name: Run unit tests
         run: make test __PIPELINE_BUILD=y
