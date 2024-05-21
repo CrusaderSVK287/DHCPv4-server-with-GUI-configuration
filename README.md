@@ -19,3 +19,9 @@ Implementation of DHCP server in C with focus on configuration accessibility
   ```
   The standard states that these steps SHOULD be followed, and we do not yet have API for clients history, this step is for now skipped.
 
+# Note
+
+This repository was originally located on gitlab but was recently migrated to github.
+As of now it is missing a proper README, documentation and similiar stuff. Until this 
+note is here, consider the missing stuff as TODO.
+
