@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-dependencies:
+    runs-on: ubuntu-latest
+    container: gcc
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up environment
+        run: |
+          apt-get update -qy
+          apt-get install -y cmake
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
+
+      - name: Build dependencies
+        run: make deps
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependencies
+          path: |
+            include/
+            server/obj/
+          retention-days: 1
+
+  build:
+    runs-on: ubuntu-latest
+    container: gcc
+    needs: build-dependencies
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dependencies
+
+      - name: Set up environment
+        run: export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
+
+      - name: Compile projects
+        run: make projects __PIPELINE_BUILD=y
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            include/
+            server/obj/
+          retention-days: 1
+
+  test:
+    runs-on: ubuntu-latest
+    container: gcc
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+
+      - name: Set up environment
+        run: export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
+
+      - name: Run unit tests
+        run: make test __PIPELINE_BUILD=y
+
