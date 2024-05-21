@@ -14,7 +14,10 @@ jobs:
     container: gcc
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      - name: Create include file
+        run: mkdir $GITHUB_WORKSPACE/include
 
       - name: Set up environment
         run: export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
