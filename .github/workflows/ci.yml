@@ -20,8 +20,7 @@ jobs:
       - name: Set up environment
         run: |
           mkdir $GITHUB_WORKSPACE/include
-          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include::$LD_LIBRARY_PATH
-          apt-get update -qy
+          export LD_LIBRARY_PATH=/__w/Simple-DHCPv4-server/Simple-DHCPv4-server/include::$LD_LIBRARY_PATH          apt-get update -qy
           apt-get install -y cmake 
 
       - name: Compile dependencies
