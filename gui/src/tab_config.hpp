@@ -20,6 +20,7 @@ enum ConfigName {
 
     CONF_SEC_ACL_ENABLE,
     CONF_SEC_ACL_MODE,
+    CONF_SEC_DYN_ACL_ENABLE,
     CONF_SEC_ACL_ENTRIES,
     CONFIG_COUNT // Add this to keep track of the number of configs
 };

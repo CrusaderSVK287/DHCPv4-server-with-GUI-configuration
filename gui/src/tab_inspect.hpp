@@ -88,6 +88,7 @@ private:
     void load_selected_message();
     void load_selected_message_options();
     void load_selected_option();
+    void remove_database_entry();
 };
 
 #endif // !__TAB_INSPECT_HPP__

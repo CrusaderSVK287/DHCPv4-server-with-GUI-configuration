@@ -16,6 +16,7 @@ private:
 
     int selected;
     int log_selected;
+    int log_selected_last;
     std::vector<std::string> entries;
     std::vector<std::string> log_content;
     

@@ -1,6 +1,7 @@
 #include "tab_inspect.hpp"
 #include "database.hpp"
 #include <cstdint>
+#include <exception>
 #include <filesystem>
 #include <ftxui/component/component.hpp>
 #include <ftxui/dom/elements.hpp>
@@ -50,7 +51,6 @@ static uint32_t uint32_from_uint8_array(const uint8_t* array, size_t lenght) {
 
 TabInspect::TabInspect() 
 { 
-    // TODO: Maybe get some delete button for management
     this->toggle_filter_selected = 0;
     this->transaction_entry_selected = 0;
     this->loaded_transaction_selected = 0;
@@ -119,14 +119,19 @@ TabInspect::TabInspect()
         Renderer([] {return separator();}),
 
         Container::Horizontal({
-            // transaction menu
+            // transaction menu with delete button
             Menu(&transaction_entries_xid, &transaction_entry_selected) 
                 | vscroll_indicator | yframe | yflex | size(WIDTH, EQUAL, 12),
             Renderer([] {return separator();}),
 
             // messages menu
+
+            Container::Vertical({
             Menu(&loaded_transaction_msg_types, &loaded_transaction_selected)
                 | vscroll_indicator | yframe | yflex | size(WIDTH, EQUAL, 12),
+                Renderer([] {return separator();}),
+                Button("  Delete", [&] {this->remove_database_entry();})
+            }),
             Renderer([] {return separator();}),
 
             // window with message details
@@ -390,3 +395,15 @@ void TabInspect::load_selected_option()
     option_detail_selected_last = option_detail_selected;
 }
 
+void TabInspect::remove_database_entry()
+{
+    std::string &xid = transaction_entries_xid[transaction_entry_selected];
+
+    for (auto &entry : fs::directory_iterator(TabInspect::db_path)) {
+        if (entry.path().string().find(xid + "_") != entry.path().string().npos) {
+            log("deleting " + entry.path().string());
+            try {fs::remove(entry);} catch(std::exception &e) {}
+            return;
+        }
+    }
+}

@@ -112,3 +112,5 @@ deps:
 	@echo "Dependencies: make, $(CC)"
 	@echo "Libraries needed: $(LDLIBS)"
 
+install:
+	mv $(BINDIR)/$(BINNAME) /usr/local/bin/$(BINNAME)

@@ -102,3 +102,7 @@ deps: -setup
 -setup:
 	@mkdir -p $(INC_DIR)
 	@mkdir -p $(DEPS_DIR)
+
+install:
+	$(MAKE) -C server install 
+	$(MAKE) -C gui install 

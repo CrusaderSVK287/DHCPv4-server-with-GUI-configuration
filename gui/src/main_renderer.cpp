@@ -11,6 +11,7 @@
 #include "ftxui/component/event.hpp"              // for Event, Event::Custom
 #include "ftxui/component/screen_interactive.hpp"  // for Component, ScreenInteractive
 #include "ftxui/dom/elements.hpp" 
+#include "tab_help.hpp"
 #include "version_info.hpp"
 
 #include "tab_logs.hpp"
@@ -22,12 +23,12 @@
 
 using namespace ftxui;
 
-static Component _not_yet_implemented_tab(std::string s)
-{
-    return Renderer([s] {
-            return text(std::format("Tab {} not yet implemented", s)) | bold | hcenter;
-        });
-}
+// static Component _not_yet_implemented_tab(std::string s)
+// {
+//     return Renderer([s] {
+//             return text(std::format("Tab {} not yet implemented", s)) | bold | hcenter;
+//         });
+// }
 
 int tui_loop()
 {
@@ -43,10 +44,11 @@ int tui_loop()
     TabInspect tab_inspect = TabInspect();
     TabConfig tab_config = TabConfig();
     TabCommand tab_command = TabCommand();
+    TabHelp tab_help = TabHelp();
 
     auto tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated()) | hcenter;
     auto tab_contents = Container::Tab({
-        _not_yet_implemented_tab("help"),
+        tab_help.tab_contents,
         tab_config.tab_contents,
         tab_logs.tab_contents,
         tab_lease.tab_contents,
@@ -55,15 +57,16 @@ int tui_loop()
         },
         &tab_index);
 
+    auto exit_button = Button("Exit", [&]{screen.Exit();});
     auto main_container = Container::Vertical({
         Container::Horizontal({
             tab_selection,
+            exit_button
         }),
         tab_contents,
     });
     
     auto main_renderer = Renderer(main_container, [&] {
-            //TDOD: make some switch case where only active tab will refresh
         switch (tab_index) {
             case 0: break;
             case 1: tab_config.refresh(); break;
@@ -82,7 +85,7 @@ int tui_loop()
             }),
             hbox({
                 tab_selection->Render() | flex,
-                // TODO: add some quit button
+                exit_button->Render()
             }),
             tab_contents->Render() | flex,
         });
