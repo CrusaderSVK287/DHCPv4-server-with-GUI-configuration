@@ -13,14 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     container: gcc
     steps:
+
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Create include file
-        run: mkdir $GITHUB_WORKSPACE/include
-
       - name: Set up environment
-        run: export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
+        run: |
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/include:$LD_LIBRARY_PATH
+          apt-get update -qy
+          apt-get install -y cmake 
+          mkdir $GITHUB_WORKSPACE/include
 
       - name: Compile dependencies
         run: make deps
