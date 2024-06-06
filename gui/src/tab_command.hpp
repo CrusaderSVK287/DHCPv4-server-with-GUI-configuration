@@ -36,6 +36,7 @@ private:
     // Locally handled commands
     void command_clear();
     void command_help();
+    void command_config();
 };
 
 #endif //__TAB_COMMAND_HPP__

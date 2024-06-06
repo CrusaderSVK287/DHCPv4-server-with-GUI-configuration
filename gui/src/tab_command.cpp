@@ -61,6 +61,7 @@ void TabCommand::initialize_commands()
     this->commands.push_back({"clear", false, &TabCommand::command_clear, "Deletes all output", "clear"});
     this->commands.push_back({"help", false, &TabCommand::command_help, "Shows short help page for each command", "help | ?"});
     this->commands.push_back({"?", false, &TabCommand::command_help, "", ""});
+    this->commands.push_back({"config", false, &TabCommand::command_config, "Set or get value of a config entry. For arrays use 0 base indexing", "config get/set path.to.config.entry [new_value]"});
 
     // Server handled commands
     this->commands.push_back({"echo", true, nullptr, "Echoes back what the user types in arguments", "echo param1 param2 ..."});

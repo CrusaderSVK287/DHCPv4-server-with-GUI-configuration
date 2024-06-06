@@ -77,13 +77,12 @@ public:
     void update_acl_entries();
     void options_load();
     void pools_refresh();
+    static constexpr const char* default_config_path = "/etc/dhcp/config.json";
 
 private:
     void dhcp_option_ctl(bool remove);
     void pool_ctl(bool remove);
     std::string dhcp_option_ctl_input;
-
-    static constexpr const char* default_config_path = "/etc/dhcp/config.json";
 
     static std::vector<std::string> config_menu_entries;
     static std::vector<std::string> boolean_toogle;
